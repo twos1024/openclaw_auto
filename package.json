@@ -14,6 +14,7 @@
     "test:unit": "vitest run --reporter=default",
     "test:unit:watch": "vitest",
     "test:e2e": "playwright test --reporter=line",
+    "tauri": "node scripts/with-rust.mjs tauri",
     "tauri:dev": "node scripts/with-rust.mjs tauri dev",
     "tauri:build": "node scripts/with-rust.mjs tauri build"
   },
