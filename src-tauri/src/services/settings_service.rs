@@ -6,6 +6,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::json;
 use tokio::fs;
 
+use crate::adapters::file_ops;
 use crate::adapters::platform;
 use crate::models::error::{AppError, ErrorCode};
 
@@ -114,18 +115,7 @@ pub async fn write_app_settings(
         .with_details(json!({ "serialize_error": error.to_string() }))
     })?;
 
-    let temp_path = resolved.with_extension("tmp");
-    fs::write(&temp_path, serialized.as_bytes())
-        .await
-        .map_err(|error| map_write_error(&temp_path, error, ErrorCode::ConfigWriteFailed))?;
-
-    if resolved.exists() {
-        fs::remove_file(&resolved)
-            .await
-            .map_err(|error| map_write_error(&resolved, error, ErrorCode::ConfigWriteFailed))?;
-    }
-
-    fs::rename(&temp_path, &resolved)
+    file_ops::safe_write_bytes(&resolved, serialized.as_bytes())
         .await
         .map_err(|error| map_write_error(&resolved, error, ErrorCode::ConfigWriteFailed))?;
 

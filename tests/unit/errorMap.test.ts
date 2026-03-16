@@ -35,6 +35,12 @@ describe("errorMap", () => {
     expect(hint?.title).toBe("安装命令执行失败");
   });
 
+  it("maps gateway status failure error code to readable hint", () => {
+    const hint = mapErrorCode("E_GATEWAY_STATUS_FAILED");
+
+    expect(hint?.title).toBe("网关状态读取失败");
+  });
+
   it("falls back to generic summary for unmapped fatal errors", () => {
     const summaries = extractErrorSummaries([
       "[fatal] unknown crash happened in gateway runtime",

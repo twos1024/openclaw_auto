@@ -128,8 +128,8 @@ npm run tauri:build
 
 在当前 Windows 本地环境里，`npm run tauri:build` 已验证通过，产物位于：
 
-- `src-tauri/target/release/bundle/msi/ClawDesk_0.1.0_x64_en-US.msi`
-- `src-tauri/target/release/bundle/nsis/ClawDesk_0.1.0_x64-setup.exe`
+- `src-tauri/target/release/bundle/msi/ClawDesk_0.1.1_x64_en-US.msi`
+- `src-tauri/target/release/bundle/nsis/ClawDesk_0.1.1_x64-setup.exe`
 
 可执行文件位于：
 
@@ -137,7 +137,7 @@ npm run tauri:build
 
 额外已验证：
 
-- `ClawDesk_0.1.0_x64-setup.exe` 可静默安装到临时目录
+- `ClawDesk_0.1.1_x64-setup.exe` 可静默安装到临时目录
 - 安装后的 `clawdesk.exe` 可成功启动
 - 静默卸载与目录清理可完成
 
@@ -185,6 +185,7 @@ ZIP 诊断包当前包含：
 
 - push / pull request 时执行
 - 安装 Node 与 Rust
+- 使用 `npm ci` 安装锁定依赖
 - 运行 `npm run lint`
 - 运行 `npm run test:unit`
 
@@ -193,9 +194,11 @@ ZIP 诊断包当前包含：
 `.github/workflows/release.yml`
 
 - push tag `v*` 时执行
+- 先执行 `lint + unit test` 作为发版门禁
 - Windows 构建 `nsis`
 - macOS 构建 `dmg`
 - Linux 构建 `deb` 与 `appimage`
+- 使用 `npm ci` 安装锁定依赖
 - Linux runner 会自动安装 Tauri 官方文档要求的系统依赖
 - 上传 `src-tauri/target/release/bundle/**` 作为产物
 

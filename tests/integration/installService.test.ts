@@ -1,7 +1,7 @@
 /* @vitest-environment jsdom */
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { installService } from "../../src/services/installService";
+import { buildInstallPhasesPreview, installService } from "../../src/services/installService";
 
 type InvokeHandler = (payload?: Record<string, unknown>) => unknown | Promise<unknown>;
 
@@ -252,7 +252,7 @@ describe("installService integration", () => {
     });
   });
 
-  it("falls back to stderr text classification when backend details are legacy-shaped", async () => {
+  it("keeps legacy-shaped backend errors generic instead of reclassifying stderr in the frontend", async () => {
     createInvokeMock({
       install_openclaw: async () => ({
         success: false,
@@ -277,8 +277,8 @@ describe("installService integration", () => {
     expect(result.status).toBe("failure");
     expect(result.stage).toBe("prerequisite");
     expect(result.issue).toMatchObject({
-      failureKind: "missing-npm",
-      code: "E_PATH_NOT_FOUND",
+      failureKind: "unknown",
+      code: "E_SHELL_SPAWN_FAILED",
     });
   });
 
@@ -319,6 +319,30 @@ describe("installService integration", () => {
       status: "warning",
       code: "E_GATEWAY_INSTALL_FAILED",
       detail: "Gateway managed install could not register the local service.",
+    });
+  });
+
+  it("keeps preview phases non-successful when npm is missing but OpenClaw CLI is still detectable", () => {
+    const phases = buildInstallPhasesPreview({
+      platform: "windows",
+      architecture: "x64",
+      homeDir: "C:\\Users\\Tester",
+      configPath: "C:\\Users\\Tester\\.openclaw\\openclaw.json",
+      npmFound: false,
+      npmVersion: null,
+      openclawFound: true,
+      openclawPath: "C:\\Users\\Tester\\AppData\\Roaming\\npm\\openclaw.cmd",
+      openclawVersion: "0.9.0",
+    });
+
+    expect(phases.find((item) => item.id === "prerequisite")).toMatchObject({
+      status: "failure",
+    });
+    expect(phases.find((item) => item.id === "install-cli")).toMatchObject({
+      status: "warning",
+    });
+    expect(phases.find((item) => item.id === "verify")).toMatchObject({
+      status: "warning",
     });
   });
 });

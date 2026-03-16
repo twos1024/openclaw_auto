@@ -116,8 +116,10 @@ pub async fn export_diagnostics(
     content: String,
     archive: bool,
 ) -> Result<ExportDiagnosticsData, AppError> {
-    let settings = settings_service::read_app_settings(None).await.ok();
-    let diagnostics_dir = settings
+    let settings_result = settings_service::read_app_settings(None).await;
+    let diagnostics_dir = settings_result
+        .as_ref()
+        .ok()
         .as_ref()
         .map(|data| PathBuf::from(data.content.diagnostics_dir.clone()))
         .unwrap_or_else(platform::clawdesk_diagnostics_dir);
@@ -138,7 +140,11 @@ pub async fn export_diagnostics(
         .unwrap_or_default()
         .trim()
         .replace(|ch: char| !ch.is_ascii_alphanumeric(), "-");
-    let snapshots = collect_diagnostic_snapshots(settings.as_ref()).await;
+    let snapshots = collect_diagnostic_snapshots(
+        settings_result.as_ref().ok(),
+        settings_result.as_ref().err(),
+    )
+    .await;
     let bundle = build_diagnostics_bundle(&content, source.clone(), keyword.clone(), &snapshots);
 
     if archive {
@@ -256,16 +262,17 @@ async fn read_gateway_logs(line_limit: usize) -> Result<ReadLogsData, AppError> 
 
 async fn collect_diagnostic_snapshots(
     settings: Option<&settings_service::ReadAppSettingsData>,
+    settings_error: Option<&AppError>,
 ) -> DiagnosticSnapshots {
     let env_snapshot = env_service::detect_env()
         .await
         .map(|value| serde_json::to_string_pretty(&value).unwrap_or_else(|_| "{}".to_string()))
-        .unwrap_or_else(|error| format!("ERROR: {} | {}", error.message, error.suggestion));
+        .unwrap_or_else(|error| format_snapshot_error(&error));
 
     let gateway_snapshot = gateway_service::get_gateway_status()
         .await
         .map(|value| serde_json::to_string_pretty(&value).unwrap_or_else(|_| "{}".to_string()))
-        .unwrap_or_else(|error| format!("ERROR: {} | {}", error.message, error.suggestion));
+        .unwrap_or_else(|error| format_snapshot_error(&error));
 
     let config_snapshot = config_service::read_openclaw_config(None)
         .await
@@ -273,12 +280,13 @@ async fn collect_diagnostic_snapshots(
             serde_json::to_string_pretty(&sanitize_config_snapshot(value.content))
                 .unwrap_or_else(|_| "{}".to_string())
         })
-        .unwrap_or_else(|error| format!("ERROR: {} | {}", error.message, error.suggestion));
+        .unwrap_or_else(|error| format_snapshot_error(&error));
 
     let settings_snapshot = settings
         .map(|value| {
             serde_json::to_string_pretty(&value.content).unwrap_or_else(|_| "{}".to_string())
         })
+        .or_else(|| settings_error.map(format_snapshot_error))
         .unwrap_or_else(|| "Settings snapshot unavailable.".to_string());
 
     DiagnosticSnapshots {
@@ -316,6 +324,21 @@ fn build_diagnostics_bundle(
         snapshots.config_snapshot.clone(),
     ]
     .join("\n")
+}
+
+fn format_snapshot_error(error: &AppError) -> String {
+    let mut parts = vec![format!(
+        "ERROR {}: {} | {}",
+        serialize_error_code(&error.code),
+        error.message,
+        error.suggestion
+    )];
+
+    if let Some(details) = error.details.as_ref() {
+        parts.push(serde_json::to_string_pretty(details).unwrap_or_else(|_| details.to_string()));
+    }
+
+    parts.join("\n")
 }
 
 async fn write_diagnostics_archive(
@@ -651,6 +674,13 @@ fn source_name(source: &LogSource) -> &'static str {
     }
 }
 
+fn serialize_error_code(code: &ErrorCode) -> String {
+    serde_json::to_string(code)
+        .unwrap_or_else(|_| "\"E_INTERNAL\"".to_string())
+        .trim_matches('"')
+        .to_string()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -711,5 +741,24 @@ mod tests {
         assert!(included
             .iter()
             .any(|item| item.as_str() == Some("manifest.json")));
+    }
+
+    #[test]
+    fn format_snapshot_error_preserves_settings_read_failure_reason() {
+        let error = AppError::new(
+            ErrorCode::ConfigCorrupted,
+            "App settings content is not valid JSON.",
+            "Repair the settings file format or restore from a backup file.",
+        )
+        .with_details(json!({
+            "path": "/tmp/settings.json",
+            "json_error": "expected value at line 1 column 1"
+        }));
+
+        let formatted = format_snapshot_error(&error);
+
+        assert!(formatted.contains("E_CONFIG_CORRUPTED"));
+        assert!(formatted.contains("App settings content is not valid JSON."));
+        assert!(formatted.contains("/tmp/settings.json"));
     }
 }

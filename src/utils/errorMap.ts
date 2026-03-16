@@ -57,6 +57,13 @@ const ERROR_CODE_MAP: Record<string, Omit<ErrorHint, "id">> = {
     severity: "high",
     code: "E_GATEWAY_START_FAILED",
   },
+  E_GATEWAY_STATUS_FAILED: {
+    title: "网关状态读取失败",
+    message: "ClawDesk 未能读取当前 Gateway 运行状态。",
+    suggestion: "检查 Gateway 安装状态、命令可执行性和 startup 日志后重试。",
+    severity: "medium",
+    code: "E_GATEWAY_STATUS_FAILED",
+  },
   E_GATEWAY_STOP_FAILED: {
     title: "网关停止失败",
     message: "ClawDesk 未能停止当前 Gateway 进程。",
@@ -152,6 +159,7 @@ const ERROR_CODE_ALIASES: Record<string, string> = {
   PORT_CONFLICT: "E_PORT_CONFLICT",
   GATEWAY_INSTALL_FAILED: "E_GATEWAY_INSTALL_FAILED",
   GATEWAY_START_FAILED: "E_GATEWAY_START_FAILED",
+  GATEWAY_STATUS_FAILED: "E_GATEWAY_STATUS_FAILED",
   GATEWAY_STOP_FAILED: "E_GATEWAY_STOP_FAILED",
   GATEWAY_NOT_RUNNING: "E_GATEWAY_NOT_RUNNING",
   LOG_READ_FAILED: "E_LOG_READ_FAILED",

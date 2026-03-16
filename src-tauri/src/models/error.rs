@@ -32,6 +32,8 @@ pub enum ErrorCode {
     GatewayInstallFailed,
     #[serde(rename = "E_GATEWAY_START_FAILED")]
     GatewayStartFailed,
+    #[serde(rename = "E_GATEWAY_STATUS_FAILED")]
+    GatewayStatusFailed,
     #[serde(rename = "E_GATEWAY_STOP_FAILED")]
     GatewayStopFailed,
     #[serde(rename = "E_GATEWAY_NOT_RUNNING")]

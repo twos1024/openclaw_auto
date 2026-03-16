@@ -78,26 +78,6 @@ function updatePhase(
   return phases.map((phase) => (phase.id === phaseId ? { ...phase, ...patch } : phase));
 }
 
-function collectErrorText(error?: BackendError): string {
-  if (!error) return "";
-  const chunks = [error.message, error.suggestion];
-  const visit = (value: unknown): void => {
-    if (typeof value === "string") {
-      chunks.push(value);
-      return;
-    }
-    if (Array.isArray(value)) {
-      value.forEach(visit);
-      return;
-    }
-    if (value && typeof value === "object") {
-      Object.values(value).forEach(visit);
-    }
-  };
-  visit(error.details);
-  return chunks.join("\n").toLowerCase();
-}
-
 function isInstallPhaseId(value: unknown): value is InstallPhaseId {
   return value === "prerequisite" || value === "install-cli" || value === "install-gateway" || value === "verify";
 }
@@ -117,113 +97,6 @@ function hasStructuredInstallIssueMarkers(value: Record<string, unknown>): boole
     typeof value.step === "string" ||
     (typeof value.stage === "string" && typeof value.message === "string" && typeof value.suggestion === "string")
   );
-}
-
-function deriveIssueFromText(
-  stage: InstallPhaseId,
-  step: string,
-  code: string,
-  message: string,
-  suggestion: string,
-  rawText: string,
-  exitCode?: number | null,
-  sample?: string | null,
-): InstallIssue {
-  const haystack = rawText.toLowerCase();
-
-  if (
-    haystack.includes("spawn npm enoent") ||
-    haystack.includes("failed to spawn command: npm") ||
-    haystack.includes("npm not found")
-  ) {
-    return {
-      stage: "prerequisite",
-      failureKind: "missing-npm",
-      code: "E_PATH_NOT_FOUND",
-      message: "OpenClaw install prerequisites are missing.",
-      suggestion: "先安装 Node.js / npm，再刷新环境检查并重试。",
-      step,
-      exitCode,
-      sample: sample ?? firstMeaningfulLine(rawText),
-    };
-  }
-
-  if (
-    haystack.includes("permission denied") ||
-    haystack.includes("access is denied") ||
-    haystack.includes("operation not permitted") ||
-    haystack.includes("eacces") ||
-    haystack.includes("eperm")
-  ) {
-    return {
-      stage,
-      failureKind: "permission-denied",
-      code: "E_PERMISSION_DENIED",
-      message,
-      suggestion,
-      step,
-      exitCode,
-      sample: sample ?? firstMeaningfulLine(rawText),
-    };
-  }
-
-  if (
-    haystack.includes("registry.npmjs.org") ||
-    haystack.includes("enotfound") ||
-    haystack.includes("econnreset") ||
-    haystack.includes("socket hang up") ||
-    haystack.includes("network request failed") ||
-    haystack.includes("proxy") ||
-    haystack.includes("certificate")
-  ) {
-    return {
-      stage,
-      failureKind: "network-failure",
-      code: "E_NETWORK_FAILED",
-      message: "OpenClaw CLI installation failed while downloading packages from npm.",
-      suggestion: "检查 npm registry、代理、证书和网络链路后重试。",
-      step,
-      exitCode,
-      sample: sample ?? firstMeaningfulLine(rawText),
-    };
-  }
-
-  if (haystack.includes("timeout") || haystack.includes("timed out") || haystack.includes("deadline exceeded")) {
-    return {
-      stage,
-      failureKind: "command-timeout",
-      code: "E_SHELL_TIMEOUT",
-      message,
-      suggestion,
-      step,
-      exitCode,
-      sample: sample ?? firstMeaningfulLine(rawText),
-    };
-  }
-
-  if (stage === "install-gateway") {
-    return {
-      stage,
-      failureKind: "gateway-install-failed",
-      code: code || "E_GATEWAY_INSTALL_FAILED",
-      message,
-      suggestion,
-      step,
-      exitCode,
-      sample: sample ?? firstMeaningfulLine(rawText),
-    };
-  }
-
-  return {
-    stage,
-    failureKind: "unknown",
-    code,
-    message,
-    suggestion,
-    step,
-    exitCode,
-    sample: sample ?? firstMeaningfulLine(rawText),
-  };
 }
 
 function normalizeInstallIssue(raw: unknown, fallback?: Partial<InstallIssue>): InstallIssue | null {
@@ -264,21 +137,63 @@ function normalizeInstallIssue(raw: unknown, fallback?: Partial<InstallIssue>): 
   };
 }
 
+function getDetailNumber(error: BackendError | undefined, key: string): number | null {
+  const value = error?.details?.[key];
+  return typeof value === "number" ? value : null;
+}
+
+function getDetailString(error: BackendError | undefined, key: string): string | null {
+  const value = error?.details?.[key];
+  return typeof value === "string" ? value : null;
+}
+
+function looksLikeMissingNpmSpawnError(error?: BackendError): boolean {
+  if (!error) return false;
+  return error.code === "E_SHELL_SPAWN_FAILED" && error.message.toLowerCase().includes("npm");
+}
+
+function fallbackStep(stage: InstallPhaseId): string {
+  if (stage === "install-gateway") return "openclaw gateway install --json";
+  if (stage === "verify") return "resolve openclaw executable path";
+  return "npm install -g openclaw@latest";
+}
+
+function createFallbackIssue(stage: InstallPhaseId, error?: BackendError): InstallIssue | null {
+  if (!error) return null;
+
+  return {
+    stage,
+    failureKind: "unknown",
+    code: error.code ?? "E_UNKNOWN",
+    message: error.message ?? "OpenClaw install failed.",
+    suggestion: error.suggestion ?? "Check install logs and retry.",
+    step: fallbackStep(stage),
+    exitCode: getDetailNumber(error, "exitCode") ?? getDetailNumber(error, "exit_code"),
+    sample:
+      getDetailString(error, "sample") ??
+      firstMeaningfulLine(getDetailString(error, "stderr") ?? getDetailString(error, "stdout") ?? ""),
+  };
+}
+
 function buildIssueFromShellOutput(stage: InstallPhaseId, step: string, output?: ShellCommandOutput | null): InstallIssue | null {
   if (!output) return null;
 
-  const rawText = [output.stderr, output.stdout].filter(Boolean).join("\n");
-  const code = stage === "install-gateway" ? "E_GATEWAY_INSTALL_FAILED" : "E_UNKNOWN";
-  const message =
-    stage === "install-gateway"
-      ? "Gateway managed install could not register the local service."
-      : "OpenClaw install command returned a non-zero exit code.";
-  const suggestion =
-    stage === "install-gateway"
-      ? "前往 Service 与 Logs 页面继续排查托管安装输出。"
-      : "检查 npm 输出、权限和网络后重试。";
-
-  return deriveIssueFromText(stage, step, code, message, suggestion, rawText, output.exitCode ?? null);
+  return {
+    stage,
+    failureKind: stage === "install-gateway" ? "gateway-install-failed" : "unknown",
+    code: stage === "install-gateway" ? "E_GATEWAY_INSTALL_FAILED" : "E_UNKNOWN",
+    message:
+      stage === "install-gateway"
+        ? "Gateway managed install could not register the local service."
+        : "OpenClaw install command returned a non-zero exit code.",
+    suggestion:
+      stage === "install-gateway"
+        ? "前往 Service 与 Logs 页面继续排查托管安装输出。"
+        : "检查安装日志和命令输出后重试。",
+    step,
+    exitCode: output.exitCode ?? null,
+    sample: firstMeaningfulLine(output.stderr) ?? firstMeaningfulLine(output.stdout),
+  };
 }
 
 function classifyErrorStage(error?: BackendError): InstallPhaseId {
@@ -286,24 +201,18 @@ function classifyErrorStage(error?: BackendError): InstallPhaseId {
     return error.details.stage;
   }
 
-  const haystack = collectErrorText(error);
   const code = error?.code ?? "";
 
-  if (haystack.includes("spawn npm enoent") || haystack.includes("failed to spawn command: npm")) {
+  if (looksLikeMissingNpmSpawnError(error)) {
     return "prerequisite";
   }
 
-  if (
-    haystack.includes("permission denied") ||
-    haystack.includes("access is denied") ||
-    code === "E_PERMISSION_DENIED" ||
-    code === "E_NETWORK_FAILED"
-  ) {
-    return "install-cli";
+  if (code === "E_GATEWAY_INSTALL_FAILED") {
+    return "install-gateway";
   }
 
-  if (haystack.includes("gateway install") || haystack.includes("managed gateway") || code === "E_GATEWAY_INSTALL_FAILED") {
-    return "install-gateway";
+  if (code === "E_PATH_NOT_FOUND" && (error?.message ?? "").toLowerCase().includes("executable")) {
+    return "verify";
   }
 
   return "install-cli";
@@ -318,13 +227,11 @@ function buildIssueFromError(error?: BackendError): InstallIssue | null {
     code: error.code,
     message: error.message,
     suggestion: error.suggestion,
-    step: fallbackStage === "install-gateway" ? "openclaw gateway install --json" : "npm install -g openclaw@latest",
+    step: fallbackStep(fallbackStage),
   });
   if (structured) return structured;
 
-  const stage = fallbackStage;
-  const step = stage === "install-gateway" ? "openclaw gateway install --json" : "npm install -g openclaw@latest";
-  return deriveIssueFromText(stage, step, error.code, error.message, error.suggestion, collectErrorText(error));
+  return createFallbackIssue(fallbackStage, error);
 }
 
 function toFailureResult(error?: BackendError): InstallActionResult {
@@ -442,17 +349,28 @@ export function buildInstallPhasesPreview(
   });
 
   if (environment.openclawFound) {
+    const downstreamStatus = environment.npmFound ? "success" : "warning";
     phases = updatePhase(phases, "install-cli", {
-      status: "success",
-      detail: `已检测到 OpenClaw${environment.openclawVersion ? ` ${environment.openclawVersion}` : ""}。`,
-      suggestion: "如需重装，可重新执行安装流程。",
+      status: downstreamStatus,
+      detail: environment.npmFound
+        ? `已检测到 OpenClaw${environment.openclawVersion ? ` ${environment.openclawVersion}` : ""}。`
+        : `已检测到 OpenClaw${environment.openclawVersion ? ` ${environment.openclawVersion}` : ""}，但 npm 当前不可用。`,
+      suggestion: environment.npmFound
+        ? "如需重装，可重新执行安装流程。"
+        : "先恢复 npm 与 PATH，再继续安装、重装或修复 OpenClaw CLI。",
     });
     phases = updatePhase(phases, "verify", {
-      status: "success",
-      detail: environment.openclawPath
-        ? `当前 CLI 路径：${environment.openclawPath}`
-        : "当前已检测到 OpenClaw CLI。",
-      suggestion: "继续前往 Config 与 Service 页面完成配置和启动。",
+      status: downstreamStatus,
+      detail: environment.npmFound
+        ? environment.openclawPath
+          ? `当前 CLI 路径：${environment.openclawPath}`
+          : "当前已检测到 OpenClaw CLI。"
+        : environment.openclawPath
+          ? `当前 CLI 路径仍可解析：${environment.openclawPath}，但环境前置检查未通过。`
+          : "当前已检测到 OpenClaw CLI，但环境前置检查未通过。",
+      suggestion: environment.npmFound
+        ? "继续前往 Config 与 Service 页面完成配置和启动。"
+        : "先修复 npm / PATH 环境，再继续后续安装和验证步骤。",
     });
   }
 

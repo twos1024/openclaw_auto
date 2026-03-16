@@ -32,6 +32,18 @@ pub struct GatewayActionData {
     pub pid: Option<u32>,
 }
 
+#[derive(Debug, Clone)]
+struct GatewayErrorContext {
+    code: ErrorCode,
+    conflict_port: Option<u16>,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum GatewayLogPolicy {
+    Always,
+    FailuresOnly,
+}
+
 pub async fn get_gateway_status() -> Result<GatewayStatusData, AppError> {
     let program = env_service::ensure_openclaw_available().await?;
     let args = vec![
@@ -40,17 +52,20 @@ pub async fn get_gateway_status() -> Result<GatewayStatusData, AppError> {
         "--json".to_string(),
     ];
     let output = run_command(&program, &args, GATEWAY_TIMEOUT_MS).await?;
-    log_shell_output(
+    log_shell_output_best_effort(
+        GatewayLogPolicy::FailuresOnly,
         LogSource::Startup,
         "openclaw gateway status --json",
         &output,
-    )?;
+    );
 
     if output.exit_code.unwrap_or(1) != 0 {
+        let error_context = detect_gateway_error_context(&output, ErrorCode::GatewayStatusFailed);
         return map_gateway_error(
-            ErrorCode::GatewayStartFailed,
+            error_context.code,
             "Failed to query OpenClaw Gateway status.",
             "Check whether the Gateway service is installed correctly, then retry.",
+            error_context.conflict_port,
             &output,
         );
     }
@@ -66,13 +81,20 @@ pub async fn start_gateway() -> Result<GatewayActionData, AppError> {
         "--json".to_string(),
     ];
     let output = run_command(&program, &args, GATEWAY_TIMEOUT_MS).await?;
-    log_shell_output(LogSource::Startup, "openclaw gateway start --json", &output)?;
+    log_shell_output_best_effort(
+        GatewayLogPolicy::Always,
+        LogSource::Startup,
+        "openclaw gateway start --json",
+        &output,
+    );
 
     if output.exit_code.unwrap_or(1) != 0 {
+        let error_context = detect_gateway_error_context(&output, ErrorCode::GatewayStartFailed);
         return map_gateway_error(
-            detect_error_code_from_output(&output),
+            error_context.code,
             "OpenClaw Gateway failed to start.",
             "Check startup logs, configuration, and port usage, then retry.",
+            error_context.conflict_port,
             &output,
         );
     }
@@ -93,13 +115,19 @@ pub async fn stop_gateway() -> Result<GatewayActionData, AppError> {
         "--json".to_string(),
     ];
     let output = run_command(&program, &args, GATEWAY_TIMEOUT_MS).await?;
-    log_shell_output(LogSource::Startup, "openclaw gateway stop --json", &output)?;
+    log_shell_output_best_effort(
+        GatewayLogPolicy::Always,
+        LogSource::Startup,
+        "openclaw gateway stop --json",
+        &output,
+    );
 
     if output.exit_code.unwrap_or(1) != 0 {
         return map_gateway_error(
             ErrorCode::GatewayStopFailed,
             "OpenClaw Gateway failed to stop.",
             "Check whether the Gateway is already stopped or managed externally, then retry.",
+            None,
             &output,
         );
     }
@@ -119,17 +147,20 @@ pub async fn restart_gateway() -> Result<GatewayActionData, AppError> {
         "--json".to_string(),
     ];
     let output = run_command(&program, &args, GATEWAY_TIMEOUT_MS).await?;
-    log_shell_output(
+    log_shell_output_best_effort(
+        GatewayLogPolicy::Always,
         LogSource::Startup,
         "openclaw gateway restart --json",
         &output,
-    )?;
+    );
 
     if output.exit_code.unwrap_or(1) != 0 {
+        let error_context = detect_gateway_error_context(&output, ErrorCode::GatewayStartFailed);
         return map_gateway_error(
-            detect_error_code_from_output(&output),
+            error_context.code,
             "OpenClaw Gateway failed to restart.",
             "Check startup logs, configuration, and port usage, then retry.",
+            error_context.conflict_port,
             &output,
         );
     }
@@ -159,13 +190,19 @@ pub async fn open_dashboard() -> Result<GatewayActionData, AppError> {
 
     let args = vec!["dashboard".to_string()];
     let output = run_command(&program, &args, 15_000).await?;
-    log_shell_output(LogSource::Startup, "openclaw dashboard", &output)?;
+    log_shell_output_best_effort(
+        GatewayLogPolicy::Always,
+        LogSource::Startup,
+        "openclaw dashboard",
+        &output,
+    );
 
     if output.exit_code.unwrap_or(1) != 0 {
         return map_gateway_error(
             ErrorCode::DashboardOpenFailed,
             "OpenClaw failed to open the local dashboard.",
             "Check whether the local dashboard is available and whether the system browser can be launched.",
+            None,
             &output,
         );
     }
@@ -326,22 +363,57 @@ fn find_key_recursive<'a>(value: &'a Value, key: &str) -> Option<&'a Value> {
     }
 }
 
-fn detect_error_code_from_output(output: &ShellOutput) -> ErrorCode {
+fn detect_gateway_error_context(
+    output: &ShellOutput,
+    default_code: ErrorCode,
+) -> GatewayErrorContext {
     let haystack = format!("{}\n{}", output.stdout, output.stderr).to_ascii_lowercase();
     if haystack.contains("address already in use")
         || haystack.contains("eaddrinuse")
         || haystack.contains("port conflict")
     {
-        return ErrorCode::PortConflict;
+        return GatewayErrorContext {
+            code: ErrorCode::PortConflict,
+            conflict_port: extract_port_conflict_port(&haystack),
+        };
     }
 
-    ErrorCode::GatewayStartFailed
+    GatewayErrorContext {
+        code: default_code,
+        conflict_port: None,
+    }
+}
+
+fn extract_port_conflict_port(text: &str) -> Option<u16> {
+    find_port_after_pattern(text, "port ").or_else(|| find_port_after_colon(text))
+}
+
+fn find_port_after_pattern(text: &str, pattern: &str) -> Option<u16> {
+    let start = text.find(pattern)? + pattern.len();
+    let digits = text[start..]
+        .chars()
+        .skip_while(|char| !char.is_ascii_digit())
+        .take_while(|char| char.is_ascii_digit())
+        .collect::<String>();
+
+    digits.parse::<u16>().ok()
+}
+
+fn find_port_after_colon(text: &str) -> Option<u16> {
+    let start = text.rfind(':')? + 1;
+    let digits = text[start..]
+        .chars()
+        .take_while(|char| char.is_ascii_digit())
+        .collect::<String>();
+
+    digits.parse::<u16>().ok()
 }
 
 fn map_gateway_error<T>(
     code: ErrorCode,
     message: &str,
     suggestion: &str,
+    conflict_port: Option<u16>,
     output: &ShellOutput,
 ) -> Result<T, AppError> {
     Err(
@@ -351,8 +423,47 @@ fn map_gateway_error<T>(
             "stdout": output.stdout,
             "stderr": output.stderr,
             "exit_code": output.exit_code,
+            "portConflictPort": conflict_port,
+            "port": conflict_port,
         })),
     )
+}
+
+fn should_persist_shell_output(policy: GatewayLogPolicy, output: &ShellOutput) -> bool {
+    match policy {
+        GatewayLogPolicy::Always => true,
+        GatewayLogPolicy::FailuresOnly => output.exit_code.unwrap_or(1) != 0,
+    }
+}
+
+fn log_shell_output_best_effort(
+    policy: GatewayLogPolicy,
+    source: LogSource,
+    step: &str,
+    output: &ShellOutput,
+) {
+    log_shell_output_best_effort_with(policy, source, step, output, log_shell_output);
+}
+
+fn log_shell_output_best_effort_with<F>(
+    policy: GatewayLogPolicy,
+    source: LogSource,
+    step: &str,
+    output: &ShellOutput,
+    logger: F,
+) where
+    F: FnOnce(LogSource, &str, &ShellOutput) -> Result<(), AppError>,
+{
+    if !should_persist_shell_output(policy, output) {
+        return;
+    }
+
+    if let Err(error) = logger(source, step, output) {
+        eprintln!(
+            "clawdesk gateway log write skipped: {} | {}",
+            error.message, error.suggestion
+        );
+    }
 }
 
 fn log_shell_output(source: LogSource, step: &str, output: &ShellOutput) -> Result<(), AppError> {
@@ -447,9 +558,56 @@ mod tests {
             "Error: listen EADDRINUSE: address already in use 127.0.0.1:3000",
         );
 
-        assert!(matches!(
-            detect_error_code_from_output(&output),
-            ErrorCode::PortConflict
+        let context = detect_gateway_error_context(&output, ErrorCode::GatewayStartFailed);
+
+        assert!(matches!(context.code, ErrorCode::PortConflict));
+        assert_eq!(context.conflict_port, Some(3000));
+    }
+
+    #[test]
+    fn keeps_status_failures_distinct_from_start_failures() {
+        let output = shell_output("", "service unavailable");
+
+        let context = detect_gateway_error_context(&output, ErrorCode::GatewayStatusFailed);
+
+        assert!(matches!(context.code, ErrorCode::GatewayStatusFailed));
+        assert_eq!(context.conflict_port, None);
+    }
+
+    #[test]
+    fn status_probe_logging_only_persists_failures() {
+        let success = shell_output(r#"{"running":true}"#, "");
+        let failure = ShellOutput {
+            exit_code: Some(1),
+            ..shell_output("", "status command failed")
+        };
+
+        assert!(!should_persist_shell_output(
+            GatewayLogPolicy::FailuresOnly,
+            &success
         ));
+        assert!(should_persist_shell_output(
+            GatewayLogPolicy::FailuresOnly,
+            &failure
+        ));
+    }
+
+    #[test]
+    fn best_effort_logging_swallow_errors_for_gateway_commands() {
+        let output = shell_output(r#"{"running":true}"#, "");
+
+        log_shell_output_best_effort_with(
+            GatewayLogPolicy::Always,
+            LogSource::Startup,
+            "openclaw gateway start --json",
+            &output,
+            |_source, _step, _output| {
+                Err(AppError::new(
+                    ErrorCode::LogReadFailed,
+                    "Failed to open the ClawDesk log file for writing.",
+                    "Check file permissions for the application log directory and retry.",
+                ))
+            },
+        );
     }
 }

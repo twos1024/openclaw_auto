@@ -107,7 +107,9 @@ function normalizeActionError(error?: BackendError): ServiceActionResult {
 
   const code = error.code ?? "E_UNKNOWN";
   if (code.includes("PORT") || code.includes("CONFLICT")) {
-    const conflictPort = toNumber(error.details?.port);
+    const conflictPort = toNumber(
+      error.details?.portConflictPort ?? error.details?.port_conflict_port ?? error.details?.port,
+    );
     return {
       status: "failure",
       detail: conflictPort
