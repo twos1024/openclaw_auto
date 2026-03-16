@@ -10,6 +10,13 @@ const statusStyles: Record<GuidedSetupStepStatus, { bg: string; text: string; bo
   ready: { bg: "#ecfeff", text: "#155e75", border: "#67e8f9", label: "Ready" },
 };
 
+const launchCheckStyles = {
+  healthy: { bg: "#f0fdf4", text: "#166534", border: "#86efac", label: "Healthy" },
+  degraded: { bg: "#fffbeb", text: "#92400e", border: "#fcd34d", label: "Degraded" },
+  offline: { bg: "#fef2f2", text: "#991b1b", border: "#fca5a5", label: "Offline" },
+  unknown: { bg: "#f8fafc", text: "#475569", border: "#cbd5e1", label: "Unknown" },
+} as const;
+
 export interface SetupAssistantDialogProps {
   open: boolean;
   onClose: () => void;
@@ -38,7 +45,7 @@ export function SetupAssistantDialog({ open, onClose }: SetupAssistantDialogProp
               cursor: "pointer",
             }}
           >
-            Refresh
+            Run Launch Check
           </button>
           {model ? (
             <Link
@@ -87,6 +94,81 @@ export function SetupAssistantDialog({ open, onClose }: SetupAssistantDialogProp
           >
             <strong style={{ color: "#0f172a" }}>{model.headline}</strong>
             <p style={{ margin: 0, color: "#475569" }}>{model.summary}</p>
+            <p style={{ margin: 0, fontSize: 12, color: "#64748b" }}>
+              Last checked: {new Date(model.lastCheckedAt).toLocaleString()}
+            </p>
+          </section>
+
+          <section
+            style={{
+              border: "1px solid #e2e8f0",
+              borderRadius: 12,
+              background: "#ffffff",
+              padding: 16,
+              display: "grid",
+              gap: 12,
+            }}
+          >
+            <div>
+              <h3 style={{ margin: 0 }}>Launch Check</h3>
+              <p style={{ margin: "6px 0 0", color: "#64748b" }}>
+                这里显示当前 install / config / service 的即时检查结果，用于决定下一步动作。
+              </p>
+            </div>
+            <div style={{ display: "grid", gap: 10 }}>
+              {model.launchChecks.map((check) => {
+                const style = launchCheckStyles[check.level];
+                return (
+                  <article
+                    key={check.id}
+                    style={{
+                      border: `1px solid ${style.border}`,
+                      borderRadius: 12,
+                      background: "#ffffff",
+                      padding: 14,
+                      display: "grid",
+                      gap: 8,
+                    }}
+                  >
+                    <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "center" }}>
+                      <strong style={{ color: "#0f172a" }}>{check.title}</strong>
+                      <span
+                        style={{
+                          borderRadius: 999,
+                          padding: "4px 10px",
+                          fontSize: 12,
+                          fontWeight: 700,
+                          background: style.bg,
+                          color: style.text,
+                          border: `1px solid ${style.border}`,
+                        }}
+                      >
+                        {style.label}
+                      </span>
+                    </div>
+                    <p style={{ margin: 0, color: "#475569" }}>{check.detail}</p>
+                    <div>
+                      <Link
+                        to={check.route}
+                        onClick={onClose}
+                        style={{
+                          borderRadius: 8,
+                          padding: "8px 12px",
+                          textDecoration: "none",
+                          fontWeight: 700,
+                          color: "#0f172a",
+                          background: "#f8fafc",
+                          border: "1px solid #cbd5e1",
+                          display: "inline-block",
+                        }}
+                      >
+                        Open
+                      </Link>
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
           </section>
 
           <div style={{ display: "grid", gap: 12 }}>

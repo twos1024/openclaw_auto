@@ -38,7 +38,14 @@ export function DashboardPage(): JSX.Element {
       />
 
       {isRunning && address ? (
-        <DashboardFrame src={address} frameKey={frameKey} />
+        <DashboardFrame
+          src={address}
+          frameKey={frameKey}
+          onReloadFrame={() => setFrameKey((current) => current + 1)}
+          onOpenExternal={() => void openDashboard()}
+          onOpenSetupAssistant={openSetupAssistant}
+          onRestartGateway={() => void restartGateway()}
+        />
       ) : (
         <section
           style={{

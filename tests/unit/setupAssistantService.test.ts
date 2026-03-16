@@ -73,6 +73,10 @@ describe("setupAssistantService", () => {
     expect(model.steps[2]?.status).toBe("blocked");
     expect(model.steps[3]?.status).toBe("blocked");
     expect(model.primaryRoute).toBe("/install");
+    expect(model.launchChecks[0]).toMatchObject({
+      title: "Install Check",
+      level: "offline",
+    });
   });
 
   it("marks dashboard step ready only when service is healthy", () => {
@@ -113,5 +117,9 @@ describe("setupAssistantService", () => {
     expect(model.steps[2]?.status).toBe("complete");
     expect(model.steps[3]?.status).toBe("ready");
     expect(model.primaryRoute).toBe("/dashboard");
+    expect(model.launchChecks[2]).toMatchObject({
+      title: "Service Check",
+      level: "healthy",
+    });
   });
 });

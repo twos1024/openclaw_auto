@@ -41,11 +41,13 @@ export function ModalDialog({
         style={{
           width: "100%",
           maxWidth: width,
+          maxHeight: "calc(100vh - 40px)",
           borderRadius: 16,
           background: "#ffffff",
           border: "1px solid #e2e8f0",
           boxShadow: "0 32px 80px rgba(15, 23, 42, 0.24)",
           display: "grid",
+          gridTemplateRows: "auto minmax(0, 1fr) auto",
           gap: 16,
           padding: 20,
         }}
@@ -69,9 +71,22 @@ export function ModalDialog({
           </button>
         </div>
 
-        <div style={{ display: "grid", gap: 16 }}>{children}</div>
+        <div style={{ display: "grid", gap: 16, overflow: "auto", paddingRight: 4 }}>{children}</div>
 
-        {footer ? <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>{footer}</div> : null}
+        {footer ? (
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              gap: 12,
+              alignItems: "center",
+              paddingTop: 4,
+              borderTop: "1px solid #e2e8f0",
+            }}
+          >
+            {footer}
+          </div>
+        ) : null}
       </section>
     </div>
   );

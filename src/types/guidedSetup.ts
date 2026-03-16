@@ -11,10 +11,20 @@ export interface GuidedSetupStep {
   status: GuidedSetupStepStatus;
 }
 
+export interface GuidedLaunchCheck {
+  id: "install" | "config" | "service";
+  title: string;
+  level: "healthy" | "degraded" | "offline" | "unknown";
+  detail: string;
+  route: string;
+}
+
 export interface GuidedSetupModel {
   headline: string;
   summary: string;
   primaryRoute: string;
   primaryLabel: string;
+  lastCheckedAt: string;
+  launchChecks: GuidedLaunchCheck[];
   steps: GuidedSetupStep[];
 }

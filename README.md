@@ -128,8 +128,8 @@ npm run tauri:build
 
 在当前 Windows 本地环境里，`npm run tauri:build` 已验证通过，产物位于：
 
-- `src-tauri/target/release/bundle/msi/ClawDesk_0.1.1_x64_en-US.msi`
-- `src-tauri/target/release/bundle/nsis/ClawDesk_0.1.1_x64-setup.exe`
+- `src-tauri/target/release/bundle/msi/ClawDesk_0.1.2_x64_en-US.msi`
+- `src-tauri/target/release/bundle/nsis/ClawDesk_0.1.2_x64-setup.exe`
 
 可执行文件位于：
 
@@ -137,7 +137,7 @@ npm run tauri:build
 
 额外已验证：
 
-- `ClawDesk_0.1.1_x64-setup.exe` 可静默安装到临时目录
+- `ClawDesk_0.1.2_x64-setup.exe` 可静默安装到临时目录
 - 安装后的 `clawdesk.exe` 可成功启动
 - 静默卸载与目录清理可完成
 

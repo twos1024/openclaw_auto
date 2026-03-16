@@ -1,6 +1,29 @@
 import { expect, test, type Page } from "@playwright/test";
 
-async function mockWorkspaceBackend(page: Page, options?: { running?: boolean }): Promise<void> {
+async function mockWorkspaceBackend(
+  page: Page,
+  options?: { running?: boolean; routeDashboardFrame?: boolean; timeoutMode?: boolean },
+): Promise<void> {
+  if (options?.routeDashboardFrame) {
+    await page.route("http://127.0.0.1:18789/**", async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: "text/html",
+        body: "<!doctype html><html><head><title>OpenClaw</title></head><body>dashboard ok</body></html>",
+      });
+    });
+  }
+  if (options?.timeoutMode) {
+    await page.route("http://127.0.0.1:18789/**", async (route) => {
+      await new Promise((resolve) => setTimeout(resolve, 6000));
+      await route.fulfill({
+        status: 200,
+        contentType: "text/html",
+        body: "<!doctype html><html><body>late dashboard</body></html>",
+      });
+    });
+  }
+
   await page.addInitScript((payload) => {
     const running = payload.running as boolean;
 
@@ -93,10 +116,10 @@ async function mockWorkspaceBackend(page: Page, options?: { running?: boolean })
 
 test.describe("Dashboard workspace", () => {
   test("shows embedded dashboard iframe when gateway is running", async ({ page }) => {
-    await mockWorkspaceBackend(page, { running: true });
+    await mockWorkspaceBackend(page, { running: true, routeDashboardFrame: true });
     await page.goto("/#/dashboard");
 
-    await expect(page.getByRole("heading", { name: "Embedded Dashboard" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Embedded Dashboard", exact: true })).toBeVisible();
     await expect(page.locator('iframe[title="OpenClaw Dashboard"]')).toHaveAttribute(
       "src",
       "http://127.0.0.1:18789",
@@ -109,9 +132,18 @@ test.describe("Dashboard workspace", () => {
 
     await page.getByRole("button", { name: "Setup Assistant" }).click();
     await expect(page.getByRole("heading", { name: "Setup Assistant" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Launch Check" })).toBeVisible();
     await expect(page.getByText("Install OpenClaw")).toBeVisible();
 
-    await page.getByRole("link", { name: "Go to Install" }).click();
+    await page.getByRole("link", { name: "Continue Setup" }).click();
     await expect(page).toHaveURL(/#\/install$/);
+  });
+
+  test("shows a timeout recovery state when the embedded dashboard never becomes ready", async ({ page }) => {
+    await mockWorkspaceBackend(page, { running: true, timeoutMode: true });
+    await page.goto("/#/dashboard");
+
+    await expect(page.getByText("Dashboard connection timed out")).toBeVisible();
+    await expect(page.getByRole("button", { name: "Open Setup Assistant" })).toBeVisible();
   });
 });

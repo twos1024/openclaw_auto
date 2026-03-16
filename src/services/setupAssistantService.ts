@@ -1,4 +1,9 @@
-import type { GuidedSetupModel, GuidedSetupStep, GuidedSetupStepStatus } from "../types/guidedSetup";
+import type {
+  GuidedLaunchCheck,
+  GuidedSetupModel,
+  GuidedSetupStep,
+  GuidedSetupStepStatus,
+} from "../types/guidedSetup";
 import type { HealthLevel, OverviewStatus } from "../types/status";
 
 function isHealthy(level: HealthLevel): boolean {
@@ -62,6 +67,29 @@ export function buildSetupAssistantModel(status: OverviewStatus): GuidedSetupMod
   ];
 
   const primaryStep = steps.find((step) => step.status === "current" || step.status === "ready") ?? steps[0];
+  const launchChecks: GuidedLaunchCheck[] = [
+    {
+      id: "install",
+      title: "Install Check",
+      level: status.install.level,
+      detail: status.install.detail,
+      route: "/install",
+    },
+    {
+      id: "config",
+      title: "Config Check",
+      level: status.config.level,
+      detail: status.config.detail,
+      route: "/config",
+    },
+    {
+      id: "service",
+      title: "Service Check",
+      level: status.service.level,
+      detail: status.service.detail,
+      route: "/service",
+    },
+  ];
 
   return {
     headline: serviceReady ? "系统已就绪，可以进入 Dashboard" : "按照推荐顺序完成首次配置",
@@ -70,6 +98,8 @@ export function buildSetupAssistantModel(status: OverviewStatus): GuidedSetupMod
       : "Setup Assistant 会按安装、配置、启动服务、进入 Dashboard 的顺序给出当前建议动作。",
     primaryRoute: primaryStep.route,
     primaryLabel: primaryStep.actionLabel,
+    lastCheckedAt: status.overall.updatedAt,
+    launchChecks,
     steps,
   };
 }
