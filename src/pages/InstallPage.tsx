@@ -1,11 +1,16 @@
+import { useState } from "react";
 import { InstallEnvironmentPanel } from "../components/install/InstallEnvironmentPanel";
 import { InstallIssueCard } from "../components/install/InstallIssueCard";
 import { InstallPhaseTimeline } from "../components/install/InstallPhaseTimeline";
 import { InstallProgressCard } from "../components/install/InstallProgressCard";
 import { InstallResultCard } from "../components/install/InstallResultCard";
+import { InstallWizardDialog } from "../components/install/InstallWizardDialog";
+import { PlatformGuidancePanel } from "../components/install/PlatformGuidancePanel";
 import { useInstallFlow } from "../hooks/useInstallFlow";
+import { buildPlatformGuidance } from "../services/installWizardService";
 
 export function InstallPage(): JSX.Element {
+  const [isWizardOpen, setIsWizardOpen] = useState<boolean>(false);
   const {
     environment,
     envError,
@@ -19,6 +24,7 @@ export function InstallPage(): JSX.Element {
   } = useInstallFlow();
   const installBlockedByEnv = Boolean(environment && !environment.npmFound);
   const visibleIssue = installResult?.issue ?? installResult?.data?.gatewayInstallIssue ?? null;
+  const platformCards = buildPlatformGuidance(environment?.platform);
 
   return (
     <div style={{ display: "grid", gap: 16 }}>
@@ -27,6 +33,23 @@ export function InstallPage(): JSX.Element {
         <p style={{ margin: 0, color: "#64748b" }}>
           安装 OpenClaw CLI，尝试托管 Gateway 安装，并在同一页面里查看当前阶段、结果和下一步建议。
         </p>
+        <div style={{ marginTop: 12 }}>
+          <button
+            type="button"
+            onClick={() => setIsWizardOpen(true)}
+            style={{
+              border: "1px solid #cbd5e1",
+              background: "#ffffff",
+              color: "#0f172a",
+              borderRadius: 8,
+              padding: "10px 14px",
+              fontWeight: 700,
+              cursor: "pointer",
+            }}
+          >
+            Open Install Wizard
+          </button>
+        </div>
       </header>
 
       {envError ? (
@@ -54,6 +77,8 @@ export function InstallPage(): JSX.Element {
         onInstall={() => void installOpenClaw()}
       />
 
+      <PlatformGuidancePanel cards={platformCards} />
+
       <InstallProgressCard progress={installProgress} />
 
       <InstallPhaseTimeline phases={phases} activePhaseId={installProgress.activePhaseId} />
@@ -77,6 +102,13 @@ export function InstallPage(): JSX.Element {
         <p style={{ margin: 0, color: "#475569" }}>2. Start install and watch the progress card for the active phase and estimated completion state.</p>
         <p style={{ margin: 0, color: "#475569" }}>3. After success or warning, continue to Config to save provider settings, then start Gateway from Service.</p>
       </section>
+
+      <InstallWizardDialog
+        open={isWizardOpen}
+        onClose={() => setIsWizardOpen(false)}
+        environment={environment}
+        installResult={installResult}
+      />
     </div>
   );
 }

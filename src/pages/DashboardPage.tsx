@@ -1,12 +1,17 @@
 import { useState } from "react";
+import { DashboardDiagnosticsPanel } from "../components/dashboard/DashboardDiagnosticsPanel";
 import { DashboardFrame } from "../components/dashboard/DashboardFrame";
 import { DashboardToolbar } from "../components/dashboard/DashboardToolbar";
+import { useEnvironmentSnapshot } from "../hooks/useEnvironmentSnapshot";
 import { useAppSettingsSnapshot } from "../hooks/useAppSettingsSnapshot";
 import { useGatewayControl } from "../hooks/useGatewayControl";
 import { useShellActions } from "../hooks/useShellActions";
+import { currentPlatformCard } from "../services/installWizardService";
+import type { DashboardEmbedPhase } from "../types/dashboard";
 
 export function DashboardPage(): JSX.Element {
   const { settings } = useAppSettingsSnapshot();
+  const { environment } = useEnvironmentSnapshot();
   const { openSetupAssistant } = useShellActions();
   const {
     status,
@@ -18,9 +23,11 @@ export function DashboardPage(): JSX.Element {
     refreshStatus,
   } = useGatewayControl(settings.gatewayPollMs);
   const [frameKey, setFrameKey] = useState<number>(0);
+  const [embedPhase, setEmbedPhase] = useState<DashboardEmbedPhase>("loading");
 
   const address = status?.address ?? null;
   const isRunning = Boolean(status?.running && address);
+  const platformCard = currentPlatformCard(environment?.platform);
 
   return (
     <div style={{ display: "grid", gap: 16 }}>
@@ -37,6 +44,13 @@ export function DashboardPage(): JSX.Element {
         onOpenExternal={() => void openDashboard()}
       />
 
+      <DashboardDiagnosticsPanel
+        phase={isRunning ? embedPhase : "blocked"}
+        address={address}
+        statusDetail={status?.statusDetail ?? "Waiting for Gateway status..."}
+        platformCard={platformCard}
+      />
+
       {isRunning && address ? (
         <DashboardFrame
           src={address}
@@ -45,6 +59,7 @@ export function DashboardPage(): JSX.Element {
           onOpenExternal={() => void openDashboard()}
           onOpenSetupAssistant={openSetupAssistant}
           onRestartGateway={() => void restartGateway()}
+          onPhaseChange={setEmbedPhase}
         />
       ) : (
         <section

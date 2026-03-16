@@ -9,6 +9,7 @@ export interface DashboardFrameProps {
   onOpenExternal: () => void;
   onOpenSetupAssistant: () => void;
   onRestartGateway: () => void;
+  onPhaseChange?: (phase: DashboardEmbedPhase) => void;
   timeoutMs?: number;
 }
 
@@ -43,6 +44,7 @@ export function DashboardFrame({
   onOpenExternal,
   onOpenSetupAssistant,
   onRestartGateway,
+  onPhaseChange,
   timeoutMs = 3000,
 }: DashboardFrameProps): JSX.Element {
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
@@ -58,6 +60,10 @@ export function DashboardFrame({
       window.clearTimeout(timer);
     };
   }, [frameKey, src, timeoutMs]);
+
+  useEffect(() => {
+    onPhaseChange?.(phase);
+  }, [onPhaseChange, phase]);
 
   const presentation = useMemo(() => buildDashboardEmbedPresentation(phase), [phase]);
 

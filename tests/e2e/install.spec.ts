@@ -239,6 +239,17 @@ test.describe("Install failure diagnostics", () => {
     await expect(page.getByText("3. 安装 Gateway 托管服务", { exact: true })).toBeVisible();
   });
 
+  test("opens install wizard and shows detected platform guidance", async ({ page }) => {
+    await mockInstallBackend(page);
+    await page.goto("/#/install");
+
+    await page.getByRole("button", { name: "Open Install Wizard" }).click();
+    const dialog = page.getByRole("dialog", { name: "Install Wizard" });
+    await expect(dialog.getByRole("heading", { name: "Install Wizard" })).toBeVisible();
+    await expect(dialog.getByRole("heading", { name: "Platform Guidance" })).toBeVisible();
+    await expect(dialog.getByText("Windows", { exact: true })).toBeVisible();
+  });
+
   test("shows progress UI while the install command is still running", async ({ page }) => {
     await mockInstallBackend(page, { installDelayMs: 2600 });
     await page.goto("/#/install");
