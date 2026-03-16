@@ -55,10 +55,12 @@ async function mockLogsBackend(page: Page, fixtures: Record<LogSource, string[]>
   }, { sources: fixtures });
 }
 
-async function mockInstallBackend(page: Page): Promise<void> {
-  await page.addInitScript(() => {
+async function mockInstallBackend(page: Page, options?: { installDelayMs?: number }): Promise<void> {
+  await page.addInitScript((payload) => {
+    const installDelayMs = payload.installDelayMs as number | undefined;
     const state = {
       openclawFound: false,
+      installStartedAt: 0,
     };
 
     (window as unknown as { __TAURI__?: unknown }).__TAURI__ = {
@@ -84,6 +86,10 @@ async function mockInstallBackend(page: Page): Promise<void> {
           }
 
           if (command === "install_openclaw") {
+            state.installStartedAt = Date.now();
+            if (installDelayMs && installDelayMs > 0) {
+              await new Promise((resolve) => setTimeout(resolve, installDelayMs));
+            }
             state.openclawFound = true;
             return {
               success: true,
@@ -115,6 +121,35 @@ async function mockInstallBackend(page: Page): Promise<void> {
 
           if (command === "read_logs") {
             const source = args?.source ?? "gateway";
+            if (source === "install") {
+              if (!state.installStartedAt) {
+                return {
+                  success: true,
+                  data: { source, lines: [] },
+                };
+              }
+
+              const elapsedMs = Date.now() - state.installStartedAt;
+              const lines = [
+                "[phase] stage=install-cli state=running detail=Installing OpenClaw CLI via npm global install.",
+              ];
+
+              if (elapsedMs >= 700) {
+                lines.push("[phase] stage=install-cli state=success detail=OpenClaw CLI install finished.");
+                lines.push("[stdout] added 12 packages in 3s");
+                lines.push("[phase] stage=install-gateway state=running detail=Installing Gateway managed service.");
+              }
+
+              if (state.openclawFound) {
+                lines.push("[phase] stage=install-gateway state=success detail=Gateway managed install finished.");
+                lines.push("[phase] stage=verify state=success detail=Install flow completed.");
+              }
+
+              return {
+                success: true,
+                data: { source, lines },
+              };
+            }
             return {
               success: true,
               data: { source, lines: fixtures[source as LogSource] ?? [] },
@@ -139,7 +174,7 @@ async function mockInstallBackend(page: Page): Promise<void> {
         },
       },
     };
-  });
+  }, { installDelayMs: options?.installDelayMs ?? 0 });
 }
 
 async function mockSettingsBackend(page: Page): Promise<void> {
@@ -199,9 +234,25 @@ test.describe("Install failure diagnostics", () => {
     await expect(page.getByText("安装阶段")).toBeVisible();
     await page.getByRole("button", { name: "Install OpenClaw" }).click();
 
-    await expect(page.getByText("安装完成", { exact: true })).toBeVisible();
+    await expect(page.getByRole("progressbar", { name: "安装进度" })).toHaveAttribute("aria-valuenow", "100");
     await expect(page.getByText("OpenClaw Installed")).toBeVisible();
     await expect(page.getByText("3. 安装 Gateway 托管服务", { exact: true })).toBeVisible();
+  });
+
+  test("shows progress UI while the install command is still running", async ({ page }) => {
+    await mockInstallBackend(page, { installDelayMs: 2600 });
+    await page.goto("/#/install");
+
+    await page.getByRole("button", { name: "Install OpenClaw" }).click();
+
+    const progressBar = page.getByRole("progressbar", { name: "安装进度" });
+    await expect(progressBar).toBeVisible();
+    await expect(progressBar).toHaveAttribute("aria-valuenow", /^(?:[1-9]|[1-8]\d|9[0-5])$/);
+    await expect(page.getByText(/^当前阶段：安装 OpenClaw CLI$/)).toBeVisible();
+    await expect(page.getByText(/^当前阶段：安装 Gateway 托管服务$/)).toBeVisible();
+
+    await expect(page.getByText("OpenClaw Installed")).toBeVisible();
+    await expect(progressBar).toHaveAttribute("aria-valuenow", "100");
   });
 
   test("shows readable install error summary for missing install artifact", async ({ page }) => {

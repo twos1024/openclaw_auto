@@ -5,6 +5,15 @@ const statusStyles: Record<InstallPhaseStatus, { bg: string; color: string; bord
   warning: { bg: "#fffbeb", color: "#92400e", border: "#fcd34d" },
   failure: { bg: "#fef2f2", color: "#991b1b", border: "#fca5a5" },
   pending: { bg: "#f8fafc", color: "#475569", border: "#cbd5e1" },
+  running: { bg: "#eff6ff", color: "#1d4ed8", border: "#93c5fd" },
+};
+
+const statusLabels: Record<InstallPhaseStatus, string> = {
+  success: "完成",
+  warning: "注意",
+  failure: "失败",
+  pending: "等待中",
+  running: "进行中",
 };
 
 function StatusBadge({ status }: { status: InstallPhaseStatus }): JSX.Element {
@@ -16,22 +25,22 @@ function StatusBadge({ status }: { status: InstallPhaseStatus }): JSX.Element {
         padding: "2px 8px",
         fontSize: 12,
         fontWeight: 700,
-        textTransform: "uppercase",
         background: style.bg,
         color: style.color,
         border: `1px solid ${style.border}`,
       }}
     >
-      {status}
+      {statusLabels[status]}
     </span>
   );
 }
 
 export interface InstallPhaseTimelineProps {
   phases: InstallPhase[];
+  activePhaseId?: InstallPhase["id"] | null;
 }
 
-export function InstallPhaseTimeline({ phases }: InstallPhaseTimelineProps): JSX.Element {
+export function InstallPhaseTimeline({ phases, activePhaseId = null }: InstallPhaseTimelineProps): JSX.Element {
   return (
     <section
       style={{
@@ -55,11 +64,20 @@ export function InstallPhaseTimeline({ phases }: InstallPhaseTimelineProps): JSX
           <article
             key={phase.id}
             style={{
-              border: "1px solid #e2e8f0",
+              border:
+                phase.id === activePhaseId || phase.status === "running"
+                  ? "1px solid #93c5fd"
+                  : "1px solid #e2e8f0",
               borderRadius: 10,
               padding: 12,
               display: "grid",
               gap: 8,
+              background:
+                phase.id === activePhaseId || phase.status === "running" ? "#f8fbff" : "#ffffff",
+              boxShadow:
+                phase.id === activePhaseId || phase.status === "running"
+                  ? "0 0 0 1px rgba(147, 197, 253, 0.25)"
+                  : "none",
             }}
           >
             <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "center" }}>

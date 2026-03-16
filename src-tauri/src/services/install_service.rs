@@ -29,13 +29,18 @@ pub struct InstallOpenClawData {
 }
 
 pub async fn install_openclaw() -> Result<InstallOpenClawData, AppError> {
-    log_service::append_log_line(
+    append_install_log_line(
         LogSource::Install,
         &format!(
             "[info] {} install_openclaw started",
             Utc::now().to_rfc3339()
         ),
-    )?;
+    );
+    write_phase_event_to_install_log(
+        "install-cli",
+        "running",
+        "Installing OpenClaw CLI via npm global install.",
+    );
 
     let npm_program = openclaw::npm_program().to_string();
     let install_args = vec![
@@ -44,24 +49,54 @@ pub async fn install_openclaw() -> Result<InstallOpenClawData, AppError> {
         "openclaw@latest".to_string(),
     ];
     let install_step = "npm install -g openclaw@latest";
-    let install_output = run_command(&npm_program, &install_args, INSTALL_TIMEOUT_MS)
-        .await
-        .map_err(|error| install_error_from_error("install-cli", install_step, &error))?;
-    write_shell_output_to_install_log(install_step, &install_output)?;
+    let install_output = match run_command(&npm_program, &install_args, INSTALL_TIMEOUT_MS).await {
+        Ok(output) => output,
+        Err(error) => {
+            write_install_error_to_log(install_step, &error);
+            write_phase_event_to_install_log(
+                "install-cli",
+                "failure",
+                "OpenClaw CLI install command could not be started successfully.",
+            );
+            return Err(install_error_from_error(
+                "install-cli",
+                install_step,
+                &error,
+            ));
+        }
+    };
+    write_shell_output_to_install_log(install_step, &install_output);
 
     if install_output.exit_code.unwrap_or(1) != 0 {
+        write_phase_event_to_install_log(
+            "install-cli",
+            "failure",
+            "OpenClaw CLI install command returned a non-zero exit code.",
+        );
         return Err(install_error_from_output(
             "install-cli",
             install_step,
             &install_output,
         ));
     }
+    write_phase_event_to_install_log("install-cli", "success", "OpenClaw CLI install finished.");
 
     let executable_path = env_service::ensure_openclaw_available()
         .await
         .map_err(|error| {
+            write_install_error_to_log("resolve openclaw executable path", &error);
+            write_phase_event_to_install_log(
+                "verify",
+                "failure",
+                "OpenClaw executable path could not be resolved after installation.",
+            );
             install_error_from_error("verify", "resolve openclaw executable path", &error)
         })?;
+    write_phase_event_to_install_log(
+        "install-gateway",
+        "running",
+        "Installing Gateway managed service.",
+    );
     let gateway_args = vec![
         "gateway".to_string(),
         "install".to_string(),
@@ -72,10 +107,20 @@ pub async fn install_openclaw() -> Result<InstallOpenClawData, AppError> {
         run_command(&executable_path, &gateway_args, GATEWAY_INSTALL_TIMEOUT_MS).await;
     let (service_install_output, gateway_install_issue) = match gateway_command {
         Ok(output) => {
-            write_shell_output_to_install_log(gateway_step, &output)?;
+            write_shell_output_to_install_log(gateway_step, &output);
             if output.exit_code.unwrap_or(1) == 0 {
+                write_phase_event_to_install_log(
+                    "install-gateway",
+                    "success",
+                    "Gateway managed install finished.",
+                );
                 (Some(output), None)
             } else {
+                write_phase_event_to_install_log(
+                    "install-gateway",
+                    "failure",
+                    "Gateway managed install returned a non-zero exit code.",
+                );
                 (
                     Some(output.clone()),
                     Some(classify_install_output(
@@ -87,7 +132,12 @@ pub async fn install_openclaw() -> Result<InstallOpenClawData, AppError> {
             }
         }
         Err(error) => {
-            write_install_error_to_log(gateway_step, &error)?;
+            write_install_error_to_log(gateway_step, &error);
+            write_phase_event_to_install_log(
+                "install-gateway",
+                "failure",
+                "Gateway managed install command failed before completion.",
+            );
             (
                 None,
                 Some(classify_install_error(
@@ -104,16 +154,21 @@ pub async fn install_openclaw() -> Result<InstallOpenClawData, AppError> {
     if let Some(issue) = gateway_install_issue.as_ref() {
         notes.push(issue.message.clone());
         notes.push(issue.suggestion.clone());
+    } else {
+        write_phase_event_to_install_log("verify", "running", "Validating final install result.");
     }
 
-    log_service::append_log_line(
+    append_install_log_line(
         LogSource::Install,
         &format!(
             "[info] {} install_openclaw completed cliInstalled=true gatewayServiceInstalled={}",
             Utc::now().to_rfc3339(),
             gateway_service_installed
         ),
-    )?;
+    );
+    if gateway_service_installed {
+        write_phase_event_to_install_log("verify", "success", "Install flow completed.");
+    }
 
     Ok(InstallOpenClawData {
         cli_installed: true,
@@ -129,28 +184,26 @@ pub async fn install_openclaw() -> Result<InstallOpenClawData, AppError> {
     })
 }
 
-fn write_shell_output_to_install_log(step: &str, output: &ShellOutput) -> Result<(), AppError> {
-    log_service::append_log_line(
+fn write_shell_output_to_install_log(step: &str, output: &ShellOutput) {
+    append_install_log_line(
         LogSource::Install,
         &format!(
             "[info] step={} exitCode={:?} durationMs={}",
             step, output.exit_code, output.duration_ms
         ),
-    )?;
+    );
 
     for line in output.stdout.lines() {
-        log_service::append_log_line(LogSource::Install, &format!("[stdout] {line}"))?;
+        append_install_log_line(LogSource::Install, &format!("[stdout] {line}"));
     }
 
     for line in output.stderr.lines() {
-        log_service::append_log_line(LogSource::Install, &format!("[stderr] {line}"))?;
+        append_install_log_line(LogSource::Install, &format!("[stderr] {line}"));
     }
-
-    Ok(())
 }
 
-fn write_install_error_to_log(step: &str, error: &AppError) -> Result<(), AppError> {
-    log_service::append_log_line(
+fn write_install_error_to_log(step: &str, error: &AppError) {
+    append_install_log_line(
         LogSource::Install,
         &format!(
             "[error] step={} code={} message={}",
@@ -158,13 +211,24 @@ fn write_install_error_to_log(step: &str, error: &AppError) -> Result<(), AppErr
             serialize_error_code(&error.code),
             error.message
         ),
-    )?;
+    );
 
     if let Some(details) = error.details.as_ref() {
-        log_service::append_log_line(LogSource::Install, &format!("[error-details] {}", details))?;
+        append_install_log_line(LogSource::Install, &format!("[error-details] {}", details));
     }
+}
 
-    Ok(())
+fn write_phase_event_to_install_log(stage: &str, state: &str, detail: &str) {
+    append_install_log_line(
+        LogSource::Install,
+        &format!("[phase] stage={} state={} detail={}", stage, state, detail),
+    )
+}
+
+fn append_install_log_line(source: LogSource, line: &str) {
+    if let Err(error) = log_service::append_log_line(source, line) {
+        eprintln!("install log append failed: {}", error.message);
+    }
 }
 
 fn serialize_error_code(code: &crate::models::error::ErrorCode) -> String {

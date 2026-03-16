@@ -34,7 +34,7 @@ export interface ShellCommandOutput {
 
 export type InstallPhaseId = "prerequisite" | "install-cli" | "install-gateway" | "verify";
 
-export type InstallPhaseStatus = "success" | "warning" | "failure" | "pending";
+export type InstallPhaseStatus = "success" | "warning" | "failure" | "pending" | "running";
 
 export interface InstallPhase {
   id: InstallPhaseId;
@@ -43,6 +43,28 @@ export interface InstallPhase {
   detail: string;
   suggestion: string;
   code?: string;
+}
+
+export type InstallProgressTone = "idle" | "running" | "success" | "warning" | "failure" | "blocked";
+
+export interface InstallProgressModel {
+  visible: boolean;
+  percent: number;
+  tone: InstallProgressTone;
+  activePhaseId: InstallPhaseId | null;
+  headline: string;
+  detail: string;
+  hint: string;
+}
+
+export type InstallTelemetryState = "running" | "success" | "failure" | "warning";
+
+export interface InstallTelemetry {
+  activePhaseId: InstallPhaseId;
+  phaseState: InstallTelemetryState;
+  phaseStatus: InstallPhaseStatus;
+  detail: string | null;
+  latestLogLine: string | null;
 }
 
 export type InstallFailureKind =

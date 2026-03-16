@@ -9,6 +9,7 @@ import type {
   InstallPhaseId,
   ShellCommandOutput,
 } from "../types/install";
+import type { ReadLogsData } from "../types/logs";
 import { invokeCommand } from "./tauriClient";
 
 interface DetectEnvPayload {
@@ -400,5 +401,26 @@ export const installService = {
     }
 
     return toSuccessResult(result.data);
+  },
+
+  async readInstallLogLines(limit = 80): Promise<string[]> {
+    const result = await invokeCommand<ReadLogsData>("read_logs", {
+      source: "install",
+      lines: limit,
+    });
+
+    if (!result.success || !result.data) {
+      return [];
+    }
+
+    if (Array.isArray(result.data.lines)) {
+      return result.data.lines.map((line) => String(line));
+    }
+
+    if (typeof result.data.content === "string") {
+      return result.data.content.split(/\r?\n/u).filter((line) => line.trim().length > 0);
+    }
+
+    return [];
   },
 };
