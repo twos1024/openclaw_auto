@@ -1,6 +1,7 @@
 import { createHashRouter } from "react-router-dom";
 import { AppShell } from "./components/layout/AppShell";
 import { OverviewPage } from "./pages/OverviewPage";
+import { DashboardPage } from "./pages/DashboardPage";
 import { InstallPage } from "./pages/InstallPage";
 import { ConfigPage } from "./pages/ConfigPage";
 import { ServicePage } from "./pages/ServicePage";
@@ -15,6 +16,10 @@ export const router = createHashRouter([
       {
         index: true,
         element: <OverviewPage autoRefreshMs={15000} />,
+      },
+      {
+        path: "dashboard",
+        element: <DashboardPage />,
       },
       {
         path: "install",

@@ -156,7 +156,7 @@ describe("statusService integration", () => {
     expect(data.overall.level).toBe("healthy");
     expect(data.nextActions[0]).toMatchObject({
       label: "打开 Dashboard",
-      route: "/service",
+      route: "/dashboard",
       kind: "open-dashboard",
     });
   });

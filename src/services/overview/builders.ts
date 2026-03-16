@@ -422,8 +422,8 @@ export function buildNextActions(
     actions.push({
       id: "open-dashboard",
       label: "打开 Dashboard",
-      route: "/service",
-      description: "Gateway 已运行，可以直接打开本地 Dashboard 验证整体工作流。",
+      route: "/dashboard",
+      description: "Gateway 已运行，可以进入 ClawDesk 内嵌 Dashboard，必要时再打开外部页面。",
       kind: "open-dashboard",
     });
   }

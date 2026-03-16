@@ -101,7 +101,7 @@ export function OverviewActionList({
                     background: "#ffffff",
                   }}
                 >
-                  Service
+                  Dashboard
                 </Link>
               ) : null}
             </div>

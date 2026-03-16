@@ -7,6 +7,7 @@ type NavItem = {
 
 const navItems: NavItem[] = [
   { to: "/", label: "Overview" },
+  { to: "/dashboard", label: "Dashboard" },
   { to: "/install", label: "Install" },
   { to: "/config", label: "Config" },
   { to: "/service", label: "Service" },

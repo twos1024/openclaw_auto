@@ -1,0 +1,152 @@
+import { Link } from "react-router-dom";
+import { useSetupAssistant } from "../../hooks/useSetupAssistant";
+import type { GuidedSetupStepStatus } from "../../types/guidedSetup";
+import { ModalDialog } from "../common/ModalDialog";
+
+const statusStyles: Record<GuidedSetupStepStatus, { bg: string; text: string; border: string; label: string }> = {
+  complete: { bg: "#f0fdf4", text: "#166534", border: "#86efac", label: "Complete" },
+  current: { bg: "#eff6ff", text: "#1d4ed8", border: "#93c5fd", label: "Current" },
+  blocked: { bg: "#f8fafc", text: "#475569", border: "#cbd5e1", label: "Blocked" },
+  ready: { bg: "#ecfeff", text: "#155e75", border: "#67e8f9", label: "Ready" },
+};
+
+export interface SetupAssistantDialogProps {
+  open: boolean;
+  onClose: () => void;
+}
+
+export function SetupAssistantDialog({ open, onClose }: SetupAssistantDialogProps): JSX.Element | null {
+  const { model, isLoading, errorText, refresh } = useSetupAssistant(open);
+
+  return (
+    <ModalDialog
+      title="Setup Assistant"
+      open={open}
+      onClose={onClose}
+      footer={
+        <>
+          <button
+            type="button"
+            onClick={() => void refresh()}
+            style={{
+              border: "1px solid #cbd5e1",
+              borderRadius: 8,
+              background: "#ffffff",
+              color: "#0f172a",
+              padding: "10px 14px",
+              fontWeight: 600,
+              cursor: "pointer",
+            }}
+          >
+            Refresh
+          </button>
+          {model ? (
+            <Link
+              to={model.primaryRoute}
+              onClick={onClose}
+              style={{
+                borderRadius: 8,
+                background: "#0f172a",
+                color: "#ffffff",
+                padding: "10px 14px",
+                textDecoration: "none",
+                fontWeight: 700,
+              }}
+            >
+              Continue Setup
+            </Link>
+          ) : null}
+        </>
+      }
+    >
+      {isLoading ? <p style={{ margin: 0, color: "#475569" }}>Loading setup guidance...</p> : null}
+      {errorText ? (
+        <section
+          style={{
+            border: "1px solid #fca5a5",
+            borderRadius: 12,
+            background: "#fef2f2",
+            color: "#991b1b",
+            padding: 14,
+          }}
+        >
+          {errorText}
+        </section>
+      ) : null}
+      {model ? (
+        <>
+          <section
+            style={{
+              border: "1px solid #e2e8f0",
+              borderRadius: 12,
+              background: "#f8fafc",
+              padding: 16,
+              display: "grid",
+              gap: 8,
+            }}
+          >
+            <strong style={{ color: "#0f172a" }}>{model.headline}</strong>
+            <p style={{ margin: 0, color: "#475569" }}>{model.summary}</p>
+          </section>
+
+          <div style={{ display: "grid", gap: 12 }}>
+            {model.steps.map((step, index) => {
+              const style = statusStyles[step.status];
+              return (
+                <article
+                  key={step.id}
+                  style={{
+                    border: `1px solid ${style.border}`,
+                    borderRadius: 12,
+                    background: "#ffffff",
+                    padding: 16,
+                    display: "grid",
+                    gap: 10,
+                  }}
+                >
+                  <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "center" }}>
+                    <strong style={{ color: "#0f172a" }}>
+                      {index + 1}. {step.title}
+                    </strong>
+                    <span
+                      style={{
+                        borderRadius: 999,
+                        padding: "4px 10px",
+                        fontSize: 12,
+                        fontWeight: 700,
+                        background: style.bg,
+                        color: style.text,
+                        border: `1px solid ${style.border}`,
+                      }}
+                    >
+                      {style.label}
+                    </span>
+                  </div>
+                  <p style={{ margin: 0, color: "#475569" }}>{step.description}</p>
+                  <div>
+                    <Link
+                      to={step.route}
+                      onClick={onClose}
+                      style={{
+                        borderRadius: 8,
+                        padding: "8px 12px",
+                        textDecoration: "none",
+                        fontWeight: 700,
+                        color: step.status === "blocked" ? "#475569" : "#ffffff",
+                        background: step.status === "blocked" ? "#e2e8f0" : "#0f172a",
+                        pointerEvents: step.status === "blocked" ? "none" : "auto",
+                        display: "inline-block",
+                      }}
+                    >
+                      {step.actionLabel}
+                    </Link>
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+        </>
+      ) : null}
+    </ModalDialog>
+  );
+}
