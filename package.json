@@ -1,0 +1,44 @@
+{
+  "name": "clawdesk",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 0.0.0.0 --port 1420",
+    "build": "vite build",
+    "preview": "vite preview --host 0.0.0.0 --port 4173",
+    "lint": "npm run lint:frontend && npm run lint:rust",
+    "lint:frontend": "eslint src tests --ext .ts,.tsx --max-warnings=0",
+    "lint:rust": "node scripts/with-rust.mjs cargo fmt --manifest-path src-tauri/Cargo.toml --all -- --check",
+    "test": "npm run test:unit",
+    "test:unit": "vitest run --reporter=default",
+    "test:unit:watch": "vitest",
+    "test:e2e": "playwright test --reporter=line",
+    "tauri:dev": "node scripts/with-rust.mjs tauri dev",
+    "tauri:build": "node scripts/with-rust.mjs tauri build"
+  },
+  "dependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-router-dom": "^6.30.1",
+    "zustand": "^4.5.7"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.9.0",
+    "@playwright/test": "^1.55.0",
+    "@tauri-apps/cli": "^2.0.2",
+    "@types/react": "^18.3.3",
+    "@types/react-dom": "^18.3.0",
+    "@typescript-eslint/eslint-plugin": "^8.41.0",
+    "@typescript-eslint/parser": "^8.41.0",
+    "@vitejs/plugin-react": "^4.3.1",
+    "eslint": "^9.9.0",
+    "eslint-plugin-react-hooks": "^5.1.0",
+    "eslint-plugin-react-refresh": "^0.4.9",
+    "jsdom": "^24.1.1",
+    "typescript-eslint": "^8.41.0",
+    "typescript": "^5.5.4",
+    "vite": "^5.4.0",
+    "vitest": "^2.0.5"
+  }
+}
