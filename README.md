@@ -63,6 +63,18 @@ docs/specs/
 ### macOS
 
 - Xcode Command Line Tools
+- Homebrew 安装场景下，ClawDesk 会额外补充 `/opt/homebrew/bin`、`/usr/local/bin` 等常见 PATH 目录
+
+### Linux
+
+- GTK/WebKitGTK 构建依赖
+- `libwebkit2gtk-4.1-dev`
+- `libayatana-appindicator3-dev`
+- `librsvg2-dev`
+- `libxdo-dev`
+- `libssl-dev`
+- `patchelf`
+- ClawDesk 在 Linux 下会优先使用 `XDG_CONFIG_HOME`，并补充 `~/.local/bin`、`~/.npm-global/bin`、`~/.volta/bin`、`~/.nvm/current/bin`、`/snap/bin` 等常见 PATH 目录
 
 ## 本地开发命令
 
@@ -129,6 +141,12 @@ npm run tauri:build
 - 安装后的 `clawdesk.exe` 可成功启动
 - 静默卸载与目录清理可完成
 
+GitHub Actions release 现已覆盖：
+
+- Windows: `nsis`
+- macOS: `dmg`
+- Linux: `deb` + `appimage`
+
 ## 测试覆盖
 
 当前测试分层如下：
@@ -177,6 +195,8 @@ ZIP 诊断包当前包含：
 - push tag `v*` 时执行
 - Windows 构建 `nsis`
 - macOS 构建 `dmg`
+- Linux 构建 `deb` 与 `appimage`
+- Linux runner 会自动安装 Tauri 官方文档要求的系统依赖
 - 上传 `src-tauri/target/release/bundle/**` 作为产物
 
 ## 重要实现约束
@@ -187,6 +207,7 @@ ZIP 诊断包当前包含：
 - 配置保存前自动备份
 - 错误统一映射为 `error code + message + suggestion`
 - 平台差异收敛在 `src-tauri/src/adapters`
+- macOS / Linux 的桌面运行时会自动补充常见 PATH 目录，降低 GUI 环境找不到 `npm` / `openclaw` 的概率
 
 ## 已验证命令
 

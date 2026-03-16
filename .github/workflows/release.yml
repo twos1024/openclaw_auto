@@ -22,6 +22,9 @@ jobs:
           - name: macos
             os: macos-latest
             bundle: dmg
+          - name: linux
+            os: ubuntu-22.04
+            bundle: deb,appimage
 
     steps:
       - name: Checkout
@@ -34,6 +37,22 @@ jobs:
 
       - name: Setup Rust toolchain
         uses: dtolnay/rust-toolchain@stable
+
+      - name: Install Linux system dependencies
+        if: matrix.platform.os == 'ubuntu-22.04'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential \
+            curl \
+            file \
+            libayatana-appindicator3-dev \
+            librsvg2-dev \
+            libssl-dev \
+            libwebkit2gtk-4.1-dev \
+            libxdo-dev \
+            patchelf \
+            wget
 
       - name: Install frontend dependencies
         run: npm install

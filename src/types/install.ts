@@ -19,6 +19,7 @@ export interface InstallOpenClawData {
   configPath: string;
   installOutput?: ShellCommandOutput;
   serviceInstallOutput?: ShellCommandOutput | null;
+  gatewayInstallIssue?: InstallIssue | null;
   notes: string[];
 }
 
@@ -44,6 +45,26 @@ export interface InstallPhase {
   code?: string;
 }
 
+export type InstallFailureKind =
+  | "missing-npm"
+  | "permission-denied"
+  | "network-failure"
+  | "command-timeout"
+  | "gateway-install-failed"
+  | "unknown"
+  | string;
+
+export interface InstallIssue {
+  stage: InstallPhaseId;
+  failureKind: InstallFailureKind;
+  code: string;
+  message: string;
+  suggestion: string;
+  step: string;
+  exitCode?: number | null;
+  sample?: string | null;
+}
+
 export interface InstallActionResult {
   status: "success" | "warning" | "failure" | "error";
   stage: InstallPhaseId;
@@ -51,6 +72,7 @@ export interface InstallActionResult {
   suggestion: string;
   code?: string;
   phases: InstallPhase[];
+  issue?: InstallIssue;
   data?: InstallOpenClawData;
 }
 

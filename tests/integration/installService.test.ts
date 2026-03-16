@@ -105,15 +105,14 @@ describe("installService integration", () => {
       install_openclaw: async () => ({
         success: false,
         error: {
-          code: "E_SHELL_SPAWN_FAILED",
-          message: "Failed to spawn command: npm",
+          code: "E_PATH_NOT_FOUND",
+          message: "OpenClaw install prerequisites are missing.",
           suggestion: "Install Node.js and npm first.",
           details: {
-            source_error: {
-              details: {
-                os_error: "spawn npm ENOENT",
-              },
-            },
+            stage: "prerequisite",
+            failureKind: "missing-npm",
+            step: "npm install -g openclaw@latest",
+            sample: "spawn npm ENOENT",
           },
         },
       }),
@@ -123,10 +122,203 @@ describe("installService integration", () => {
 
     expect(result.status).toBe("failure");
     expect(result.stage).toBe("prerequisite");
+    expect(result.issue).toMatchObject({
+      failureKind: "missing-npm",
+      step: "npm install -g openclaw@latest",
+      sample: "spawn npm ENOENT",
+    });
     expect(result.phases[0]).toMatchObject({
       id: "prerequisite",
       status: "failure",
-      code: "E_SHELL_SPAWN_FAILED",
+      code: "E_PATH_NOT_FOUND",
+    });
+  });
+
+  it("classifies permission denied as CLI install failure with structured issue context", async () => {
+    createInvokeMock({
+      install_openclaw: async () => ({
+        success: false,
+        error: {
+          code: "E_PERMISSION_DENIED",
+          message: "OpenClaw CLI installation could not write to the global npm directory.",
+          suggestion: "Run the install with elevated privileges or change the npm global directory.",
+          details: {
+            stage: "install-cli",
+            failureKind: "permission-denied",
+            step: "npm install -g openclaw@latest",
+            exitCode: 243,
+            sample: "npm ERR! code EACCES",
+          },
+        },
+      }),
+    });
+
+    const result = await installService.installOpenClaw();
+
+    expect(result.status).toBe("failure");
+    expect(result.stage).toBe("install-cli");
+    expect(result.issue).toMatchObject({
+      failureKind: "permission-denied",
+      step: "npm install -g openclaw@latest",
+      exitCode: 243,
+      sample: "npm ERR! code EACCES",
+    });
+    expect(result.phases.find((item) => item.id === "install-cli")).toMatchObject({
+      status: "failure",
+      code: "E_PERMISSION_DENIED",
+    });
+  });
+
+  it("classifies network failures with actionable install guidance", async () => {
+    createInvokeMock({
+      install_openclaw: async () => ({
+        success: false,
+        error: {
+          code: "E_NETWORK_FAILED",
+          message: "OpenClaw CLI installation failed while downloading packages from npm.",
+          suggestion: "Check registry connectivity, proxy settings, and retry.",
+          details: {
+            stage: "install-cli",
+            failureKind: "network-failure",
+            step: "npm install -g openclaw@latest",
+            exitCode: 1,
+            sample: "npm ERR! request to https://registry.npmjs.org/openclaw failed",
+          },
+        },
+      }),
+    });
+
+    const result = await installService.installOpenClaw();
+
+    expect(result.status).toBe("failure");
+    expect(result.stage).toBe("install-cli");
+    expect(result.code).toBe("E_NETWORK_FAILED");
+    expect(result.issue?.failureKind).toBe("network-failure");
+  });
+
+  it("keeps generic non-zero install exits in a dedicated install failure code", async () => {
+    createInvokeMock({
+      install_openclaw: async () => ({
+        success: false,
+        error: {
+          code: "E_INSTALL_COMMAND_FAILED",
+          message: "OpenClaw installation command returned a non-zero exit code.",
+          suggestion: "Check npm output and retry.",
+          details: {
+            stage: "install-cli",
+            failureKind: "unknown",
+            step: "npm install -g openclaw@latest",
+            exitCode: 1,
+            sample: "npm ERR! unexpected internal failure",
+          },
+        },
+      }),
+    });
+
+    const result = await installService.installOpenClaw();
+
+    expect(result.status).toBe("failure");
+    expect(result.stage).toBe("install-cli");
+    expect(result.code).toBe("E_INSTALL_COMMAND_FAILED");
+    expect(result.issue?.code).toBe("E_INSTALL_COMMAND_FAILED");
+  });
+
+  it("treats post-install binary lookup failures as verify-stage issues instead of prerequisites", async () => {
+    createInvokeMock({
+      install_openclaw: async () => ({
+        success: false,
+        error: {
+          code: "E_PATH_NOT_FOUND",
+          message: "OpenClaw CLI appears installed, but its executable path could not be resolved.",
+          suggestion: "Check the npm global bin directory and PATH configuration.",
+          details: {
+            stage: "verify",
+            failureKind: "binary-not-found",
+            step: "resolve openclaw executable path",
+            sample: "INFO: Could not find files for the given pattern(s).",
+          },
+        },
+      }),
+    });
+
+    const result = await installService.installOpenClaw();
+
+    expect(result.status).toBe("failure");
+    expect(result.stage).toBe("verify");
+    expect(result.issue).toMatchObject({
+      failureKind: "binary-not-found",
+      step: "resolve openclaw executable path",
+      code: "E_PATH_NOT_FOUND",
+    });
+  });
+
+  it("falls back to stderr text classification when backend details are legacy-shaped", async () => {
+    createInvokeMock({
+      install_openclaw: async () => ({
+        success: false,
+        error: {
+          code: "E_SHELL_SPAWN_FAILED",
+          message: "Failed to spawn command: npm",
+          suggestion: "Check whether the binary exists and is executable.",
+          details: {
+            sourceError: {
+              details: {
+                os_error: "spawn npm ENOENT",
+              },
+            },
+            program: "npm",
+          },
+        },
+      }),
+    });
+
+    const result = await installService.installOpenClaw();
+
+    expect(result.status).toBe("failure");
+    expect(result.stage).toBe("prerequisite");
+    expect(result.issue).toMatchObject({
+      failureKind: "missing-npm",
+      code: "E_PATH_NOT_FOUND",
+    });
+  });
+
+  it("uses gatewayInstallIssue to explain partial managed install warnings", async () => {
+    createInvokeMock({
+      install_openclaw: async () => ({
+        success: true,
+        data: {
+          cliInstalled: true,
+          gatewayServiceInstalled: false,
+          executablePath: "C:\\Users\\Tester\\AppData\\Roaming\\npm\\openclaw.cmd",
+          configPath: "C:\\Users\\Tester\\.openclaw\\openclaw.json",
+          notes: ["Managed service install requires manual follow-up."],
+          gatewayInstallIssue: {
+            stage: "install-gateway",
+            failureKind: "gateway-install-failed",
+            code: "E_GATEWAY_INSTALL_FAILED",
+            message: "Gateway managed install could not register the local service.",
+            suggestion: "Open Service and Logs to inspect the managed install output.",
+            step: "openclaw gateway install --json",
+            exitCode: 1,
+            sample: "service registration failed",
+          },
+        },
+      }),
+    });
+
+    const result = await installService.installOpenClaw();
+    const phase = result.phases.find((item) => item.id === "install-gateway");
+
+    expect(result.status).toBe("warning");
+    expect(result.issue).toMatchObject({
+      failureKind: "gateway-install-failed",
+      code: "E_GATEWAY_INSTALL_FAILED",
+      step: "openclaw gateway install --json",
+    });
+    expect(phase).toMatchObject({
+      status: "warning",
+      code: "E_GATEWAY_INSTALL_FAILED",
+      detail: "Gateway managed install could not register the local service.",
     });
   });
 });

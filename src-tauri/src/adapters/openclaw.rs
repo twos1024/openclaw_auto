@@ -1,6 +1,8 @@
 use std::env;
 use std::path::PathBuf;
 
+use crate::adapters::platform;
+
 pub fn binary_name() -> &'static str {
     if cfg!(windows) {
         "openclaw.cmd"
@@ -24,33 +26,11 @@ pub fn binary_candidates() -> Vec<PathBuf> {
         candidates.push(current_dir.join(binary_name()));
     }
 
-    if cfg!(windows) {
-        if let Some(app_data) = env::var("APPDATA").ok().or_else(|| {
-            env::var("USERPROFILE")
-                .ok()
-                .map(|p| format!("{p}\\AppData\\Roaming"))
-        }) {
-            candidates.push(PathBuf::from(&app_data).join("npm").join("openclaw.cmd"));
-            candidates.push(PathBuf::from(app_data).join("npm").join("openclaw"));
+    for dir in platform::desktop_runtime_bin_dirs() {
+        candidates.push(dir.join(binary_name()));
+        if cfg!(windows) {
+            candidates.push(dir.join("openclaw"));
         }
-    } else {
-        if let Ok(home) = env::var("HOME") {
-            candidates.push(
-                PathBuf::from(&home)
-                    .join(".npm-global")
-                    .join("bin")
-                    .join("openclaw"),
-            );
-            candidates.push(
-                PathBuf::from(&home)
-                    .join(".local")
-                    .join("bin")
-                    .join("openclaw"),
-            );
-        }
-
-        candidates.push(PathBuf::from("/usr/local/bin/openclaw"));
-        candidates.push(PathBuf::from("/opt/homebrew/bin/openclaw"));
     }
 
     candidates

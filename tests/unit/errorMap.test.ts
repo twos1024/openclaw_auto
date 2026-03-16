@@ -23,6 +23,18 @@ describe("errorMap", () => {
     expect(summaries[0]?.count).toBe(2);
   });
 
+  it("maps network failure error code to readable hint", () => {
+    const hint = mapErrorCode("E_NETWORK_FAILED");
+
+    expect(hint?.title).toBe("网络或镜像异常");
+  });
+
+  it("maps install command failure error code to readable hint", () => {
+    const hint = mapErrorCode("E_INSTALL_COMMAND_FAILED");
+
+    expect(hint?.title).toBe("安装命令执行失败");
+  });
+
   it("falls back to generic summary for unmapped fatal errors", () => {
     const summaries = extractErrorSummaries([
       "[fatal] unknown crash happened in gateway runtime",
@@ -31,4 +43,3 @@ describe("errorMap", () => {
     expect(summaries[0]?.title).toBe("通用运行错误");
   });
 });
-

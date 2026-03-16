@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub enum ErrorCode {
     #[serde(rename = "E_INVALID_INPUT")]
     InvalidInput,
@@ -22,8 +22,14 @@ pub enum ErrorCode {
     ShellTimeout,
     #[serde(rename = "E_SHELL_WAIT_FAILED")]
     ShellWaitFailed,
+    #[serde(rename = "E_INSTALL_COMMAND_FAILED")]
+    InstallCommandFailed,
+    #[serde(rename = "E_NETWORK_FAILED")]
+    NetworkFailed,
     #[serde(rename = "E_PORT_CONFLICT")]
     PortConflict,
+    #[serde(rename = "E_GATEWAY_INSTALL_FAILED")]
+    GatewayInstallFailed,
     #[serde(rename = "E_GATEWAY_START_FAILED")]
     GatewayStartFailed,
     #[serde(rename = "E_GATEWAY_STOP_FAILED")]

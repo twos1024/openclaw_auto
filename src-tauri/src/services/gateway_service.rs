@@ -374,3 +374,82 @@ fn log_shell_output(source: LogSource, step: &str, output: &ShellOutput) -> Resu
 
     Ok(())
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn shell_output(stdout: &str, stderr: &str) -> ShellOutput {
+        ShellOutput {
+            program: "openclaw".to_string(),
+            args: vec![
+                "gateway".to_string(),
+                "status".to_string(),
+                "--json".to_string(),
+            ],
+            stdout: stdout.to_string(),
+            stderr: stderr.to_string(),
+            exit_code: Some(0),
+            duration_ms: 250,
+        }
+    }
+
+    #[test]
+    fn parses_nested_gateway_status_payload() {
+        let output = shell_output(
+            r#"{
+              "gateway": {
+                "active": true,
+                "gatewayPort": "4317",
+                "dashboardUrl": "http://127.0.0.1:4317",
+                "processId": 9981,
+                "startedAt": "2026-03-16T10:00:00Z",
+                "message": "Gateway ready"
+              }
+            }"#,
+            "",
+        );
+
+        let status = parse_gateway_status_output(&output);
+
+        assert!(status.running);
+        assert_eq!(status.port, 4317);
+        assert_eq!(status.address, "http://127.0.0.1:4317");
+        assert_eq!(status.pid, Some(9981));
+        assert_eq!(status.status_detail, "Gateway ready");
+    }
+
+    #[test]
+    fn parses_stopped_gateway_payload_with_string_state() {
+        let output = shell_output(
+            r#"{
+              "service": {
+                "status": "inactive",
+                "port": "3000",
+                "detail": "Gateway is stopped"
+              }
+            }"#,
+            "",
+        );
+
+        let status = parse_gateway_status_output(&output);
+
+        assert!(!status.running);
+        assert_eq!(status.state, "inactive");
+        assert_eq!(status.port, 3000);
+        assert_eq!(status.status_detail, "Gateway is stopped");
+    }
+
+    #[test]
+    fn detects_port_conflict_from_cli_output() {
+        let output = shell_output(
+            "",
+            "Error: listen EADDRINUSE: address already in use 127.0.0.1:3000",
+        );
+
+        assert!(matches!(
+            detect_error_code_from_output(&output),
+            ErrorCode::PortConflict
+        ));
+    }
+}

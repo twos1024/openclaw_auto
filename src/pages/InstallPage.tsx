@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { InstallIssueCard } from "../components/install/InstallIssueCard";
 import { InstallPhaseTimeline } from "../components/install/InstallPhaseTimeline";
 import { useInstallFlow } from "../hooks/useInstallFlow";
 
@@ -40,6 +41,8 @@ export function InstallPage(): JSX.Element {
     refreshEnvironment,
     installOpenClaw,
   } = useInstallFlow();
+  const installBlockedByEnv = Boolean(environment && !environment.npmFound);
+  const visibleIssue = installResult?.issue ?? installResult?.data?.gatewayInstallIssue ?? null;
 
   return (
     <div style={{ display: "grid", gap: 16 }}>
@@ -115,7 +118,7 @@ export function InstallPage(): JSX.Element {
           <button
             type="button"
             onClick={() => void installOpenClaw()}
-            disabled={isLoading || isInstalling}
+            disabled={isLoading || isInstalling || installBlockedByEnv}
             style={{
               border: "none",
               background: "#1d4ed8",
@@ -123,11 +126,11 @@ export function InstallPage(): JSX.Element {
               borderRadius: 8,
               padding: "10px 14px",
               fontWeight: 600,
-              cursor: isLoading || isInstalling ? "not-allowed" : "pointer",
-              opacity: isLoading || isInstalling ? 0.6 : 1,
+              cursor: isLoading || isInstalling || installBlockedByEnv ? "not-allowed" : "pointer",
+              opacity: isLoading || isInstalling || installBlockedByEnv ? 0.6 : 1,
             }}
           >
-            {isInstalling ? "Installing..." : "Install OpenClaw"}
+            {isInstalling ? "Installing..." : installBlockedByEnv ? "npm Required" : "Install OpenClaw"}
           </button>
 
           <Link
@@ -147,6 +150,12 @@ export function InstallPage(): JSX.Element {
             Open Logs
           </Link>
         </div>
+
+        {installBlockedByEnv ? (
+          <p style={{ margin: 0, fontSize: 13, color: "#92400e" }}>
+            当前未检测到 npm，安装按钮已禁用。请先安装 Node.js / npm，然后刷新环境检查。
+          </p>
+        ) : null}
       </section>
 
       <InstallPhaseTimeline phases={phases} />
@@ -202,6 +211,8 @@ export function InstallPage(): JSX.Element {
           ) : null}
         </section>
       ) : null}
+
+      {visibleIssue ? <InstallIssueCard issue={visibleIssue} /> : null}
 
       <section
         style={{

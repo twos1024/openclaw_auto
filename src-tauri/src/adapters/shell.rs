@@ -6,6 +6,7 @@ use serde_json::json;
 use tokio::process::Command;
 use tokio::time::{timeout, Duration};
 
+use crate::adapters::platform;
 use crate::models::error::{AppError, ErrorCode};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -29,6 +30,10 @@ pub async fn run_command(
         .stdout(Stdio::piped())
         .stderr(Stdio::piped())
         .kill_on_drop(true);
+
+    if let Some(path_env) = platform::normalized_path_env() {
+        command.env("PATH", path_env);
+    }
 
     let started_at = Instant::now();
     let child = command.spawn().map_err(|error| {

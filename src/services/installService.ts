@@ -3,9 +3,11 @@ import type {
   InstallActionResult,
   InstallEnvResult,
   InstallEnvironment,
+  InstallIssue,
   InstallOpenClawData,
   InstallPhase,
   InstallPhaseId,
+  ShellCommandOutput,
 } from "../types/install";
 import { invokeCommand } from "./tauriClient";
 
@@ -96,7 +98,194 @@ function collectErrorText(error?: BackendError): string {
   return chunks.join("\n").toLowerCase();
 }
 
+function isInstallPhaseId(value: unknown): value is InstallPhaseId {
+  return value === "prerequisite" || value === "install-cli" || value === "install-gateway" || value === "verify";
+}
+
+function firstMeaningfulLine(text: string): string | null {
+  return (
+    text
+      .split(/\r?\n/u)
+      .map((item) => item.trim())
+      .find((item) => item.length > 0) ?? null
+  );
+}
+
+function hasStructuredInstallIssueMarkers(value: Record<string, unknown>): boolean {
+  return (
+    typeof value.failureKind === "string" ||
+    typeof value.step === "string" ||
+    (typeof value.stage === "string" && typeof value.message === "string" && typeof value.suggestion === "string")
+  );
+}
+
+function deriveIssueFromText(
+  stage: InstallPhaseId,
+  step: string,
+  code: string,
+  message: string,
+  suggestion: string,
+  rawText: string,
+  exitCode?: number | null,
+  sample?: string | null,
+): InstallIssue {
+  const haystack = rawText.toLowerCase();
+
+  if (
+    haystack.includes("spawn npm enoent") ||
+    haystack.includes("failed to spawn command: npm") ||
+    haystack.includes("npm not found")
+  ) {
+    return {
+      stage: "prerequisite",
+      failureKind: "missing-npm",
+      code: "E_PATH_NOT_FOUND",
+      message: "OpenClaw install prerequisites are missing.",
+      suggestion: "先安装 Node.js / npm，再刷新环境检查并重试。",
+      step,
+      exitCode,
+      sample: sample ?? firstMeaningfulLine(rawText),
+    };
+  }
+
+  if (
+    haystack.includes("permission denied") ||
+    haystack.includes("access is denied") ||
+    haystack.includes("operation not permitted") ||
+    haystack.includes("eacces") ||
+    haystack.includes("eperm")
+  ) {
+    return {
+      stage,
+      failureKind: "permission-denied",
+      code: "E_PERMISSION_DENIED",
+      message,
+      suggestion,
+      step,
+      exitCode,
+      sample: sample ?? firstMeaningfulLine(rawText),
+    };
+  }
+
+  if (
+    haystack.includes("registry.npmjs.org") ||
+    haystack.includes("enotfound") ||
+    haystack.includes("econnreset") ||
+    haystack.includes("socket hang up") ||
+    haystack.includes("network request failed") ||
+    haystack.includes("proxy") ||
+    haystack.includes("certificate")
+  ) {
+    return {
+      stage,
+      failureKind: "network-failure",
+      code: "E_NETWORK_FAILED",
+      message: "OpenClaw CLI installation failed while downloading packages from npm.",
+      suggestion: "检查 npm registry、代理、证书和网络链路后重试。",
+      step,
+      exitCode,
+      sample: sample ?? firstMeaningfulLine(rawText),
+    };
+  }
+
+  if (haystack.includes("timeout") || haystack.includes("timed out") || haystack.includes("deadline exceeded")) {
+    return {
+      stage,
+      failureKind: "command-timeout",
+      code: "E_SHELL_TIMEOUT",
+      message,
+      suggestion,
+      step,
+      exitCode,
+      sample: sample ?? firstMeaningfulLine(rawText),
+    };
+  }
+
+  if (stage === "install-gateway") {
+    return {
+      stage,
+      failureKind: "gateway-install-failed",
+      code: code || "E_GATEWAY_INSTALL_FAILED",
+      message,
+      suggestion,
+      step,
+      exitCode,
+      sample: sample ?? firstMeaningfulLine(rawText),
+    };
+  }
+
+  return {
+    stage,
+    failureKind: "unknown",
+    code,
+    message,
+    suggestion,
+    step,
+    exitCode,
+    sample: sample ?? firstMeaningfulLine(rawText),
+  };
+}
+
+function normalizeInstallIssue(raw: unknown, fallback?: Partial<InstallIssue>): InstallIssue | null {
+  if (!raw || typeof raw !== "object") return null;
+
+  const value = raw as Record<string, unknown>;
+  if (!hasStructuredInstallIssueMarkers(value)) return null;
+
+  const stage = isInstallPhaseId(value.stage) ? value.stage : fallback?.stage ?? "install-cli";
+  const failureKind = typeof value.failureKind === "string" ? value.failureKind : fallback?.failureKind ?? "unknown";
+  const code = typeof value.code === "string" ? value.code : fallback?.code ?? "E_UNKNOWN";
+  const message =
+    typeof value.message === "string"
+      ? value.message
+      : fallback?.message ?? "OpenClaw install encountered an issue.";
+  const suggestion =
+    typeof value.suggestion === "string"
+      ? value.suggestion
+      : fallback?.suggestion ?? "Check logs and retry the install flow.";
+  const step =
+    typeof value.step === "string"
+      ? value.step
+      : fallback?.step ?? "npm install -g openclaw@latest";
+  const exitCode =
+    typeof value.exitCode === "number" ? value.exitCode : fallback?.exitCode ?? null;
+  const sample =
+    typeof value.sample === "string" ? value.sample : fallback?.sample ?? null;
+
+  return {
+    stage,
+    failureKind,
+    code,
+    message,
+    suggestion,
+    step,
+    exitCode,
+    sample,
+  };
+}
+
+function buildIssueFromShellOutput(stage: InstallPhaseId, step: string, output?: ShellCommandOutput | null): InstallIssue | null {
+  if (!output) return null;
+
+  const rawText = [output.stderr, output.stdout].filter(Boolean).join("\n");
+  const code = stage === "install-gateway" ? "E_GATEWAY_INSTALL_FAILED" : "E_UNKNOWN";
+  const message =
+    stage === "install-gateway"
+      ? "Gateway managed install could not register the local service."
+      : "OpenClaw install command returned a non-zero exit code.";
+  const suggestion =
+    stage === "install-gateway"
+      ? "前往 Service 与 Logs 页面继续排查托管安装输出。"
+      : "检查 npm 输出、权限和网络后重试。";
+
+  return deriveIssueFromText(stage, step, code, message, suggestion, rawText, output.exitCode ?? null);
+}
+
 function classifyErrorStage(error?: BackendError): InstallPhaseId {
+  if (error?.details && typeof error.details.stage === "string" && isInstallPhaseId(error.details.stage)) {
+    return error.details.stage;
+  }
+
   const haystack = collectErrorText(error);
   const code = error?.code ?? "";
 
@@ -104,19 +293,43 @@ function classifyErrorStage(error?: BackendError): InstallPhaseId {
     return "prerequisite";
   }
 
-  if (haystack.includes("permission denied") || haystack.includes("access is denied") || code === "E_PERMISSION_DENIED") {
+  if (
+    haystack.includes("permission denied") ||
+    haystack.includes("access is denied") ||
+    code === "E_PERMISSION_DENIED" ||
+    code === "E_NETWORK_FAILED"
+  ) {
     return "install-cli";
   }
 
-  if (haystack.includes("gateway install") || haystack.includes("managed gateway")) {
+  if (haystack.includes("gateway install") || haystack.includes("managed gateway") || code === "E_GATEWAY_INSTALL_FAILED") {
     return "install-gateway";
   }
 
   return "install-cli";
 }
 
+function buildIssueFromError(error?: BackendError): InstallIssue | null {
+  if (!error) return null;
+
+  const fallbackStage = classifyErrorStage(error);
+  const structured = normalizeInstallIssue(error.details, {
+    stage: fallbackStage,
+    code: error.code,
+    message: error.message,
+    suggestion: error.suggestion,
+    step: fallbackStage === "install-gateway" ? "openclaw gateway install --json" : "npm install -g openclaw@latest",
+  });
+  if (structured) return structured;
+
+  const stage = fallbackStage;
+  const step = stage === "install-gateway" ? "openclaw gateway install --json" : "npm install -g openclaw@latest";
+  return deriveIssueFromText(stage, step, error.code, error.message, error.suggestion, collectErrorText(error));
+}
+
 function toFailureResult(error?: BackendError): InstallActionResult {
-  const stage = classifyErrorStage(error);
+  const issue = buildIssueFromError(error);
+  const stage = issue?.stage ?? classifyErrorStage(error);
   let phases = createBasePhases();
 
   if (stage !== "prerequisite") {
@@ -129,23 +342,27 @@ function toFailureResult(error?: BackendError): InstallActionResult {
 
   phases = updatePhase(phases, stage, {
     status: "failure",
-    detail: error?.message ?? "OpenClaw install failed.",
-    suggestion: error?.suggestion ?? "Check install logs and retry.",
-    code: error?.code,
+    detail: issue?.message ?? error?.message ?? "OpenClaw install failed.",
+    suggestion: issue?.suggestion ?? error?.suggestion ?? "Check install logs and retry.",
+    code: issue?.code ?? error?.code,
   });
 
   return {
     status: "failure",
     stage,
-    detail: error?.message ?? "OpenClaw install failed.",
-    suggestion: error?.suggestion ?? "Check install logs and retry.",
-    code: error?.code,
+    detail: issue?.message ?? error?.message ?? "OpenClaw install failed.",
+    suggestion: issue?.suggestion ?? error?.suggestion ?? "Check install logs and retry.",
+    code: issue?.code ?? error?.code,
     phases,
+    issue: issue ?? undefined,
   };
 }
 
 function toSuccessResult(data: InstallOpenClawData): InstallActionResult {
   let phases = createBasePhases();
+  const gatewayIssue =
+    normalizeInstallIssue(data.gatewayInstallIssue) ??
+    buildIssueFromShellOutput("install-gateway", "openclaw gateway install --json", data.serviceInstallOutput);
 
   phases = updatePhase(phases, "prerequisite", {
     status: "success",
@@ -163,10 +380,11 @@ function toSuccessResult(data: InstallOpenClawData): InstallActionResult {
     status: data.gatewayServiceInstalled ? "success" : "warning",
     detail: data.gatewayServiceInstalled
       ? "Gateway 托管服务安装成功。"
-      : "CLI 已安装，但 Gateway 托管服务仍需要人工关注。",
+      : gatewayIssue?.message ?? "CLI 已安装，但 Gateway 托管服务仍需要人工关注。",
     suggestion: data.gatewayServiceInstalled
       ? "继续验证安装结果。"
-      : "可前往 Service 和 Logs 页面继续排查托管服务安装问题。",
+      : gatewayIssue?.suggestion ?? "可前往 Service 和 Logs 页面继续排查托管服务安装问题。",
+    code: data.gatewayServiceInstalled ? undefined : gatewayIssue?.code,
   });
   phases = updatePhase(phases, "verify", {
     status: data.executablePath ? "success" : "warning",
@@ -183,11 +401,13 @@ function toSuccessResult(data: InstallOpenClawData): InstallActionResult {
     stage: data.gatewayServiceInstalled ? "verify" : "install-gateway",
     detail: data.gatewayServiceInstalled
       ? "OpenClaw CLI 和 Gateway 托管服务安装完成。"
-      : "OpenClaw CLI 已安装，但 Gateway 托管服务还需要进一步处理。",
+      : gatewayIssue?.message ?? "OpenClaw CLI 已安装，但 Gateway 托管服务还需要进一步处理。",
     suggestion: data.gatewayServiceInstalled
       ? "继续前往 Config 和 Service 页面完成配置并启动 Gateway。"
-      : "查看安装日志并前往 Service 页面继续完成剩余步骤。",
+      : gatewayIssue?.suggestion ?? "查看安装日志并前往 Service 页面继续完成剩余步骤。",
+    code: data.gatewayServiceInstalled ? undefined : gatewayIssue?.code,
     phases,
+    issue: gatewayIssue ?? undefined,
     data,
   };
 }
