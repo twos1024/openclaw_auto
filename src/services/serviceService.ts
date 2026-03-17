@@ -1,4 +1,5 @@
 import type { BackendError } from "../types/api";
+import type { DashboardProbeResult } from "../types/dashboard";
 import { invokeCommand, isTauriRuntime } from "./tauriClient";
 
 export type GatewayRuntimeState = "running" | "stopped" | "starting" | "stopping" | "error";
@@ -21,6 +22,40 @@ export interface ServiceActionResult {
   suggestion: string;
   code?: string;
   conflictPort?: number;
+}
+
+function normalizeProbeData(raw: unknown, fallbackAddress: string): DashboardProbeResult {
+  if (!raw || typeof raw !== "object") {
+    return {
+      address: fallbackAddress,
+      reachable: false,
+      result: "unreachable",
+      httpStatus: null,
+      responseTimeMs: null,
+      detail: "Dashboard probe returned an empty payload.",
+    };
+  }
+
+  const obj = raw as Record<string, unknown>;
+  const address = typeof obj.address === "string" ? obj.address : fallbackAddress;
+  const result = typeof obj.result === "string" ? obj.result : "unreachable";
+  return {
+    address,
+    reachable: Boolean(obj.reachable),
+    result:
+      result === "reachable" ||
+      result === "timeout" ||
+      result === "unreachable" ||
+      result === "invalid-address" ||
+      result === "idle" ||
+      result === "probing"
+        ? result
+        : "unreachable",
+    httpStatus: toNumber(obj.httpStatus ?? obj.http_status),
+    responseTimeMs: toNumber(obj.responseTimeMs ?? obj.response_time_ms),
+    detail:
+      typeof obj.detail === "string" ? obj.detail : "Dashboard endpoint probe did not return a detail message.",
+  };
 }
 
 function toNumber(value: unknown): number | null {
@@ -186,5 +221,44 @@ export const serviceService = {
 
   async openDashboard(): Promise<ServiceActionResult> {
     return invokeAction("open_dashboard");
+  },
+
+  async probeDashboardEndpoint(address: string): Promise<DashboardProbeResult> {
+    if (!address) {
+      return {
+        address: "",
+        reachable: false,
+        result: "invalid-address",
+        httpStatus: null,
+        responseTimeMs: null,
+        detail: "Dashboard address is missing.",
+      };
+    }
+
+    if (!isTauriRuntime()) {
+      return {
+        address,
+        reachable: false,
+        result: "idle",
+        httpStatus: null,
+        responseTimeMs: null,
+        detail: "Endpoint probe is only available in the Tauri runtime.",
+      };
+    }
+
+    const result = await invokeCommand<Record<string, unknown>>("probe_dashboard_endpoint", { address });
+    if (!result.success || !result.data) {
+      const invalidAddress = result.error?.code === "E_INVALID_INPUT";
+      return {
+        address,
+        reachable: false,
+        result: invalidAddress ? "invalid-address" : "unreachable",
+        httpStatus: null,
+        responseTimeMs: null,
+        detail: result.error?.message || "Dashboard endpoint probe failed.",
+      };
+    }
+
+    return normalizeProbeData(result.data, address);
   },
 };

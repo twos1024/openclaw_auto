@@ -73,4 +73,76 @@ describe("serviceService integration", () => {
     expect(result.state).toBe("error");
     expect(result.statusDetail).toBe("Failed to query OpenClaw Gateway status.");
   });
+
+  it("normalizes dashboard probe diagnostics from the backend command", async () => {
+    createInvokeMock({
+      probe_dashboard_endpoint: async () => ({
+        success: true,
+        data: {
+          address: "http://127.0.0.1:18789",
+          reachable: true,
+          result: "reachable",
+          httpStatus: 200,
+          responseTimeMs: 125,
+          detail: "Dashboard endpoint responded successfully.",
+        },
+      }),
+    });
+
+    const result = await serviceService.probeDashboardEndpoint("http://127.0.0.1:18789");
+
+    expect(result).toMatchObject({
+      address: "http://127.0.0.1:18789",
+      reachable: true,
+      result: "reachable",
+      httpStatus: 200,
+      responseTimeMs: 125,
+    });
+  });
+
+  it("preserves timeout probe results from the backend command", async () => {
+    createInvokeMock({
+      probe_dashboard_endpoint: async () => ({
+        success: true,
+        data: {
+          address: "http://127.0.0.1:18789",
+          reachable: false,
+          result: "timeout",
+          httpStatus: null,
+          responseTimeMs: null,
+          detail: "Dashboard endpoint timed out after 3000ms.",
+        },
+      }),
+    });
+
+    const result = await serviceService.probeDashboardEndpoint("http://127.0.0.1:18789");
+
+    expect(result).toMatchObject({
+      reachable: false,
+      result: "timeout",
+      detail: "Dashboard endpoint timed out after 3000ms.",
+    });
+  });
+
+  it("maps invalid probe input to an invalid-address diagnostic payload", async () => {
+    createInvokeMock({
+      probe_dashboard_endpoint: async () => ({
+        success: false,
+        error: {
+          code: "E_INVALID_INPUT",
+          message: "Dashboard address is invalid and cannot be probed.",
+          suggestion: "Refresh gateway status and retry the dashboard diagnostics probe.",
+        },
+      }),
+    });
+
+    const result = await serviceService.probeDashboardEndpoint("http://bad");
+
+    expect(result).toMatchObject({
+      address: "http://bad",
+      reachable: false,
+      result: "invalid-address",
+      detail: "Dashboard address is invalid and cannot be probed.",
+    });
+  });
 });

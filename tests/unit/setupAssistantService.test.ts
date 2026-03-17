@@ -72,7 +72,8 @@ describe("setupAssistantService", () => {
     expect(model.steps[1]?.status).toBe("blocked");
     expect(model.steps[2]?.status).toBe("blocked");
     expect(model.steps[3]?.status).toBe("blocked");
-    expect(model.primaryRoute).toBe("/install");
+    expect(model.primaryRoute).toBe("/install?wizard=1");
+    expect(model.launchChecks[0]?.route).toBe("/install?wizard=1");
     expect(model.launchChecks[0]).toMatchObject({
       title: "Install Check",
       level: "offline",

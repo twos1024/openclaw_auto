@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useCallback } from "react";
+import { useSearchParams } from "react-router-dom";
 import { InstallEnvironmentPanel } from "../components/install/InstallEnvironmentPanel";
 import { InstallIssueCard } from "../components/install/InstallIssueCard";
 import { InstallPhaseTimeline } from "../components/install/InstallPhaseTimeline";
@@ -10,7 +11,7 @@ import { useInstallFlow } from "../hooks/useInstallFlow";
 import { buildPlatformGuidance } from "../services/installWizardService";
 
 export function InstallPage(): JSX.Element {
-  const [isWizardOpen, setIsWizardOpen] = useState<boolean>(false);
+  const [searchParams, setSearchParams] = useSearchParams();
   const {
     environment,
     envError,
@@ -25,6 +26,17 @@ export function InstallPage(): JSX.Element {
   const installBlockedByEnv = Boolean(environment && !environment.npmFound);
   const visibleIssue = installResult?.issue ?? installResult?.data?.gatewayInstallIssue ?? null;
   const platformCards = buildPlatformGuidance(environment?.platform);
+  const isWizardOpen = searchParams.get("wizard") === "1";
+  const openWizard = useCallback(() => {
+    const next = new URLSearchParams(searchParams);
+    next.set("wizard", "1");
+    setSearchParams(next);
+  }, [searchParams, setSearchParams]);
+  const closeWizard = useCallback(() => {
+    const next = new URLSearchParams(searchParams);
+    next.delete("wizard");
+    setSearchParams(next);
+  }, [searchParams, setSearchParams]);
 
   return (
     <div style={{ display: "grid", gap: 16 }}>
@@ -36,7 +48,7 @@ export function InstallPage(): JSX.Element {
         <div style={{ marginTop: 12 }}>
           <button
             type="button"
-            onClick={() => setIsWizardOpen(true)}
+            onClick={openWizard}
             style={{
               border: "1px solid #cbd5e1",
               background: "#ffffff",
@@ -105,7 +117,7 @@ export function InstallPage(): JSX.Element {
 
       <InstallWizardDialog
         open={isWizardOpen}
-        onClose={() => setIsWizardOpen(false)}
+        onClose={closeWizard}
         environment={environment}
         installResult={installResult}
       />

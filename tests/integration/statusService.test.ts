@@ -90,7 +90,7 @@ describe("statusService integration", () => {
     expect(data.install.level).toBe("degraded");
     expect(data.settings.level).toBe("healthy");
     expect(data.nextActions[0]).toMatchObject({
-      route: "/install",
+      route: "/install?wizard=1",
       label: "安装 OpenClaw",
     });
   });

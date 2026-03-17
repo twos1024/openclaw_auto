@@ -23,7 +23,7 @@ describe("installWizardService", () => {
 
     expect(model.steps[0]?.status).toBe("current");
     expect(model.steps[1]?.status).toBe("blocked");
-    expect(model.primaryRoute).toBe("/install");
+    expect(model.primaryRoute).toBe("/install?wizard=1");
   });
 
   it("moves the active step to config after install succeeds", () => {

@@ -10,6 +10,8 @@ function isHealthy(level: HealthLevel): boolean {
   return level === "healthy";
 }
 
+const installWizardRoute = "/install?wizard=1";
+
 function stepStatus(current: GuidedSetupStep["id"], active: GuidedSetupStep["id"], complete: boolean): GuidedSetupStepStatus {
   if (complete) return "complete";
   if (current === active) return current === "dashboard" ? "ready" : "current";
@@ -34,7 +36,7 @@ export function buildSetupAssistantModel(status: OverviewStatus): GuidedSetupMod
       id: "install",
       title: "Install OpenClaw",
       description: status.install.detail,
-      route: "/install",
+      route: installWizardRoute,
       actionLabel: "Go to Install",
       status: stepStatus("install", activeStep, installReady),
     },
@@ -73,7 +75,7 @@ export function buildSetupAssistantModel(status: OverviewStatus): GuidedSetupMod
       title: "Install Check",
       level: status.install.level,
       detail: status.install.detail,
-      route: "/install",
+      route: installWizardRoute,
     },
     {
       id: "config",

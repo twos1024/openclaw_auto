@@ -1,5 +1,5 @@
-import type { DashboardEmbedPhase } from "../../types/dashboard";
 import type { PlatformGuidanceCard } from "../../types/installWizard";
+import type { DashboardDiagnosticsModel, DashboardEmbedPhase } from "../../types/dashboard";
 
 const phaseLabels: Record<DashboardEmbedPhase, string> = {
   loading: "Loading",
@@ -15,19 +15,20 @@ const phaseColors: Record<DashboardEmbedPhase, { bg: string; text: string; borde
   blocked: { bg: "#fef2f2", text: "#991b1b", border: "#fca5a5" },
 };
 
+const itemTones = {
+  healthy: { bg: "#f0fdf4", text: "#166534", border: "#86efac", label: "Healthy" },
+  warning: { bg: "#fff7ed", text: "#9a3412", border: "#fdba74", label: "Warning" },
+  error: { bg: "#fef2f2", text: "#991b1b", border: "#fca5a5", label: "Error" },
+  neutral: { bg: "#f8fafc", text: "#475569", border: "#cbd5e1", label: "Pending" },
+} as const;
+
 export interface DashboardDiagnosticsPanelProps {
   phase: DashboardEmbedPhase;
-  address: string | null;
-  statusDetail: string;
   platformCard: PlatformGuidanceCard | null;
+  model: DashboardDiagnosticsModel;
 }
 
-export function DashboardDiagnosticsPanel({
-  phase,
-  address,
-  statusDetail,
-  platformCard,
-}: DashboardDiagnosticsPanelProps): JSX.Element {
+export function DashboardDiagnosticsPanel({ phase, platformCard, model }: DashboardDiagnosticsPanelProps): JSX.Element {
   const color = phaseColors[phase];
 
   return (
@@ -65,18 +66,48 @@ export function DashboardDiagnosticsPanel({
       </div>
 
       <div style={{ display: "grid", gap: 8 }}>
-        <p style={{ margin: 0, color: "#475569" }}>
-          <strong>Endpoint:</strong> {address ?? "-"}
-        </p>
-        <p style={{ margin: 0, color: "#475569" }}>
-          <strong>Status:</strong> {statusDetail}
-        </p>
+        {model.items.map((item) => {
+          const tone = itemTones[item.tone];
+          return (
+            <article
+              key={item.id}
+              style={{
+                border: `1px solid ${tone.border}`,
+                borderRadius: 12,
+                background: "#ffffff",
+                padding: 14,
+                display: "grid",
+                gap: 8,
+              }}
+            >
+              <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "center" }}>
+                <strong style={{ color: "#0f172a" }}>{item.title}</strong>
+                <span
+                  style={{
+                    borderRadius: 999,
+                    padding: "4px 10px",
+                    fontSize: 12,
+                    fontWeight: 700,
+                    background: tone.bg,
+                    color: tone.text,
+                    border: `1px solid ${tone.border}`,
+                  }}
+                >
+                  {tone.label}
+                </span>
+              </div>
+              <p style={{ margin: 0, color: "#475569" }}>{item.detail}</p>
+              {item.meta ? (
+                <p style={{ margin: 0, fontSize: 13, color: "#64748b" }}>{item.meta}</p>
+              ) : null}
+            </article>
+          );
+        })}
         <p style={{ margin: 0, color: "#475569" }}>
           <strong>Platform:</strong> {platformCard?.title ?? "Unknown"}
         </p>
         <p style={{ margin: 0, color: "#64748b", fontSize: 13 }}>
-          {platformCard?.troubleshooting ??
-            "若内嵌页面加载异常，优先检查 Gateway 状态、iframe 安全策略和本地端口连通性。"}
+          {model.platformNote}
         </p>
       </div>
     </section>

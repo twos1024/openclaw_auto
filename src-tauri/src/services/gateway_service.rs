@@ -1,6 +1,8 @@
 use chrono::{DateTime, Utc};
+use reqwest::Url;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
+use std::time::{Duration, Instant};
 
 use crate::adapters::platform;
 use crate::adapters::shell::{run_command, ShellOutput};
@@ -9,6 +11,7 @@ use crate::services::env_service;
 use crate::services::log_service::{self, LogSource};
 
 const GATEWAY_TIMEOUT_MS: u64 = 30_000;
+const DASHBOARD_PROBE_TIMEOUT_MS: u64 = 3_000;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -30,6 +33,17 @@ pub struct GatewayActionData {
     pub detail: String,
     pub address: Option<String>,
     pub pid: Option<u32>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DashboardProbeData {
+    pub address: String,
+    pub reachable: bool,
+    pub result: String,
+    pub http_status: Option<u16>,
+    pub response_time_ms: Option<u64>,
+    pub detail: String,
 }
 
 #[derive(Debug, Clone)]
@@ -212,6 +226,73 @@ pub async fn open_dashboard() -> Result<GatewayActionData, AppError> {
         address: Some(status.address),
         pid: status.pid,
     })
+}
+
+pub async fn probe_dashboard_endpoint(address: String) -> Result<DashboardProbeData, AppError> {
+    let parsed = Url::parse(&address).map_err(|_| {
+        AppError::new(
+            ErrorCode::InvalidInput,
+            "Dashboard address is invalid and cannot be probed.",
+            "Refresh gateway status and retry the dashboard diagnostics probe.",
+        )
+        .with_details(json!({
+            "address": address,
+        }))
+    })?;
+
+    let client = reqwest::Client::builder()
+        .timeout(Duration::from_millis(DASHBOARD_PROBE_TIMEOUT_MS))
+        .build()
+        .map_err(|error| {
+            AppError::new(
+                ErrorCode::InternalError,
+                "Failed to initialize the dashboard probe client.",
+                "Retry the diagnostics action. If it keeps failing, inspect the desktop runtime logs.",
+            )
+            .with_details(json!({
+                "address": parsed.to_string(),
+                "sourceError": error.to_string(),
+            }))
+        })?;
+
+    let started_at = Instant::now();
+    match client.get(parsed.clone()).send().await {
+        Ok(response) => Ok(DashboardProbeData {
+            address: parsed.to_string(),
+            reachable: true,
+            result: "reachable".to_string(),
+            http_status: Some(response.status().as_u16()),
+            response_time_ms: Some(started_at.elapsed().as_millis() as u64),
+            detail: "Dashboard endpoint responded successfully.".to_string(),
+        }),
+        Err(error) if error.is_timeout() => Ok(DashboardProbeData {
+            address: parsed.to_string(),
+            reachable: false,
+            result: "timeout".to_string(),
+            http_status: None,
+            response_time_ms: None,
+            detail: format!(
+                "Dashboard endpoint timed out after {}ms.",
+                DASHBOARD_PROBE_TIMEOUT_MS
+            ),
+        }),
+        Err(error) if error.is_connect() => Ok(DashboardProbeData {
+            address: parsed.to_string(),
+            reachable: false,
+            result: "unreachable".to_string(),
+            http_status: None,
+            response_time_ms: None,
+            detail: format!("Dashboard endpoint is not reachable: {}", error),
+        }),
+        Err(error) => Ok(DashboardProbeData {
+            address: parsed.to_string(),
+            reachable: false,
+            result: "unreachable".to_string(),
+            http_status: None,
+            response_time_ms: None,
+            detail: format!("Dashboard endpoint probe failed: {}", error),
+        }),
+    }
 }
 
 fn parse_gateway_status_output(output: &ShellOutput) -> GatewayStatusData {
@@ -608,6 +689,19 @@ mod tests {
                     "Check file permissions for the application log directory and retry.",
                 ))
             },
+        );
+    }
+
+    #[tokio::test]
+    async fn rejects_invalid_dashboard_probe_address() {
+        let error = probe_dashboard_endpoint("not-a-url".to_string())
+            .await
+            .expect_err("invalid address should fail");
+
+        assert!(matches!(error.code, ErrorCode::InvalidInput));
+        assert_eq!(
+            error.message,
+            "Dashboard address is invalid and cannot be probed."
         );
     }
 }

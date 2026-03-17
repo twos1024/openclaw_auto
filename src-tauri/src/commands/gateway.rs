@@ -1,5 +1,7 @@
 use crate::models::result::CommandResult;
-use crate::services::gateway_service::{self, GatewayActionData, GatewayStatusData};
+use crate::services::gateway_service::{
+    self, DashboardProbeData, GatewayActionData, GatewayStatusData,
+};
 
 #[tauri::command]
 pub async fn get_gateway_status() -> CommandResult<GatewayStatusData> {
@@ -36,6 +38,14 @@ pub async fn restart_gateway() -> CommandResult<GatewayActionData> {
 #[tauri::command]
 pub async fn open_dashboard() -> CommandResult<GatewayActionData> {
     match gateway_service::open_dashboard().await {
+        Ok(data) => CommandResult::ok(data),
+        Err(error) => CommandResult::err(error),
+    }
+}
+
+#[tauri::command]
+pub async fn probe_dashboard_endpoint(address: String) -> CommandResult<DashboardProbeData> {
+    match gateway_service::probe_dashboard_endpoint(address).await {
         Ok(data) => CommandResult::ok(data),
         Err(error) => CommandResult::err(error),
     }

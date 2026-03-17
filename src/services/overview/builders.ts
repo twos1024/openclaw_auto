@@ -9,6 +9,8 @@ import type {
 import { settingsService } from "../settingsService";
 import { APP_VERSION, type ConfigReadData, type DetectEnvData, type GatewayStatusData } from "./contracts";
 
+const installWizardRoute = "/install?wizard=1";
+
 function levelRank(level: HealthLevel): number {
   switch (level) {
     case "offline":
@@ -63,7 +65,7 @@ export function buildPreviewOverview(updatedAt: string): OverviewStatus {
     install: buildSection(
       "openclaw-install",
       "OpenClaw 安装",
-      "/install",
+      installWizardRoute,
       "查看 Install",
       "unknown",
       "预览模式不会检测本机 OpenClaw CLI 与 npm 安装状态。",
@@ -114,7 +116,7 @@ export function buildPreviewOverview(updatedAt: string): OverviewStatus {
       {
         id: "run-tauri",
         label: "启动桌面模式",
-        route: "/install",
+        route: installWizardRoute,
         description: "先在 Tauri 模式下运行 ClawDesk，再继续本机安装与服务控制。",
       },
     ],
@@ -162,7 +164,7 @@ export function buildInstallSection(
     return buildSection(
       "openclaw-install",
       "OpenClaw 安装",
-      "/install",
+      installWizardRoute,
       "前往 Install",
       "offline",
       envResult.error?.message ?? "尚未完成 OpenClaw 环境探测。",
@@ -174,7 +176,7 @@ export function buildInstallSection(
     return buildSection(
       "openclaw-install",
       "OpenClaw 安装",
-      "/install",
+      installWizardRoute,
       "安装 npm",
       "offline",
       "未检测到 npm，当前无法执行 OpenClaw 安装流程。",
@@ -187,7 +189,7 @@ export function buildInstallSection(
     return buildSection(
       "openclaw-install",
       "OpenClaw 安装",
-      "/install",
+      installWizardRoute,
       "安装 OpenClaw",
       "degraded",
       "尚未检测到 OpenClaw CLI，请先完成安装。",
@@ -202,7 +204,7 @@ export function buildInstallSection(
   return buildSection(
     "openclaw-install",
     "OpenClaw 安装",
-    "/install",
+    installWizardRoute,
     "查看 Install",
     "healthy",
     `已检测到 OpenClaw ${envResult.data.openclaw_version ?? ""}`.trim(),
@@ -397,7 +399,7 @@ export function buildNextActions(
     actions.push({
       id: "install-openclaw",
       label: "安装 OpenClaw",
-      route: "/install",
+      route: installWizardRoute,
       description: "先确认 npm 与 OpenClaw CLI 已安装，这是后续配置与 Gateway 控制的前提。",
     });
   }

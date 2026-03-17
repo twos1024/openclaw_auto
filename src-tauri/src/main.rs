@@ -20,6 +20,7 @@ fn main() {
             commands::gateway::stop_gateway,
             commands::gateway::restart_gateway,
             commands::gateway::open_dashboard,
+            commands::gateway::probe_dashboard_endpoint,
             commands::logs::read_logs,
             commands::logs::export_diagnostics,
             commands::settings::read_app_settings,

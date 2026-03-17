@@ -107,6 +107,22 @@ async function mockWorkspaceBackend(
             };
           }
 
+          if (command === "probe_dashboard_endpoint") {
+            return {
+              success: true,
+              data: {
+                address: "http://127.0.0.1:18789",
+                reachable: running,
+                result: running ? "reachable" : "idle",
+                httpStatus: running ? 200 : null,
+                responseTimeMs: running ? 110 : null,
+                detail: running
+                  ? "Dashboard endpoint responded successfully."
+                  : "Gateway is not running, so the dashboard endpoint was not probed.",
+              },
+            };
+          }
+
           return { success: true, data: {} };
         },
       },
@@ -136,7 +152,8 @@ test.describe("Dashboard workspace", () => {
     await expect(page.getByText("Install OpenClaw")).toBeVisible();
 
     await page.getByRole("link", { name: "Continue Setup" }).click();
-    await expect(page).toHaveURL(/#\/install$/);
+    await expect(page).toHaveURL(/#\/install\?wizard=1$/);
+    await expect(page.getByRole("dialog", { name: "Install Wizard" })).toBeVisible();
   });
 
   test("shows a timeout recovery state when the embedded dashboard never becomes ready", async ({ page }) => {
@@ -145,5 +162,14 @@ test.describe("Dashboard workspace", () => {
 
     await expect(page.getByText("Dashboard connection timed out")).toBeVisible();
     await expect(page.getByRole("button", { name: "Open Setup Assistant" })).toBeVisible();
+  });
+
+  test("shows live diagnostics for a reachable dashboard endpoint", async ({ page }) => {
+    await mockWorkspaceBackend(page, { running: true, routeDashboardFrame: true });
+    await page.goto("/#/dashboard");
+
+    await expect(page.getByRole("heading", { name: "Dashboard Diagnostics" })).toBeVisible();
+    await expect(page.getByText("Local Endpoint Probe")).toBeVisible();
+    await expect(page.getByText("HTTP 200")).toBeVisible();
   });
 });

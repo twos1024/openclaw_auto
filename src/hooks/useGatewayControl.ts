@@ -13,10 +13,10 @@ export interface UseGatewayControlResult {
   isPolling: boolean;
   loadingByAction: Record<"start" | "stop" | "restart" | "openDashboard", boolean>;
   refreshStatus: () => Promise<void>;
-  startGateway: () => Promise<void>;
-  stopGateway: () => Promise<void>;
-  restartGateway: () => Promise<void>;
-  openDashboard: () => Promise<void>;
+  startGateway: () => Promise<ServiceActionResult | null>;
+  stopGateway: () => Promise<ServiceActionResult | null>;
+  restartGateway: () => Promise<ServiceActionResult | null>;
+  openDashboard: () => Promise<ServiceActionResult | null>;
 }
 
 async function safeRun<T>(fn: () => Promise<T>): Promise<T | null> {
@@ -63,7 +63,7 @@ export function useGatewayControl(pollMs = 5000): UseGatewayControlResult {
 
   const runAction = useCallback(
     async (key: "start" | "stop" | "restart" | "openDashboard", fn: () => Promise<ServiceActionResult>) => {
-      if (actionLockRef.current[key]) return;
+      if (actionLockRef.current[key]) return null;
 
       actionLockRef.current[key] = true;
       setLoadingByAction((prev) => ({ ...prev, [key]: true }));
@@ -73,6 +73,7 @@ export function useGatewayControl(pollMs = 5000): UseGatewayControlResult {
           setLastActionResult(result);
         }
         await refreshStatus();
+        return result;
       } finally {
         actionLockRef.current[key] = false;
         if (!unmountedRef.current) {

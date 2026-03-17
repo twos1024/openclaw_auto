@@ -14,6 +14,8 @@ function normalizePlatform(platform: string | null | undefined): PlatformKey {
   return "unknown";
 }
 
+const installWizardRoute = "/install?wizard=1";
+
 function createStep(
   id: InstallWizardStep["id"],
   title: string,
@@ -43,7 +45,7 @@ export function buildInstallWizardModel({
       npmReady
         ? `npm 已就绪${environment?.npmVersion ? ` (${environment.npmVersion})` : ""}。`
         : "需要先确认 Node.js / npm 已安装，才能继续执行 OpenClaw 安装。",
-      "/install",
+      installWizardRoute,
       "Stay on Install",
       npmReady ? "complete" : "current",
     ),
@@ -53,7 +55,7 @@ export function buildInstallWizardModel({
       openclawReady
         ? "OpenClaw CLI 已安装或刚完成安装。"
         : "执行 OpenClaw CLI 安装，并等待 Gateway 托管安装步骤完成。",
-      "/install",
+      installWizardRoute,
       "Run Install",
       !npmReady ? "blocked" : openclawReady ? "complete" : "current",
     ),
