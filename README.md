@@ -23,11 +23,13 @@ ClawDesk 是 OpenClaw 的本地桌面控制台，基于 `Tauri v2 + React + Vite
 - `ConfigPage`: OpenAI-compatible / Ollama 配置、校验、测试连接、自动备份后保存
 - `ServicePage`: Gateway 启停、轮询状态、端口冲突提示、打开 Dashboard
 - `LogsPage`: 日志查看、关键字过滤、错误摘要、导出文本诊断、导出 ZIP 诊断包
-- `SettingsPage`: 诊断目录、日志行数限制、Gateway 轮询间隔、安装源偏好
+- `SettingsPage`: 诊断目录、日志行数限制、Gateway 轮询间隔、安装源偏好、运行时诊断
+- `RunbookPage`: 汇总 launch check、当前 blocker、恢复步骤和工作流上下文
 
 全局对话框：
 
 - `Setup Assistant`: 即时 launch check、引导式下一步动作、可直接深链到 Install Wizard
+- `Workspace Runtime Banner`: 全局展示当前运行时模式、桥接状态和阻塞提示
 
 ## 目录结构
 
@@ -135,8 +137,8 @@ npm run tauri:build
 
 在当前 Windows 本地环境里，`npm run tauri:build` 已验证通过，产物位于：
 
-- `src-tauri/target/release/bundle/msi/ClawDesk_0.1.4_x64_en-US.msi`
-- `src-tauri/target/release/bundle/nsis/ClawDesk_0.1.4_x64-setup.exe`
+- `src-tauri/target/release/bundle/msi/ClawDesk_0.2.0_x64_en-US.msi`
+- `src-tauri/target/release/bundle/nsis/ClawDesk_0.2.0_x64-setup.exe`
 
 可执行文件位于：
 
@@ -144,7 +146,7 @@ npm run tauri:build
 
 额外已验证：
 
-- `ClawDesk_0.1.4_x64-setup.exe` 可静默安装到临时目录
+- `ClawDesk_0.2.0_x64-setup.exe` 可静默安装到临时目录
 - 安装后的 `clawdesk.exe` 可成功启动
 - 静默卸载与目录清理可完成
 
