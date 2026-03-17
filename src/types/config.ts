@@ -1,6 +1,7 @@
 import type { BackendError, CommandResult } from "./api";
 
 export type ProviderType = "openai-compatible" | "ollama";
+export type OpenAiCompatiblePresetId = "custom" | "openai" | "deepseek" | "openrouter";
 
 export interface ConfigFormValues {
   providerType: ProviderType;
@@ -11,6 +12,14 @@ export interface ConfigFormValues {
   maxTokens: number;
   temperature: number;
   ollamaHost: string;
+}
+
+export interface OpenAiCompatiblePresetDefinition {
+  id: OpenAiCompatiblePresetId;
+  label: string;
+  description: string;
+  baseUrl?: string;
+  defaultModel?: string;
 }
 
 export type ConfigFormErrors = Partial<Record<keyof ConfigFormValues, string>>;

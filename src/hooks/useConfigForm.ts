@@ -1,11 +1,13 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { configService } from "../services/configService";
+import { applyOpenAiCompatiblePreset } from "../services/configPresets";
 import {
   defaultConfigValues,
   type BackendError,
   type ConfigFormErrors,
   type ConfigFormValues,
   type ConnectionTestResult,
+  type OpenAiCompatiblePresetId,
   type SaveConfigResult,
 } from "../types/config";
 import { hasValidationError, validateConfigForm } from "../utils/validators";
@@ -23,6 +25,7 @@ export interface UseConfigFormResult {
   saveResult: SaveConfigResult | null;
   setField: (field: keyof ConfigFormValues, value: string | number) => void;
   setProviderType: (providerType: ConfigFormValues["providerType"]) => void;
+  applyCompatiblePreset: (presetId: OpenAiCompatiblePresetId) => void;
   testConnection: () => Promise<void>;
   saveConfig: () => Promise<void>;
   resetToDefault: () => void;
@@ -78,6 +81,18 @@ export function useConfigForm(): UseConfigFormResult {
     }));
   }, []);
 
+  const applyCompatiblePreset = useCallback(
+    (presetId: OpenAiCompatiblePresetId) => {
+      setForm((prev) => applyOpenAiCompatiblePreset(prev, presetId));
+      setErrors((prev) => ({
+        ...prev,
+        providerType: undefined,
+        baseUrl: undefined,
+      }));
+    },
+    [],
+  );
+
   const validate = useCallback((values: ConfigFormValues): boolean => {
     const nextErrors = validateConfigForm(values);
     setErrors(nextErrors);
@@ -126,6 +141,7 @@ export function useConfigForm(): UseConfigFormResult {
       saveResult,
       setField,
       setProviderType,
+      applyCompatiblePreset,
       testConnection,
       saveConfig,
       resetToDefault,
@@ -143,6 +159,7 @@ export function useConfigForm(): UseConfigFormResult {
       saveResult,
       setField,
       setProviderType,
+      applyCompatiblePreset,
       testConnection,
       saveConfig,
       resetToDefault,

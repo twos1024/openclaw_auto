@@ -1,6 +1,7 @@
 import { OpenAIConfigForm } from "../components/config/OpenAIConfigForm";
 import { OllamaConfigForm } from "../components/config/OllamaConfigForm";
 import { useConfigForm } from "../hooks/useConfigForm";
+import { inferOpenAiCompatiblePresetId } from "../services/configPresets";
 import type { ConnectionTestResult, SaveConfigResult } from "../types/config";
 
 function ResultBanner(props: {
@@ -78,12 +79,14 @@ export function ConfigPage(): JSX.Element {
     saveResult,
     setField,
     setProviderType,
+    applyCompatiblePreset,
     testConnection,
     saveConfig,
     resetToDefault,
   } = useConfigForm();
 
   const isBusy = isLoading || isTesting || isSaving;
+  const openAiPresetId = inferOpenAiCompatiblePresetId(form.baseUrl);
 
   return (
     <div style={{ display: "grid", gap: 16 }}>
@@ -163,7 +166,9 @@ export function ConfigPage(): JSX.Element {
             values={form}
             errors={errors}
             disabled={isBusy}
+            presetId={openAiPresetId}
             onFieldChange={setField}
+            onPresetChange={applyCompatiblePreset}
           />
         ) : (
           <OllamaConfigForm
