@@ -24,9 +24,9 @@ export function OverviewActionList({
       }}
     >
       <div>
-        <h3 style={{ margin: 0, color: "#0f172a" }}>Recommended Next Actions</h3>
+        <h3 style={{ margin: 0, color: "#0f172a" }}>下一步</h3>
         <p style={{ margin: "6px 0 0", color: "#64748b" }}>
-          按当前健康状态排序。先处理靠前动作，通常能最快恢复可用链路。
+          按当前状态只做最前面的那一步，做完再继续下一项。
         </p>
       </div>
 
@@ -67,12 +67,12 @@ export function OverviewActionList({
                     cursor: actionLoadingId === action.id ? "not-allowed" : "pointer",
                     opacity: actionLoadingId === action.id ? 0.7 : 1,
                   }}
-                >
-                  {actionLoadingId === action.id ? "处理中..." : action.label}
-                </button>
-              ) : (
-                <Link
-                  to={action.route}
+                  >
+                    {actionLoadingId === action.id ? "处理中..." : action.label}
+                  </button>
+                ) : (
+                  <Link
+                    to={action.route}
                   style={{
                     whiteSpace: "nowrap",
                     borderRadius: 8,
@@ -83,7 +83,7 @@ export function OverviewActionList({
                     fontWeight: 700,
                   }}
                 >
-                  Go
+                  {action.label}
                 </Link>
               )}
 

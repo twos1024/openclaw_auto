@@ -91,36 +91,36 @@ function buildSteps(status: OverviewStatus): GuidedSetupStep[] {
   return [
     {
       id: "install",
-      title: "Install OpenClaw",
+      title: "安装 OpenClaw",
       description: status.install.detail,
       route: "/install?wizard=1",
-      actionLabel: "Go to Install",
+      actionLabel: "去安装",
       status: stepStatus("install", activeStep, installReady),
     },
     {
       id: "config",
-      title: "Save Provider Config",
+      title: "填写 API Key",
       description: status.config.detail,
       route: "/config",
-      actionLabel: "Go to Config",
+      actionLabel: "去填写 API Key",
       status: stepStatus("config", activeStep, configReady),
     },
     {
       id: "service",
-      title: "Start Gateway",
+      title: "启动 Gateway",
       description: status.service.detail,
       route: "/service",
-      actionLabel: "Go to Service",
+      actionLabel: "去启动 Gateway",
       status: stepStatus("service", activeStep, serviceReady),
     },
     {
       id: "dashboard",
-      title: "Open Embedded Dashboard",
+      title: "开始使用 OpenClaw",
       description: serviceReady
-        ? "Gateway 已就绪，可以直接进入 ClawDesk 内嵌 Dashboard 工作台。"
-        : "需要先让 Gateway 进入健康状态，才能打开内嵌 Dashboard。",
+        ? "Gateway 已就绪，现在可以直接打开 Dashboard 开始使用。"
+        : "需要先启动 Gateway，才能打开 Dashboard 正常使用。",
       route: "/dashboard",
-      actionLabel: "Open Dashboard",
+      actionLabel: "打开 Dashboard",
       status: stepStatus("dashboard", activeStep, false),
     },
   ];
@@ -130,21 +130,21 @@ function buildLaunchChecks(status: OverviewStatus): GuidedLaunchCheck[] {
   return [
     {
       id: "install",
-      title: "Install Check",
+      title: "安装检查",
       level: status.install.level,
       detail: status.install.detail,
       route: "/install?wizard=1",
     },
     {
       id: "config",
-      title: "Config Check",
+      title: "配置检查",
       level: status.config.level,
       detail: status.config.detail,
       route: "/config",
     },
     {
       id: "service",
-      title: "Service Check",
+      title: "服务检查",
       level: status.service.level,
       detail: status.service.detail,
       route: "/service",
@@ -162,7 +162,7 @@ function buildBlockers(status: OverviewStatus): RunbookBlocker[] {
       detail: status.runtime.detail,
       level: status.runtime.level,
       route: "/settings",
-      actionLabel: "Inspect Runtime",
+      actionLabel: "修复运行时",
     });
   }
 
@@ -173,7 +173,7 @@ function buildBlockers(status: OverviewStatus): RunbookBlocker[] {
       detail: status.runtime.detail,
       level: status.runtime.level,
       route: "/runbook",
-      actionLabel: "Open Runbook",
+      actionLabel: "查看说明",
     });
   }
 
@@ -184,7 +184,7 @@ function buildBlockers(status: OverviewStatus): RunbookBlocker[] {
       detail: status.install.detail,
       level: status.install.level,
       route: "/install?wizard=1",
-      actionLabel: "Resolve Install",
+      actionLabel: "去安装",
     });
   }
 
@@ -195,7 +195,7 @@ function buildBlockers(status: OverviewStatus): RunbookBlocker[] {
       detail: status.config.detail,
       level: status.config.level,
       route: "/config",
-      actionLabel: "Open Config",
+      actionLabel: "去填写 API Key",
     });
   }
 
@@ -206,7 +206,7 @@ function buildBlockers(status: OverviewStatus): RunbookBlocker[] {
       detail: status.service.detail,
       level: status.service.level,
       route: "/service",
-      actionLabel: "Open Service",
+      actionLabel: "去启动 Gateway",
     });
   }
 
@@ -220,28 +220,28 @@ function buildSupportActions(currentBlocker: RunbookBlocker | null): RunbookSupp
       id: "primary",
       label: currentBlocker.actionLabel,
       route: currentBlocker.route,
-      description: "Resolve the current blocker first.",
+      description: "先完成当前这一步，再继续下面的流程。",
     });
   }
 
   actions.push(
     {
       id: "runbook",
-      label: "Open Runbook",
+      label: "查看完整步骤",
       route: "/runbook",
-      description: "Review the full guided workflow and blocker list.",
+      description: "如果你想看完整流程顺序，再打开这里。",
     },
     {
       id: "logs",
-      label: "Open Logs",
+      label: "查看日志",
       route: "/logs",
-      description: "Inspect install, startup, and gateway logs.",
+      description: "只有安装或启动失败时，再来这里看错误日志。",
     },
     {
       id: "settings",
-      label: "Open Settings",
+      label: "打开设置",
       route: "/settings",
-      description: "Check runtime diagnostics and app preferences.",
+      description: "当桌面运行时有问题时，再来这里检查设置和环境。",
     },
   );
 
@@ -258,10 +258,10 @@ export function buildRunbookModel(status: OverviewStatus): RunbookModel {
   const primaryStep = steps.find((step) => step.status === "current" || step.status === "ready") ?? steps[0];
 
   return {
-    headline: currentBlocker ? "Resolve the current blocker before continuing." : "Workspace is ready for operation.",
+    headline: currentBlocker ? `下一步：${currentBlocker.title}` : "已经可以开始使用了",
     summary: currentBlocker
-      ? "Runbook collects the current blocker, quick links, and the recommended sequence so setup and recovery work stay consistent."
-      : "Install, configuration, service, runtime, and settings checks are aligned. The next step is usually Dashboard or Logs depending on what you need to do.",
+      ? "一次只做一件事。完成当前步骤后，再继续下一步。"
+      : "安装、API Key 配置和 Gateway 都已经就绪，现在可以直接打开 Dashboard。",
     primaryRoute: primaryStep.route,
     primaryLabel: primaryStep.actionLabel,
     lastCheckedAt: status.overall.updatedAt,

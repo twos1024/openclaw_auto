@@ -13,8 +13,8 @@ function PortConflictBanner({ port }: { port: number | null }): JSX.Element {
         color: "#991b1b",
         padding: 12,
       }}
-    >
-      <strong>Port Conflict Detected</strong>
+      >
+      <strong>端口被占用</strong>
       <p style={{ margin: "8px 0 0" }}>
         Gateway
         {port ? (
@@ -25,10 +25,10 @@ function PortConflictBanner({ port }: { port: number | null }): JSX.Element {
         ) : (
           " target port"
         )}{" "}
-        is currently occupied by another process.
+        已被其他进程占用。
       </p>
       <p style={{ margin: "8px 0 0", fontSize: 13 }}>
-        Next step: release this port or update gateway config to a free port, then retry startup.
+        先释放这个端口，或者换一个空闲端口，再重新启动 Gateway。
       </p>
     </section>
   );
@@ -46,10 +46,10 @@ function NextStepHint({ running, suggestion }: { running: boolean; suggestion: s
         padding: 12,
       }}
     >
-      <strong>Recommended Next Step</strong>
+      <strong>下一步</strong>
       <p style={{ margin: "8px 0 0" }}>{suggestion}</p>
       <p style={{ margin: "8px 0 0", fontSize: 13 }}>
-        Typical flow: click Start Gateway, wait for running state, then open Dashboard.
+        先启动 Gateway，确认运行后再打开 Dashboard。
       </p>
     </section>
   );
@@ -77,13 +77,13 @@ export function ServicePage(): JSX.Element {
   return (
     <div style={{ display: "grid", gap: 16 }}>
       <header>
-        <h2 style={{ marginBottom: 8 }}>ServicePage</h2>
+        <h2 style={{ marginBottom: 8 }}>Gateway 服务</h2>
         <p style={{ margin: 0, color: "#64748b" }}>
-          Manage OpenClaw Gateway lifecycle and monitor endpoint health.
+          先启动 Gateway，再打开 Dashboard。
         </p>
         <p style={{ margin: "6px 0 0", color: "#94a3b8", fontSize: 13 }}>
-          Polling: {isPolling ? `ON (${Math.round(settings.gatewayPollMs / 1000)}s)` : "OFF"}{" "}
-          {isInitializing ? " | Initializing..." : ""}
+          轮询：{isPolling ? `开启 (${Math.round(settings.gatewayPollMs / 1000)}s)` : "关闭"}{" "}
+          {isInitializing ? " | 正在初始化..." : ""}
         </p>
       </header>
 

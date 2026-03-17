@@ -53,6 +53,20 @@ describe("installWizardService", () => {
     expect(model.primaryRoute).toBe("/config");
   });
 
+  it("moves the active step to dashboard after config and service are ready", () => {
+    const model = buildInstallWizardModel({
+      environment: { ...baseEnvironment, openclawFound: true, openclawVersion: "1.2.3" },
+      installResult: null,
+      configReady: true,
+      serviceReady: true,
+    });
+
+    expect(model.steps[2]?.status).toBe("complete");
+    expect(model.steps[3]?.status).toBe("complete");
+    expect(model.steps[4]?.status).toBe("current");
+    expect(model.primaryRoute).toBe("/dashboard");
+  });
+
   it("highlights the current platform guidance card", () => {
     const cards = buildPlatformGuidance("linux");
     const current = cards.find((card) => card.isCurrent);

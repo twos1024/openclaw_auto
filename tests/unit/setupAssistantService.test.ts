@@ -75,7 +75,7 @@ describe("setupAssistantService", () => {
     expect(model.primaryRoute).toBe("/install?wizard=1");
     expect(model.launchChecks[0]?.route).toBe("/install?wizard=1");
     expect(model.launchChecks[0]).toMatchObject({
-      title: "Install Check",
+      title: "安装检查",
       level: "offline",
     });
   });
@@ -119,7 +119,7 @@ describe("setupAssistantService", () => {
     expect(model.steps[3]?.status).toBe("ready");
     expect(model.primaryRoute).toBe("/dashboard");
     expect(model.launchChecks[2]).toMatchObject({
-      title: "Service Check",
+      title: "服务检查",
       level: "healthy",
     });
   });

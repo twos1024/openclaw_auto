@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import { OpenAIConfigForm } from "../components/config/OpenAIConfigForm";
 import { OllamaConfigForm } from "../components/config/OllamaConfigForm";
 import { useConfigForm } from "../hooks/useConfigForm";
@@ -7,6 +8,10 @@ import type { ConnectionTestResult, SaveConfigResult } from "../types/config";
 function ResultBanner(props: {
   title: string;
   result: ConnectionTestResult | SaveConfigResult;
+  nextAction?: {
+    label: string;
+    route: string;
+  };
 }): JSX.Element {
   const colorMap = {
     success: {
@@ -43,23 +48,41 @@ function ResultBanner(props: {
       <p style={{ margin: "8px 0 0", fontSize: 13 }}>{props.result.suggestion}</p>
       {props.result.code ? (
         <p style={{ margin: "8px 0 0", fontSize: 12, opacity: 0.9 }}>
-          Error code: {props.result.code}
+          错误码：{props.result.code}
         </p>
       ) : null}
       {"latencyMs" in props.result && props.result.latencyMs ? (
         <p style={{ margin: "8px 0 0", fontSize: 12, opacity: 0.9 }}>
-          Latency: {props.result.latencyMs}ms
+          耗时：{props.result.latencyMs}ms
         </p>
       ) : null}
       {"backupPath" in props.result && props.result.backupPath ? (
         <p style={{ margin: "8px 0 0", fontSize: 12, opacity: 0.9 }}>
-          Backup: {props.result.backupPath}
+          备份：{props.result.backupPath}
         </p>
       ) : null}
       {"savedPath" in props.result && props.result.savedPath ? (
         <p style={{ margin: "8px 0 0", fontSize: 12, opacity: 0.9 }}>
-          Saved: {props.result.savedPath}
+          保存到：{props.result.savedPath}
         </p>
+      ) : null}
+      {props.nextAction ? (
+        <div style={{ marginTop: 10 }}>
+          <Link
+            to={props.nextAction.route}
+            style={{
+              display: "inline-block",
+              borderRadius: 8,
+              background: "#0f172a",
+              color: "#ffffff",
+              padding: "8px 12px",
+              textDecoration: "none",
+              fontWeight: 700,
+            }}
+          >
+            {props.nextAction.label}
+          </Link>
+        </div>
       ) : null}
     </section>
   );
@@ -91,9 +114,9 @@ export function ConfigPage(): JSX.Element {
   return (
     <div style={{ display: "grid", gap: 16 }}>
       <header>
-        <h2 style={{ marginBottom: 8 }}>ConfigPage</h2>
+        <h2 style={{ marginBottom: 8 }}>API Key 配置</h2>
         <p style={{ margin: 0, color: "#64748b" }}>
-          Configure OpenAI-compatible or Ollama mode, test connectivity, and save safely.
+          这里先填 API Key，再测试连接，最后保存配置。
         </p>
       </header>
 
@@ -115,7 +138,7 @@ export function ConfigPage(): JSX.Element {
           ) : null}
           {usedDefaultValues ? (
             <p style={{ margin: "8px 0 0", fontSize: 12, opacity: 0.9 }}>
-              当前表单展示的是默认值，不代表磁盘上的真实配置。
+              当前表单是默认值，不代表磁盘上的真实配置。
             </p>
           ) : null}
         </section>
@@ -133,13 +156,13 @@ export function ConfigPage(): JSX.Element {
       >
         {loadedPath ? (
           <p style={{ margin: 0, fontSize: 13, color: "#64748b" }}>
-            Config Path: <strong>{loadedPath}</strong>
+            配置路径：<strong>{loadedPath}</strong>
           </p>
         ) : null}
 
         <label style={{ display: "block", maxWidth: 320 }}>
           <span style={{ display: "block", marginBottom: 6, color: "#334155", fontWeight: 600 }}>
-            Provider Type
+            提供方
           </span>
           <select
             value={form.providerType}
@@ -156,7 +179,7 @@ export function ConfigPage(): JSX.Element {
               background: "#ffffff",
             }}
           >
-            <option value="openai-compatible">OpenAI-compatible</option>
+            <option value="openai-compatible">OpenAI 兼容</option>
             <option value="ollama">Ollama</option>
           </select>
         </label>
@@ -195,7 +218,7 @@ export function ConfigPage(): JSX.Element {
               opacity: isBusy ? 0.6 : 1,
             }}
           >
-            {isTesting ? "Testing..." : "Test Connection"}
+            {isTesting ? "正在测试..." : "测试连接"}
           </button>
 
           <button
@@ -213,7 +236,7 @@ export function ConfigPage(): JSX.Element {
               opacity: isBusy ? 0.6 : 1,
             }}
           >
-            {isSaving ? "Saving..." : "Save Config"}
+            {isSaving ? "正在保存..." : "保存配置"}
           </button>
 
           <button
@@ -231,13 +254,26 @@ export function ConfigPage(): JSX.Element {
               opacity: isBusy ? 0.6 : 1,
             }}
           >
-            Reset
+            重置
           </button>
         </div>
       </section>
 
-      {testResult ? <ResultBanner title="Test Result" result={testResult} /> : null}
-      {saveResult ? <ResultBanner title="Save Result" result={saveResult} /> : null}
+      {testResult ? <ResultBanner title="测试结果" result={testResult} /> : null}
+      {saveResult ? (
+        <ResultBanner
+          title="保存结果"
+          result={saveResult}
+          nextAction={
+            saveResult.status === "success"
+              ? {
+                  label: "启动 Gateway",
+                  route: "/service",
+                }
+              : undefined
+          }
+        />
+      ) : null}
     </div>
   );
 }

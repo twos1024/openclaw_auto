@@ -61,11 +61,11 @@ export function OverviewPage({ autoRefreshMs }: OverviewPageProps): JSX.Element 
   }, [autoRefreshMs]);
 
   const headerText = useMemo(() => {
-    if (loadState === "loading" && !status) return "Loading overview...";
-    if (loadState === "error") return "Overview unavailable";
-    if (status?.mode === "preview") return "OpenClaw Preview Overview";
-    if (status?.mode === "runtime-unavailable") return "OpenClaw Desktop Runtime Overview";
-    return "OpenClaw Runtime Overview";
+    if (loadState === "loading" && !status) return "正在加载";
+    if (loadState === "error") return "概览不可用";
+    if (status?.mode === "preview") return "浏览器预览";
+    if (status?.mode === "runtime-unavailable") return "桌面运行时异常";
+    return "OpenClaw 概览";
   }, [loadState, status]);
 
   const sections = status ? [status.install, status.config, status.service, status.runtime, status.settings] : [];
@@ -76,10 +76,10 @@ export function OverviewPage({ autoRefreshMs }: OverviewPageProps): JSX.Element 
         <h2 style={{ marginBottom: 8 }}>{headerText}</h2>
         <p style={{ margin: 0, color: "#64748b" }}>
           {status?.mode === "preview"
-            ? "当前是浏览器预览态，只展示可预期结构，不代表本地真实运行状态。"
+            ? "当前是浏览器预览，只看结构，不代表本机真实状态。"
             : status?.mode === "runtime-unavailable"
-              ? "当前已进入桌面窗口，但前端未连上 Tauri 命令桥。请先修复运行时集成，再继续安装、配置和服务控制。"
-              : "Overview 现在会聚合安装、配置、服务与应用设置，帮助你快速找到下一步动作。"}
+              ? "当前已进入桌面窗口，但前端没连上运行时桥接。先修复它，再继续安装和配置。"
+              : "这里会告诉你现在只该做哪一步。"}
         </p>
       </header>
 
@@ -99,7 +99,7 @@ export function OverviewPage({ autoRefreshMs }: OverviewPageProps): JSX.Element 
             opacity: loadState === "loading" ? 0.6 : 1,
           }}
         >
-          Refresh
+          重新加载
         </button>
       </div>
 

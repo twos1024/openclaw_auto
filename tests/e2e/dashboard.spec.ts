@@ -146,18 +146,18 @@ test.describe("Dashboard workspace", () => {
     );
   });
 
-  test("opens setup assistant and routes to install when setup is incomplete", async ({ page }) => {
+  test("opens setup assistant automatically and routes to install when setup is incomplete", async ({ page }) => {
     await mockWorkspaceBackend(page, { running: false });
     await page.goto("/#/");
 
-    await page.getByRole("button", { name: "Setup Assistant" }).click();
-    await expect(page.getByRole("heading", { name: "Setup Assistant" })).toBeVisible();
-    await expect(page.getByRole("heading", { name: "Launch Check" })).toBeVisible();
-    await expect(page.getByText("Install OpenClaw")).toBeVisible();
+    await expect(page.getByRole("dialog", { name: "OpenClaw 设置助手" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "OpenClaw 设置助手" })).toBeVisible();
+    await expect(page.getByText("当前先处理：OpenClaw 安装")).toBeVisible();
+    await expect(page.getByRole("link", { name: "继续下一步" })).toBeVisible();
 
-    await page.getByRole("link", { name: "Continue Setup" }).click();
+    await page.getByRole("link", { name: "继续下一步" }).click();
     await expect(page).toHaveURL(/#\/install\?wizard=1$/);
-    await expect(page.getByRole("dialog", { name: "Install Wizard" })).toBeVisible();
+    await expect(page.getByRole("dialog", { name: "OpenClaw 安装向导" })).toBeVisible();
   });
 
   test("shows a timeout recovery state when the embedded dashboard never becomes ready", async ({ page }) => {

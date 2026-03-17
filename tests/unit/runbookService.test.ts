@@ -109,11 +109,11 @@ describe("runbookService", () => {
     expect(model.currentBlocker).toMatchObject({
       id: "runtime-bridge",
       route: "/settings",
-      actionLabel: "Inspect Runtime",
+      actionLabel: "修复运行时",
     });
     expect(model.supportActions[0]).toMatchObject({
       route: "/settings",
-      label: "Inspect Runtime",
+      label: "修复运行时",
     });
   });
 

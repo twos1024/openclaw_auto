@@ -6,7 +6,7 @@ type NavItem = {
 };
 
 const navItems: NavItem[] = [
-  { to: "/", label: "Overview" },
+  { to: "/overview", label: "Overview" },
   { to: "/runbook", label: "Runbook" },
   { to: "/dashboard", label: "Dashboard" },
   { to: "/install", label: "Install" },
@@ -37,7 +37,7 @@ export function Sidebar(): JSX.Element {
           <NavLink
             key={item.to}
             to={item.to}
-            end={item.to === "/"}
+            end={item.to === "/overview"}
             style={({ isActive }) => ({
               display: "block",
               padding: "10px 12px",

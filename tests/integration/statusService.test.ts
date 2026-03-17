@@ -106,7 +106,66 @@ describe("statusService integration", () => {
     expect(data.settings.level).toBe("healthy");
     expect(data.nextActions[0]).toMatchObject({
       route: "/install?wizard=1",
-      label: "安装 OpenClaw",
+      label: "开始安装 OpenClaw",
+    });
+  });
+
+  it("recommends filling API key next when OpenClaw is installed but config is missing", async () => {
+    createInvokeMock({
+      detect_env: async () => ({
+        success: true,
+        data: {
+          platform: "windows",
+          npm_found: true,
+          npm_version: "10.9.0",
+          openclaw_found: true,
+          openclaw_version: "1.2.3",
+          openclaw_path: "C:\\Users\\Tester\\AppData\\Roaming\\npm\\openclaw.cmd",
+          config_path: "C:\\Users\\Tester\\.openclaw\\openclaw.json",
+        },
+      }),
+      get_gateway_status: async () => ({
+        success: false,
+        error: {
+          code: "E_PATH_NOT_FOUND",
+          message: "Gateway not running yet.",
+          suggestion: "Start Gateway after config.",
+        },
+      }),
+      read_openclaw_config: async () => ({
+        success: false,
+        error: {
+          code: "E_PATH_NOT_FOUND",
+          message: "config missing",
+          suggestion: "create config",
+        },
+      }),
+      read_app_settings: async () => ({
+        success: true,
+        data: {
+          path: "C:\\Users\\Tester\\AppData\\Roaming\\ClawDesk\\settings.json",
+          exists: true,
+          content: {
+            preferredInstallSource: "npm-global",
+            diagnosticsDir: "C:\\Users\\Tester\\Diagnostics",
+            logLineLimit: 1200,
+            gatewayPollMs: 5000,
+          },
+        },
+      }),
+    });
+
+    const result = await statusService.getOverviewStatus();
+    const data = result.data as {
+      overall: { headline: string };
+      nextActions: Array<{ route: string; label: string }>;
+    };
+
+    expect(result.ok).toBe(true);
+    expect(data.overall.headline).toBe("下一步：填写 API Key");
+    expect(data.nextActions[0]).toMatchObject({
+      route: "/config",
+      label: "填写 API Key",
     });
   });
 
@@ -170,7 +229,7 @@ describe("statusService integration", () => {
     expect(result.ok).toBe(true);
     expect(data.overall.level).toBe("healthy");
     expect(data.nextActions[0]).toMatchObject({
-      label: "打开 Dashboard",
+      label: "打开 Dashboard 开始使用",
       route: "/dashboard",
       kind: "open-dashboard",
     });

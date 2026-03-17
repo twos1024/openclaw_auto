@@ -116,17 +116,17 @@ export function buildPreviewOverview(updatedAt: string, runtime: RuntimeDiagnost
     mode: "preview",
     overall: {
       level: "unknown",
-      headline: "当前为浏览器预览模式",
-      summary: "请使用 `npm run tauri:dev` 启动桌面模式，以获取真实环境、配置和服务健康状态。",
+      headline: "请先打开桌面版 ClawDesk",
+      summary: "浏览器预览只能看界面，不能执行安装、写入 API Key 或启动 Gateway。",
       updatedAt,
     },
     ...previewSections,
     nextActions: [
       {
         id: "run-tauri",
-        label: "启动桌面模式",
+        label: "打开桌面版 ClawDesk",
         route: installWizardRoute,
-        description: "先在 Tauri 模式下运行 ClawDesk，再继续本机安装与服务控制。",
+        description: "先进入桌面运行时，再继续安装、配置 API Key 和启动 Gateway。",
       },
     ],
   };
@@ -193,22 +193,22 @@ export function buildRuntimeUnavailableOverview(
     overall: {
       level: "offline",
       headline: "桌面运行时异常",
-      summary: "当前已进入 ClawDesk 桌面窗口，但前端没有连上 Tauri 命令桥，安装、配置、日志和服务控制都会不可用。",
+      summary: "当前虽然已经打开桌面窗口，但本地命令桥没连上，所以安装、配置和启动都无法继续。",
       updatedAt,
     },
     ...unavailableSections,
     nextActions: [
       {
         id: "review-runtime-diagnostics",
-        label: "检查运行时诊断",
+        label: "先修复桌面运行时",
         route: "/settings",
-        description: "先确认当前是否检测到 Tauri shell 与 invoke bridge，再决定是否重启或重装桌面应用。",
+        description: "先让桌面命令桥恢复正常，再继续安装、配置 API Key 和启动 Gateway。",
       },
       {
         id: "review-logs",
-        label: "查看日志与诊断",
+        label: "查看错误日志",
         route: "/logs",
-        description: "若问题持续存在，可导出诊断摘要并附上运行时诊断信息。",
+        description: "如果修复桌面运行时时遇到问题，再来这里查看错误日志。",
       },
     ],
   };
@@ -272,7 +272,7 @@ export function buildInstallSection(
       "openclaw-install",
       "OpenClaw 安装",
       installWizardRoute,
-      "安装 npm",
+      "先安装 Node.js / npm",
       "offline",
       "未检测到 npm，当前无法执行 OpenClaw 安装流程。",
       updatedAt,
@@ -285,7 +285,7 @@ export function buildInstallSection(
       "openclaw-install",
       "OpenClaw 安装",
       installWizardRoute,
-      "安装 OpenClaw",
+      "开始安装",
       "degraded",
       "尚未检测到 OpenClaw CLI，请先完成安装。",
       updatedAt,
@@ -311,10 +311,6 @@ export function buildInstallSection(
   );
 }
 
-function ctaLabelForConfig(configResult: CommandResult<ConfigReadData>): string {
-  return configResult.error?.code === "E_PATH_NOT_FOUND" ? "创建 Config" : "修复 Config";
-}
-
 export function buildConfigSection(
   configResult: CommandResult<ConfigReadData>,
   updatedAt: string,
@@ -330,9 +326,9 @@ export function buildConfigSection(
       "openclaw-config",
       "OpenClaw 配置",
       "/config",
-      "查看 Config",
+      "查看配置",
       "healthy",
-      model ? `配置已加载，当前模型为 ${model}。` : "配置已加载。可以继续启动 Gateway。",
+      model ? `API Key 配置已保存，当前模型为 ${model}。下一步可以启动 Gateway。` : "配置已加载。下一步可以启动 Gateway。",
       updatedAt,
       [
         { label: "Provider", value: provider ?? "-" },
@@ -343,13 +339,13 @@ export function buildConfigSection(
 
   const missing = configResult.error?.code === "E_PATH_NOT_FOUND";
   return buildSection(
-    "openclaw-config",
-    "OpenClaw 配置",
-    "/config",
-    ctaLabelForConfig(configResult),
-    missing ? "degraded" : "offline",
-    missing
-      ? "尚未检测到 OpenClaw 配置文件，请先保存模型配置。"
+      "openclaw-config",
+      "OpenClaw 配置",
+      "/config",
+      configResult.error?.code === "E_PATH_NOT_FOUND" ? "填写 API Key" : "修复配置",
+      missing ? "degraded" : "offline",
+      missing
+      ? "OpenClaw 已安装，下一步请填写 API Key、接口地址和模型。"
       : configResult.error?.message ?? "OpenClaw 配置读取失败。",
     updatedAt,
   );
@@ -365,7 +361,7 @@ export function buildServiceSection(
       "openclaw-service",
       "Gateway 服务",
       "/service",
-      running ? "打开 Service" : "启动 Gateway",
+      running ? "查看运行状态" : "启动 Gateway",
       running ? "healthy" : "degraded",
       running
         ? gatewayResult.data.statusDetail ??
@@ -459,8 +455,8 @@ export function buildOverall(
   if (sections.install.level === "offline" || sections.install.level === "degraded") {
     return {
       level: sections.install.level,
-      headline: "先完成 OpenClaw 安装",
-      summary: "当前还没有形成完整运行闭环。请先确认 npm / OpenClaw CLI 安装状态，再继续配置和启动 Gateway。",
+      headline: "下一步：安装 OpenClaw",
+      summary: "这是第 1 步。安装完成后，再去填写 API Key 并启动 Gateway。",
       updatedAt,
     };
   }
@@ -476,8 +472,8 @@ export function buildOverall(
   if (sections.config.level !== "healthy") {
     return {
       level,
-      headline: "先修复 OpenClaw 配置",
-      summary: "安装链路已具备，但配置仍未完成。建议先保存 provider、model 与连接信息。",
+      headline: "下一步：填写 API Key",
+      summary: "这是第 2 步。把 API Key、接口地址和模型保存好，再启动 Gateway。",
       updatedAt,
     };
   }
@@ -485,16 +481,16 @@ export function buildOverall(
   if (sections.service.level !== "healthy") {
     return {
       level,
-      headline: "Gateway 尚未运行",
-      summary: "配置已经就绪，但 Gateway 还没进入健康状态。下一步建议前往 Service 页面启动并验证 Dashboard。",
+      headline: "下一步：启动 Gateway",
+      summary: "这是第 3 步。Gateway 启动后，就可以直接打开 Dashboard 开始使用。",
       updatedAt,
     };
   }
 
   return {
     level,
-    headline: "系统已就绪",
-    summary: "OpenClaw CLI、配置、Gateway 与 ClawDesk 设置都处于可用状态，可以继续打开 Dashboard 或导出诊断信息。",
+    headline: "可以开始使用了",
+    summary: "OpenClaw 已经安装完成，API Key 已保存，Gateway 也已启动。现在直接打开 Dashboard 即可。",
     updatedAt,
   };
 }
@@ -507,18 +503,18 @@ export function buildNextActions(
   if (sections.install.level === "offline" || sections.install.level === "degraded") {
     actions.push({
       id: "install-openclaw",
-      label: "安装 OpenClaw",
+      label: "开始安装 OpenClaw",
       route: installWizardRoute,
-      description: "先确认 npm 与 OpenClaw CLI 已安装，这是后续配置与 Gateway 控制的前提。",
+      description: "这是第 1 步。安装完成后，继续去填写 API Key。",
     });
   }
 
   if (sections.config.level !== "healthy") {
     actions.push({
       id: "configure-provider",
-      label: "保存 Provider 配置",
+      label: "填写 API Key",
       route: "/config",
-      description: "补齐模型、地址与鉴权配置，避免 Gateway 启动后仍无法连通上游模型服务。",
+      description: "这是第 2 步。填好 API Key、接口地址和模型后再启动 Gateway。",
     });
   }
 
@@ -527,14 +523,14 @@ export function buildNextActions(
       id: "start-gateway",
       label: "启动 Gateway",
       route: "/service",
-      description: "安装和配置完成后，前往 Service 页面启动 Gateway 并检查端口与 Dashboard。",
+      description: "这是第 3 步。Gateway 启动成功后，就可以打开 Dashboard 开始使用。",
     });
   } else {
     actions.push({
       id: "open-dashboard",
-      label: "打开 Dashboard",
+      label: "打开 Dashboard 开始使用",
       route: "/dashboard",
-      description: "Gateway 已运行，可以进入 ClawDesk 内嵌 Dashboard，必要时再打开外部页面。",
+      description: "OpenClaw 已经准备好，直接进入 Dashboard 即可。",
       kind: "open-dashboard",
     });
   }
@@ -550,9 +546,9 @@ export function buildNextActions(
 
   actions.push({
     id: "review-logs",
-    label: "查看日志与诊断",
+    label: "遇到问题再看日志",
     route: "/logs",
-    description: "若任何一步出现异常，可在 Logs 页面查看摘要并导出诊断信息。",
+    description: "只有安装、配置或启动失败时，再到这里查看错误和导出诊断信息。",
   });
 
   return actions;

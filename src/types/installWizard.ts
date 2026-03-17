@@ -31,4 +31,6 @@ export interface InstallWizardModel {
 export interface BuildInstallWizardArgs {
   environment: InstallEnvironment | null;
   installResult: InstallActionResult | null;
+  configReady?: boolean;
+  serviceReady?: boolean;
 }

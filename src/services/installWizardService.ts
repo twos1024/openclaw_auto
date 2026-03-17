@@ -34,64 +34,87 @@ function installSucceeded(result: InstallActionResult | null): boolean {
 export function buildInstallWizardModel({
   environment,
   installResult,
+  configReady = false,
+  serviceReady = false,
 }: BuildInstallWizardArgs): InstallWizardModel {
   const npmReady = Boolean(environment?.npmFound);
   const openclawReady = Boolean(environment?.openclawFound || installSucceeded(installResult));
+  const dashboardReady = serviceReady;
 
   const steps: InstallWizardStep[] = [
     createStep(
       "environment",
-      "Check Environment",
+      "检查安装环境",
       npmReady
         ? `npm 已就绪${environment?.npmVersion ? ` (${environment.npmVersion})` : ""}。`
         : "需要先确认 Node.js / npm 已安装，才能继续执行 OpenClaw 安装。",
       installWizardRoute,
-      "Stay on Install",
+      "留在安装页",
       npmReady ? "complete" : "current",
     ),
     createStep(
       "install",
-      "Install OpenClaw CLI",
+      "安装 OpenClaw",
       openclawReady
-        ? "OpenClaw CLI 已安装或刚完成安装。"
-        : "执行 OpenClaw CLI 安装，并等待 Gateway 托管安装步骤完成。",
+        ? "OpenClaw 已安装完成。"
+        : "执行 OpenClaw 安装，等待程序完成本机安装准备。",
       installWizardRoute,
-      "Run Install",
+      "立即安装",
       !npmReady ? "blocked" : openclawReady ? "complete" : "current",
     ),
     createStep(
       "config",
-      "Save Provider Config",
-      "完成安装后，继续保存 Provider、模型和连接参数。",
+      "填写 API Key",
+      configReady
+        ? "API Key 和模型配置已保存。"
+        : "安装完成后，填写 API Key、接口地址和模型名称。",
       "/config",
-      "Go to Config",
-      openclawReady ? "current" : "blocked",
+      "去填写 API Key",
+      !openclawReady ? "blocked" : configReady ? "complete" : "current",
     ),
     createStep(
       "service",
-      "Start Gateway",
-      "配置完成后，前往 Service 页面启动并验证 Gateway。",
+      "启动 Gateway",
+      serviceReady
+        ? "Gateway 已经启动。"
+        : "保存配置后，前往 Service 页面启动 Gateway。",
       "/service",
-      "Go to Service",
-      "blocked",
+      "去启动 Gateway",
+      !configReady ? "blocked" : serviceReady ? "complete" : "current",
     ),
     createStep(
       "dashboard",
-      "Open Embedded Dashboard",
-      "当 Gateway 运行后，可以进入内嵌 Dashboard 工作台。",
+      "开始使用 OpenClaw",
+      dashboardReady
+        ? "现在可以直接打开 Dashboard 开始使用。"
+        : "Gateway 启动后，就可以打开 Dashboard 正常使用。",
       "/dashboard",
-      "Open Dashboard",
-      "blocked",
+      "打开 Dashboard",
+      dashboardReady ? "current" : "blocked",
     ),
   ];
 
   const currentStep = steps.find((step) => step.status === "current") ?? steps[0];
 
+  const headlineByStep: Record<InstallWizardStep["id"], string> = {
+    environment: "先检查这台电脑能不能直接安装",
+    install: "先把 OpenClaw 安装好",
+    config: "下一步：填写 API Key",
+    service: "下一步：启动 Gateway",
+    dashboard: "已经可以开始使用了",
+  };
+
+  const summaryByStep: Record<InstallWizardStep["id"], string> = {
+    environment: "确认 npm 可用后，再执行安装。安装器会按顺序带你完成后续步骤。",
+    install: "安装完成后，马上去填写 API Key 和模型，然后启动 Gateway。",
+    config: "这一步只需要把 API Key、接口地址和模型填好并保存。",
+    service: "Gateway 启动成功后，就可以直接进入 Dashboard。",
+    dashboard: "OpenClaw 已完成安装、配置和启动，现在直接开始使用即可。",
+  };
+
   return {
-    headline: openclawReady ? "安装已完成，继续后续配置" : "按顺序完成本机安装向导",
-    summary: openclawReady
-      ? "OpenClaw CLI 已准备好。下一步建议保存 Provider 配置，然后启动 Gateway。"
-      : "向导会先检查环境，再执行安装，最后引导你进入配置和服务启动。",
+    headline: headlineByStep[currentStep.id],
+    summary: summaryByStep[currentStep.id],
     primaryRoute: currentStep.route,
     primaryLabel: currentStep.actionLabel,
     steps,

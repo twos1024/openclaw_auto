@@ -1,5 +1,6 @@
 import { createHashRouter } from "react-router-dom";
 import { AppShell } from "./components/layout/AppShell";
+import { HomeEntryPage } from "./pages/HomeEntryPage";
 import { OverviewPage } from "./pages/OverviewPage";
 import { RunbookPage } from "./pages/RunbookPage";
 import { DashboardPage } from "./pages/DashboardPage";
@@ -16,6 +17,10 @@ export const router = createHashRouter([
     children: [
       {
         index: true,
+        element: <HomeEntryPage />,
+      },
+      {
+        path: "overview",
         element: <OverviewPage autoRefreshMs={15000} />,
       },
       {
