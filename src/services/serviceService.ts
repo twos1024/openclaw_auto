@@ -22,6 +22,8 @@ export interface ServiceActionResult {
   suggestion: string;
   code?: string;
   conflictPort?: number;
+  address?: string | null;
+  pid?: number | null;
 }
 
 function normalizeProbeData(raw: unknown, fallbackAddress: string): DashboardProbeResult {
@@ -164,6 +166,71 @@ function normalizeActionError(error?: BackendError): ServiceActionResult {
   };
 }
 
+function defaultSuccessSuggestion(command: string, address: string | null): string {
+  if (command === "open_dashboard") {
+    return address
+      ? `The dashboard should now open at ${address}.`
+      : "The dashboard should now open in the system browser.";
+  }
+
+  if (command === "start_gateway" || command === "restart_gateway") {
+    return address
+      ? `Refresh status to confirm gateway health at ${address}.`
+      : "Refresh status to confirm gateway health.";
+  }
+
+  if (command === "stop_gateway") {
+    return "Refresh status to confirm the gateway has stopped.";
+  }
+
+  return "Refresh status to confirm gateway health.";
+}
+
+function normalizeActionSuccess(command: string, raw: unknown): ServiceActionResult {
+  if (!raw || typeof raw !== "object") {
+    return {
+      status: "success",
+      detail: "Command executed successfully.",
+      suggestion: defaultSuccessSuggestion(command, null),
+    };
+  }
+
+  const value = raw as Record<string, unknown>;
+  const address = typeof value.address === "string" ? value.address : null;
+  const pid = toNumber(value.pid);
+  const detail =
+    typeof value.detail === "string" && value.detail.trim().length > 0
+      ? value.detail
+      : "Command executed successfully.";
+
+  return {
+    status: "success",
+    detail,
+    suggestion: defaultSuccessSuggestion(command, address),
+    address,
+    pid,
+  };
+}
+
+function buildLiveErrorStatus(error?: BackendError): GatewayStatus {
+  return {
+    state: "error",
+    running: false,
+    port: toNumber(error?.details?.port ?? error?.details?.gatewayPort),
+    address: typeof error?.details?.address === "string" ? error.details.address : null,
+    pid: toNumber(error?.details?.pid),
+    lastStartedAt:
+      typeof error?.details?.lastStartedAt === "string"
+        ? error.details.lastStartedAt
+        : typeof error?.details?.last_started_at === "string"
+          ? error.details.last_started_at
+          : null,
+    statusDetail: error?.message ?? "Failed to query OpenClaw Gateway status.",
+    suggestion: error?.suggestion ?? "Check whether the Gateway service is installed correctly, then retry.",
+    portConflictPort: toNumber(error?.details?.portConflictPort ?? error?.details?.conflictPort ?? error?.details?.port),
+  };
+}
+
 async function invokeAction(command: string): Promise<ServiceActionResult> {
   if (!isTauriRuntime()) {
     return {
@@ -179,11 +246,7 @@ async function invokeAction(command: string): Promise<ServiceActionResult> {
     return normalizeActionError(result.error);
   }
 
-  return {
-    status: "success",
-    detail: "Command executed successfully.",
-    suggestion: "Refresh status to confirm gateway health.",
-  };
+  return normalizeActionSuccess(command, result.data);
 }
 
 export const serviceService = {
@@ -194,14 +257,7 @@ export const serviceService = {
 
     const result = await invokeCommand<Record<string, unknown>>("get_gateway_status");
     if (!result.success || !result.data) {
-      const normalized = normalizeActionError(result.error);
-      return {
-        ...buildPreviewStatus(),
-        state: "error",
-        statusDetail: normalized.detail,
-        suggestion: normalized.suggestion,
-        portConflictPort: normalized.conflictPort ?? null,
-      };
+      return buildLiveErrorStatus(result.error);
     }
 
     return normalizeStatusData(result.data);

@@ -17,6 +17,7 @@ export function DashboardPage(): JSX.Element {
   const { openSetupAssistant } = useShellActions();
   const {
     status,
+    refreshCycle,
     isRefreshing,
     loadingByAction,
     startGateway,
@@ -57,12 +58,12 @@ export function DashboardPage(): JSX.Element {
       if (!cancelled) {
         setProbe(result);
       }
-      });
+    });
 
     return () => {
       cancelled = true;
     };
-  }, [address, frameKey, isRefreshing, isRunning, status?.state, status?.statusDetail]);
+  }, [address, frameKey, isRunning, refreshCycle, status?.lastStartedAt, status?.state]);
 
   useEffect(() => {
     setLastExternalOpenResult(null);
@@ -72,13 +73,25 @@ export function DashboardPage(): JSX.Element {
     () =>
       buildDashboardDiagnosticsModel({
         phase: isRunning ? embedPhase : "blocked",
+        gatewayState: status?.state ?? null,
+        gatewayRunning: Boolean(status?.running),
         address,
         statusDetail: status?.statusDetail ?? "Waiting for Gateway status...",
         platformNote,
         probe,
         externalOpenResult: lastExternalOpenResult,
       }),
-    [address, embedPhase, isRunning, lastExternalOpenResult, platformNote, probe, status?.statusDetail],
+    [
+      address,
+      embedPhase,
+      isRunning,
+      lastExternalOpenResult,
+      platformNote,
+      probe,
+      status?.running,
+      status?.state,
+      status?.statusDetail,
+    ],
   );
 
   const handleOpenExternal = async (): Promise<void> => {

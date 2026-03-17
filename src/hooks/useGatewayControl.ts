@@ -8,6 +8,7 @@ import {
 export interface UseGatewayControlResult {
   status: GatewayStatus | null;
   lastActionResult: ServiceActionResult | null;
+  refreshCycle: number;
   isInitializing: boolean;
   isRefreshing: boolean;
   isPolling: boolean;
@@ -30,6 +31,7 @@ async function safeRun<T>(fn: () => Promise<T>): Promise<T | null> {
 export function useGatewayControl(pollMs = 5000): UseGatewayControlResult {
   const [status, setStatus] = useState<GatewayStatus | null>(null);
   const [lastActionResult, setLastActionResult] = useState<ServiceActionResult | null>(null);
+  const [refreshCycle, setRefreshCycle] = useState<number>(0);
   const [isInitializing, setIsInitializing] = useState<boolean>(true);
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
   const [isPolling, setIsPolling] = useState<boolean>(false);
@@ -55,6 +57,7 @@ export function useGatewayControl(pollMs = 5000): UseGatewayControlResult {
     const next = await safeRun(() => serviceService.getGatewayStatus());
     if (!unmountedRef.current && next) {
       setStatus(next);
+      setRefreshCycle((current) => current + 1);
     }
     if (!unmountedRef.current) {
       setIsRefreshing(false);
@@ -134,6 +137,7 @@ export function useGatewayControl(pollMs = 5000): UseGatewayControlResult {
     () => ({
       status,
       lastActionResult,
+      refreshCycle,
       isInitializing,
       isRefreshing,
       isPolling,
@@ -147,6 +151,7 @@ export function useGatewayControl(pollMs = 5000): UseGatewayControlResult {
     [
       status,
       lastActionResult,
+      refreshCycle,
       isInitializing,
       isRefreshing,
       isPolling,

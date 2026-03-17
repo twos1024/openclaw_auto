@@ -26,6 +26,8 @@ async function mockWorkspaceBackend(
 
   await page.addInitScript((payload) => {
     const running = payload.running as boolean;
+    const state = { probeCalls: 0 };
+    (window as unknown as { __probeCalls?: number }).__probeCalls = 0;
 
     (window as unknown as { __TAURI__?: unknown }).__TAURI__ = {
       core: {
@@ -108,6 +110,8 @@ async function mockWorkspaceBackend(
           }
 
           if (command === "probe_dashboard_endpoint") {
+            state.probeCalls += 1;
+            (window as unknown as { __probeCalls?: number }).__probeCalls = state.probeCalls;
             return {
               success: true,
               data: {
@@ -171,5 +175,19 @@ test.describe("Dashboard workspace", () => {
     await expect(page.getByRole("heading", { name: "Dashboard Diagnostics" })).toBeVisible();
     await expect(page.getByText("Local Endpoint Probe")).toBeVisible();
     await expect(page.getByText("HTTP 200")).toBeVisible();
+  });
+
+  test("refreshing status triggers only one additional dashboard probe", async ({ page }) => {
+    await mockWorkspaceBackend(page, { running: true, routeDashboardFrame: true });
+    await page.goto("/#/dashboard");
+
+    await expect.poll(() => page.evaluate(() => (window as unknown as { __probeCalls?: number }).__probeCalls ?? 0)).toBe(1);
+
+    await page.getByRole("button", { name: "Refresh Status" }).click();
+
+    await expect.poll(() => page.evaluate(() => (window as unknown as { __probeCalls?: number }).__probeCalls ?? 0)).toBe(2);
+    await page.waitForTimeout(400);
+    const finalProbeCalls = await page.evaluate(() => (window as unknown as { __probeCalls?: number }).__probeCalls ?? 0);
+    expect(finalProbeCalls).toBe(2);
   });
 });

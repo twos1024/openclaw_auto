@@ -22,6 +22,8 @@ describe("dashboardDiagnosticsService", () => {
 
     const model = buildDashboardDiagnosticsModel({
       phase: "loaded",
+      gatewayState: "running",
+      gatewayRunning: true,
       address: "http://127.0.0.1:18789",
       statusDetail: "Gateway is running.",
       platformNote: "Check iframe policy if the page stays blank.",
@@ -43,8 +45,10 @@ describe("dashboardDiagnosticsService", () => {
   it("surfaces blocked embeds and timed out endpoint probes", () => {
     const model = buildDashboardDiagnosticsModel({
       phase: "blocked",
+      gatewayState: "error",
+      gatewayRunning: false,
       address: "http://127.0.0.1:18789",
-      statusDetail: "Gateway is running.",
+      statusDetail: "Failed to query OpenClaw Gateway status.",
       platformNote: "macOS may block iframe embedding because of security headers.",
       probe: {
         address: "http://127.0.0.1:18789",
@@ -60,6 +64,11 @@ describe("dashboardDiagnosticsService", () => {
     expect(model.items[0]).toMatchObject({
       id: "embed",
       tone: "warning",
+    });
+    expect(model.items[1]).toMatchObject({
+      id: "gateway",
+      tone: "error",
+      detail: "Failed to query OpenClaw Gateway status.",
     });
     expect(model.items[2]).toMatchObject({
       id: "probe",

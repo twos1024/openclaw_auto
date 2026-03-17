@@ -46,6 +46,31 @@ pub struct DashboardProbeData {
     pub detail: String,
 }
 
+fn build_http_probe_result(
+    address: &str,
+    status_code: u16,
+    response_time_ms: u64,
+) -> DashboardProbeData {
+    let successful = (200..300).contains(&status_code);
+
+    DashboardProbeData {
+        address: address.to_string(),
+        reachable: successful,
+        result: if successful {
+            "reachable".to_string()
+        } else {
+            "unreachable".to_string()
+        },
+        http_status: Some(status_code),
+        response_time_ms: Some(response_time_ms),
+        detail: if successful {
+            "Dashboard endpoint responded successfully.".to_string()
+        } else {
+            format!("Dashboard endpoint returned HTTP {status_code}.")
+        },
+    }
+}
+
 #[derive(Debug, Clone)]
 struct GatewayErrorContext {
     code: ErrorCode,
@@ -257,14 +282,11 @@ pub async fn probe_dashboard_endpoint(address: String) -> Result<DashboardProbeD
 
     let started_at = Instant::now();
     match client.get(parsed.clone()).send().await {
-        Ok(response) => Ok(DashboardProbeData {
-            address: parsed.to_string(),
-            reachable: true,
-            result: "reachable".to_string(),
-            http_status: Some(response.status().as_u16()),
-            response_time_ms: Some(started_at.elapsed().as_millis() as u64),
-            detail: "Dashboard endpoint responded successfully.".to_string(),
-        }),
+        Ok(response) => Ok(build_http_probe_result(
+            parsed.as_ref(),
+            response.status().as_u16(),
+            started_at.elapsed().as_millis() as u64,
+        )),
         Err(error) if error.is_timeout() => Ok(DashboardProbeData {
             address: parsed.to_string(),
             reachable: false,
@@ -703,5 +725,15 @@ mod tests {
             error.message,
             "Dashboard address is invalid and cannot be probed."
         );
+    }
+
+    #[test]
+    fn http_probe_result_marks_non_success_status_as_unreachable() {
+        let result = build_http_probe_result("http://127.0.0.1:18789", 500, 42);
+
+        assert!(!result.reachable);
+        assert_eq!(result.result, "unreachable");
+        assert_eq!(result.http_status, Some(500));
+        assert_eq!(result.detail, "Dashboard endpoint returned HTTP 500.");
     }
 }

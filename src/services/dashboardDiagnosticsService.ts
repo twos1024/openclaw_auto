@@ -4,10 +4,12 @@ import type {
   DashboardEmbedPhase,
   DashboardProbeResult,
 } from "../types/dashboard";
-import type { ServiceActionResult } from "./serviceService";
+import type { GatewayRuntimeState, ServiceActionResult } from "./serviceService";
 
 interface BuildDashboardDiagnosticsArgs {
   phase: DashboardEmbedPhase;
+  gatewayState: GatewayRuntimeState | null;
+  gatewayRunning: boolean;
   address: string | null;
   statusDetail: string;
   platformNote: string;
@@ -129,19 +131,24 @@ function buildExternalOpenItem(result: ServiceActionResult | null): DashboardDia
 
 export function buildDashboardDiagnosticsModel({
   phase,
+  gatewayState,
+  gatewayRunning,
   address,
   statusDetail,
   platformNote,
   probe,
   externalOpenResult,
 }: BuildDashboardDiagnosticsArgs): DashboardDiagnosticsModel {
+  const gatewayTone =
+    gatewayRunning ? "healthy" : gatewayState === "starting" || gatewayState === "stopping" ? "warning" : "error";
+
   return {
     items: [
       buildEmbedItem(phase),
       {
         id: "gateway",
         title: "Gateway Status",
-        tone: address ? "healthy" : "warning",
+        tone: gatewayTone,
         detail: statusDetail,
         meta: address ?? undefined,
       },

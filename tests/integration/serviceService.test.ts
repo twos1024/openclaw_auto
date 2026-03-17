@@ -72,6 +72,30 @@ describe("serviceService integration", () => {
 
     expect(result.state).toBe("error");
     expect(result.statusDetail).toBe("Failed to query OpenClaw Gateway status.");
+    expect(result.address).toBeNull();
+    expect(result.port).toBeNull();
+  });
+
+  it("preserves backend success detail for gateway actions", async () => {
+    createInvokeMock({
+      open_dashboard: async () => ({
+        success: true,
+        data: {
+          detail: "Dashboard opened successfully.",
+          address: "http://127.0.0.1:18789",
+          pid: 4242,
+        },
+      }),
+    });
+
+    const result = await serviceService.openDashboard();
+
+    expect(result).toMatchObject({
+      status: "success",
+      detail: "Dashboard opened successfully.",
+      address: "http://127.0.0.1:18789",
+      pid: 4242,
+    });
   });
 
   it("normalizes dashboard probe diagnostics from the backend command", async () => {
@@ -121,6 +145,31 @@ describe("serviceService integration", () => {
       reachable: false,
       result: "timeout",
       detail: "Dashboard endpoint timed out after 3000ms.",
+    });
+  });
+
+  it("preserves non-2xx probe results from the backend command", async () => {
+    createInvokeMock({
+      probe_dashboard_endpoint: async () => ({
+        success: true,
+        data: {
+          address: "http://127.0.0.1:18789",
+          reachable: false,
+          result: "unreachable",
+          httpStatus: 500,
+          responseTimeMs: 57,
+          detail: "Dashboard endpoint returned HTTP 500.",
+        },
+      }),
+    });
+
+    const result = await serviceService.probeDashboardEndpoint("http://127.0.0.1:18789");
+
+    expect(result).toMatchObject({
+      reachable: false,
+      result: "unreachable",
+      httpStatus: 500,
+      detail: "Dashboard endpoint returned HTTP 500.",
     });
   });
 
