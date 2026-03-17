@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { useSetupAssistant } from "../../hooks/useSetupAssistant";
 import type { GuidedSetupStepStatus } from "../../types/guidedSetup";
 import { ModalDialog } from "../common/ModalDialog";
+import { StatusBadge } from "../common/StatusBadge";
 
 const statusStyles: Record<GuidedSetupStepStatus, { bg: string; text: string; border: string; label: string }> = {
   complete: { bg: "#f0fdf4", text: "#166534", border: "#86efac", label: "Complete" },
@@ -171,6 +172,48 @@ export function SetupAssistantDialog({ open, onClose }: SetupAssistantDialogProp
             </div>
           </section>
 
+          {model.currentBlocker ? (
+            <section
+              style={{
+                border: "1px solid #e2e8f0",
+                borderRadius: 12,
+                background: "#ffffff",
+                padding: 16,
+                display: "grid",
+                gap: 12,
+              }}
+            >
+              <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "center" }}>
+                <div>
+                  <h3 style={{ margin: 0 }}>Current Blocker</h3>
+                  <p style={{ margin: "6px 0 0", color: "#64748b" }}>
+                    优先处理当前 blocker，再进入下一步。
+                  </p>
+                </div>
+                <StatusBadge variant={model.currentBlocker.level} />
+              </div>
+              <strong style={{ color: "#0f172a" }}>{model.currentBlocker.title}</strong>
+              <p style={{ margin: 0, color: "#475569" }}>{model.currentBlocker.detail}</p>
+              <div>
+                <Link
+                  to={model.currentBlocker.route}
+                  onClick={onClose}
+                  style={{
+                    borderRadius: 8,
+                    background: "#0f172a",
+                    color: "#ffffff",
+                    padding: "8px 12px",
+                    textDecoration: "none",
+                    fontWeight: 700,
+                    display: "inline-block",
+                  }}
+                >
+                  {model.currentBlocker.actionLabel}
+                </Link>
+              </div>
+            </section>
+          ) : null}
+
           <div style={{ display: "grid", gap: 12 }}>
             {model.steps.map((step, index) => {
               const style = statusStyles[step.status];
@@ -227,6 +270,45 @@ export function SetupAssistantDialog({ open, onClose }: SetupAssistantDialogProp
               );
             })}
           </div>
+
+          <section
+            style={{
+              border: "1px solid #e2e8f0",
+              borderRadius: 12,
+              background: "#ffffff",
+              padding: 16,
+              display: "grid",
+              gap: 12,
+            }}
+          >
+            <div>
+              <h3 style={{ margin: 0 }}>Support Links</h3>
+              <p style={{ margin: "6px 0 0", color: "#64748b" }}>
+                当你不确定 fault 在哪里时，优先看 Runbook、Logs 和 Settings。
+              </p>
+            </div>
+            <div style={{ display: "grid", gap: 10 }}>
+              {model.supportActions.map((action) => (
+                <Link
+                  key={action.id}
+                  to={action.route}
+                  onClick={onClose}
+                  style={{
+                    border: "1px solid #cbd5e1",
+                    borderRadius: 10,
+                    background: "#ffffff",
+                    padding: 12,
+                    textDecoration: "none",
+                    display: "grid",
+                    gap: 6,
+                  }}
+                >
+                  <strong style={{ color: "#0f172a" }}>{action.label}</strong>
+                  <span style={{ color: "#475569" }}>{action.description}</span>
+                </Link>
+              ))}
+            </div>
+          </section>
         </>
       ) : null}
     </ModalDialog>

@@ -1,3 +1,10 @@
+import { Link } from "react-router-dom";
+import { NoticeBanner } from "../components/common/NoticeBanner";
+import { PageHero } from "../components/common/PageHero";
+import { SurfaceCard } from "../components/common/SurfaceCard";
+import { StatusBadge } from "../components/common/StatusBadge";
+import { RunbookContextPanel } from "../components/runbook/RunbookContextPanel";
+import { useRunbook } from "../hooks/useRunbook";
 import { useSettingsForm } from "../hooks/useSettingsForm";
 import { getRuntimeDiagnostics } from "../services/tauriClient";
 
@@ -8,6 +15,7 @@ function FieldHint(props: { text?: string }): JSX.Element | null {
 
 export function SettingsPage(): JSX.Element {
   const runtime = getRuntimeDiagnostics();
+  const { model: runbookModel } = useRunbook(true, 30000);
   const {
     form,
     errors,
@@ -28,39 +36,25 @@ export function SettingsPage(): JSX.Element {
 
   return (
     <div style={{ display: "grid", gap: 16 }}>
-      <header>
-        <h2 style={{ marginBottom: 8 }}>Settings</h2>
-        <p style={{ margin: 0, color: "#64748b" }}>
-          Manage ClawDesk app-level preferences such as diagnostics output, log volume, and Gateway polling.
-        </p>
-      </header>
+      <PageHero
+        title="Settings"
+        description="Settings collects app-level preferences and runtime diagnostics. This is the primary page for distinguishing browser preview from a broken desktop bridge."
+      />
 
       {loadIssue ? (
-        <section
-          style={{
-            border: "1px solid #fcd34d",
-            borderRadius: 10,
-            background: "#fffbeb",
-            color: "#92400e",
-            padding: 12,
-          }}
-        >
-          <strong>设置加载提示</strong>
+        <NoticeBanner title="设置加载提示" tone="warning">
           <p style={{ margin: "8px 0 0" }}>{loadIssue.message}</p>
           <p style={{ margin: "8px 0 0", fontSize: 13 }}>建议：{loadIssue.suggestion}</p>
-        </section>
+        </NoticeBanner>
       ) : null}
 
-      <section
-        style={{
-          border: "1px solid #e2e8f0",
-          borderRadius: 12,
-          background: "#ffffff",
-          padding: 16,
-          display: "grid",
-          gap: 14,
-        }}
-      >
+      <RunbookContextPanel
+        title="Runtime and Recovery Context"
+        description="Settings now participates directly in the recovery workflow. Use it when runtime mode is unclear, the Tauri bridge is missing, or diagnostics need to be redirected."
+        model={runbookModel}
+      />
+
+      <SurfaceCard title="App Preferences" subtitle="Manage diagnostics output, log volume, and gateway polling defaults.">
         <div
           style={{
             border: "1px solid #dbeafe",
@@ -72,16 +66,42 @@ export function SettingsPage(): JSX.Element {
             gap: 6,
           }}
         >
-          <strong>Runtime Diagnostics</strong>
-          <p style={{ margin: 0 }}>
-            <strong>Mode:</strong> {runtime.mode}
-          </p>
-          <p style={{ margin: 0 }}>
-            <strong>Tauri Shell:</strong> {runtime.hasTauriShell ? "detected" : "not-detected"}
-          </p>
-          <p style={{ margin: 0 }}>
-            <strong>Invoke Bridge:</strong> {runtime.hasInvokeBridge ? runtime.bridgeSource : "missing"}
-          </p>
+          <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "center" }}>
+            <strong>Runtime Diagnostics</strong>
+            <StatusBadge variant={runtime.mode === "browser-preview" ? "warning" : runtime.hasInvokeBridge ? "success" : "error"} label={runtime.mode} />
+          </div>
+          <p style={{ margin: 0 }}><strong>Tauri Shell:</strong> {runtime.hasTauriShell ? "detected" : "not-detected"}</p>
+          <p style={{ margin: 0 }}><strong>Invoke Bridge:</strong> {runtime.hasInvokeBridge ? "detected" : "missing"}</p>
+          <p style={{ margin: 0 }}><strong>Bridge Source:</strong> {runtime.bridgeSource}</p>
+          <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+            <Link
+              to="/runbook"
+              style={{
+                borderRadius: 8,
+                background: "#0f172a",
+                color: "#ffffff",
+                padding: "8px 12px",
+                textDecoration: "none",
+                fontWeight: 700,
+              }}
+            >
+              Open Runbook
+            </Link>
+            <Link
+              to="/logs"
+              style={{
+                borderRadius: 8,
+                border: "1px solid #cbd5e1",
+                background: "#ffffff",
+                color: "#0f172a",
+                padding: "8px 12px",
+                textDecoration: "none",
+                fontWeight: 700,
+              }}
+            >
+              Open Logs
+            </Link>
+          </div>
         </div>
 
         <p style={{ margin: 0, fontSize: 13, color: "#64748b" }}>
@@ -229,20 +249,10 @@ export function SettingsPage(): JSX.Element {
             Reset
           </button>
         </div>
-      </section>
+      </SurfaceCard>
 
       {saveResult ? (
-        <section
-          style={{
-            border: `1px solid ${saveResult.status === "success" ? "#86efac" : "#fca5a5"}`,
-            borderRadius: 12,
-            background: saveResult.status === "success" ? "#f0fdf4" : "#fef2f2",
-            padding: 16,
-            display: "grid",
-            gap: 8,
-          }}
-        >
-          <strong>{saveResult.status === "success" ? "设置已保存" : "设置保存失败"}</strong>
+        <NoticeBanner title={saveResult.status === "success" ? "设置已保存" : "设置保存失败"} tone={saveResult.status === "success" ? "success" : "error"}>
           <p style={{ margin: 0 }}>{saveResult.detail}</p>
           <p style={{ margin: 0, fontSize: 13, color: "#475569" }}>建议：{saveResult.suggestion}</p>
           {saveResult.savedPath ? (
@@ -251,7 +261,7 @@ export function SettingsPage(): JSX.Element {
           {saveResult.backupPath ? (
             <p style={{ margin: 0, fontSize: 12, color: "#64748b" }}>Backup: {saveResult.backupPath}</p>
           ) : null}
-        </section>
+        </NoticeBanner>
       ) : null}
     </div>
   );

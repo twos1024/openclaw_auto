@@ -230,7 +230,7 @@ test.describe("Install failure diagnostics", () => {
     await page.goto("/#/install");
 
     await expect(page.getByText("环境探测失败")).toBeVisible();
-    await expect(page.getByText("浏览器预览模式")).toBeVisible();
+    await expect(page.getByText("浏览器预览模式下无法访问 Rust 命令桥接。")).toBeVisible();
     await expect(page.getByRole("button", { name: "Desktop Runtime Required" })).toBeDisabled();
   });
 

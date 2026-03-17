@@ -7,11 +7,16 @@ import { InstallProgressCard } from "../components/install/InstallProgressCard";
 import { InstallResultCard } from "../components/install/InstallResultCard";
 import { InstallWizardDialog } from "../components/install/InstallWizardDialog";
 import { PlatformGuidancePanel } from "../components/install/PlatformGuidancePanel";
+import { NoticeBanner } from "../components/common/NoticeBanner";
+import { PageHero } from "../components/common/PageHero";
+import { RunbookContextPanel } from "../components/runbook/RunbookContextPanel";
+import { useRunbook } from "../hooks/useRunbook";
 import { useInstallFlow } from "../hooks/useInstallFlow";
 import { buildPlatformGuidance } from "../services/installWizardService";
 
 export function InstallPage(): JSX.Element {
   const [searchParams, setSearchParams] = useSearchParams();
+  const { model: runbookModel } = useRunbook(true, 30000);
   const {
     environment,
     envError,
@@ -46,12 +51,11 @@ export function InstallPage(): JSX.Element {
 
   return (
     <div style={{ display: "grid", gap: 16 }}>
-      <header>
-        <h2 style={{ marginBottom: 8 }}>Install OpenClaw</h2>
-        <p style={{ margin: 0, color: "#64748b" }}>
-          安装 OpenClaw CLI，尝试托管 Gateway 安装，并在同一页面里查看当前阶段、结果和下一步建议。
-        </p>
-        <div style={{ marginTop: 12 }}>
+      <PageHero
+        title="Install OpenClaw"
+        description="Install page now combines environment preflight, staged install progress, result handling, and direct next-step guidance into a single workflow."
+        meta={environment ? `Platform: ${environment.platform} / ${environment.architecture}` : undefined}
+        action={
           <button
             type="button"
             onClick={openWizard}
@@ -67,24 +71,21 @@ export function InstallPage(): JSX.Element {
           >
             Open Install Wizard
           </button>
-        </div>
-      </header>
+        }
+      />
 
       {envError ? (
-        <section
-          style={{
-            border: "1px solid #fca5a5",
-            borderRadius: 10,
-            background: "#fef2f2",
-            color: "#991b1b",
-            padding: 12,
-          }}
-        >
-          <strong>环境探测失败</strong>
+        <NoticeBanner title="环境探测失败" tone="error">
           <p style={{ margin: "8px 0 0" }}>{envError.message}</p>
           <p style={{ margin: "8px 0 0", fontSize: 13 }}>建议：{envError.suggestion}</p>
-        </section>
+        </NoticeBanner>
       ) : null}
+
+      <RunbookContextPanel
+        title="Install Workflow Context"
+        description="The install page is responsible for the first blocker in most cold-start scenarios. Use the current blocker and quick links below to decide whether to stay here or jump to logs/settings."
+        model={runbookModel}
+      />
 
       <InstallEnvironmentPanel
         environment={environment}
@@ -106,21 +107,11 @@ export function InstallPage(): JSX.Element {
 
       {visibleIssue ? <InstallIssueCard issue={visibleIssue} /> : null}
 
-      <section
-        style={{
-          border: "1px solid #e2e8f0",
-          borderRadius: 12,
-          background: "#ffffff",
-          padding: 16,
-          display: "grid",
-          gap: 8,
-        }}
-      >
-        <h3 style={{ margin: 0 }}>Recommended Flow</h3>
+      <NoticeBanner title="Recommended Flow" tone="info">
         <p style={{ margin: 0, color: "#475569" }}>1. Refresh environment to confirm npm availability and current OpenClaw detection.</p>
-        <p style={{ margin: 0, color: "#475569" }}>2. Start install and watch the progress card for the active phase and estimated completion state.</p>
-        <p style={{ margin: 0, color: "#475569" }}>3. After success or warning, continue to Config to save provider settings, then start Gateway from Service.</p>
-      </section>
+        <p style={{ margin: "8px 0 0", color: "#475569" }}>2. Start install and watch the progress card for the active phase and estimated completion state.</p>
+        <p style={{ margin: "8px 0 0", color: "#475569" }}>3. After success or warning, continue to Config to save provider settings, then start Gateway from Service.</p>
+      </NoticeBanner>
 
       <InstallWizardDialog
         open={isWizardOpen}

@@ -1,8 +1,13 @@
+import { NoticeBanner } from "../components/common/NoticeBanner";
+import { PageHero } from "../components/common/PageHero";
 import { ErrorSummaryPanel } from "../components/logs/ErrorSummaryPanel";
 import { LogFilterBar, LogViewer } from "../components/logs/LogViewer";
+import { RunbookContextPanel } from "../components/runbook/RunbookContextPanel";
 import { useLogs } from "../hooks/useLogs";
+import { useRunbook } from "../hooks/useRunbook";
 
 export function LogsPage(): JSX.Element {
+  const { model: runbookModel } = useRunbook(true, 30000);
   const {
     source,
     sourceOptions,
@@ -29,31 +34,23 @@ export function LogsPage(): JSX.Element {
 
   return (
     <div style={{ display: "grid", gap: 16 }}>
-      <header>
-        <h2 style={{ marginBottom: 8 }}>LogsPage</h2>
-        <p style={{ margin: 0, color: "#64748b" }}>
-          查看安装/启动/Gateway 日志，自动提炼错误摘要并生成可分享诊断信息。
-        </p>
-        <p style={{ margin: "6px 0 0", color: "#94a3b8", fontSize: 13 }}>
-          总日志 {rawLines.length} 行，过滤后 {visibleLines.length} 行
-          {lastUpdatedAt ? `，最近更新：${new Date(lastUpdatedAt).toLocaleString()}` : ""}
-        </p>
-      </header>
+      <PageHero
+        title="Logs"
+        description="Logs page is now part of the guided recovery flow. Use it to verify whether install, startup, or gateway failures already produced useful diagnostics before changing config or service state."
+        meta={`总日志 ${rawLines.length} 行，过滤后 ${visibleLines.length} 行${lastUpdatedAt ? `，最近更新：${new Date(lastUpdatedAt).toLocaleString()}` : ""}`}
+      />
 
       {loadError ? (
-        <section
-          style={{
-            border: "1px solid #fca5a5",
-            borderRadius: 10,
-            background: "#fef2f2",
-            color: "#991b1b",
-            padding: 12,
-          }}
-        >
-          <strong>日志读取提示</strong>
+        <NoticeBanner title="日志读取提示" tone="error">
           <p style={{ margin: "8px 0 0" }}>{loadError}</p>
-        </section>
+        </NoticeBanner>
       ) : null}
+
+      <RunbookContextPanel
+        title="Recovery Context"
+        description="Logs are usually the fastest way to validate whether the current blocker is install-, config-, or service-related. Use the quick links to jump back once you know where the fault sits."
+        model={runbookModel}
+      />
 
       <LogFilterBar
         source={source}

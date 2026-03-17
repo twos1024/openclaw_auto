@@ -3,9 +3,12 @@ import { useState } from "react";
 import { Sidebar } from "../navigation/Sidebar";
 import { SetupAssistantDialog } from "../dialogs/SetupAssistantDialog";
 import type { ShellOutletContext } from "../../hooks/useShellActions";
+import { useRunbook } from "../../hooks/useRunbook";
+import { WorkspaceRuntimeBanner } from "./WorkspaceRuntimeBanner";
 
 export function AppShell(): JSX.Element {
   const [isSetupAssistantOpen, setIsSetupAssistantOpen] = useState<boolean>(false);
+  const { model, isLoading, errorText } = useRunbook(true, 30000);
   const outletContext: ShellOutletContext = {
     openSetupAssistant: () => setIsSetupAssistantOpen(true),
     closeSetupAssistant: () => setIsSetupAssistantOpen(false),
@@ -65,6 +68,7 @@ export function AppShell(): JSX.Element {
           </button>
         </header>
 
+        <WorkspaceRuntimeBanner model={model?.banner ?? null} isLoading={isLoading} errorText={errorText} />
         <Outlet context={outletContext} />
         <SetupAssistantDialog
           open={isSetupAssistantOpen}
