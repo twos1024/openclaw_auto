@@ -25,6 +25,11 @@ function translateStepAction(route: string): string {
 
 export function SetupAssistantDialog({ open, onClose }: SetupAssistantDialogProps): JSX.Element | null {
   const { model, isLoading, errorText, refresh } = useSetupAssistant(open);
+  const footerAction = model?.currentBlocker
+    ? { route: model.currentBlocker.route, label: model.currentBlocker.actionLabel }
+    : model
+      ? { route: model.primaryRoute, label: model.primaryLabel }
+      : null;
 
   return (
     <ModalDialog
@@ -48,9 +53,9 @@ export function SetupAssistantDialog({ open, onClose }: SetupAssistantDialogProp
           >
             重新检查
           </button>
-          {model ? (
+          {footerAction ? (
             <Link
-              to={model.primaryRoute}
+              to={footerAction.route}
               onClick={onClose}
               style={{
                 borderRadius: 8,
@@ -61,7 +66,7 @@ export function SetupAssistantDialog({ open, onClose }: SetupAssistantDialogProp
                 fontWeight: 700,
               }}
             >
-              继续下一步
+              {footerAction.label}
             </Link>
           ) : null}
         </>

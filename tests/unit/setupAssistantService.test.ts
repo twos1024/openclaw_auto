@@ -123,4 +123,31 @@ describe("setupAssistantService", () => {
       level: "healthy",
     });
   });
+
+  it("uses the blocker route as the primary action when runtime is unavailable", () => {
+    const model = buildSetupAssistantModel(
+      createStatus({
+        mode: "runtime-unavailable",
+        runtime: {
+          id: "runtime",
+          title: "Runtime",
+          route: "/settings",
+          ctaLabel: "Inspect Runtime",
+          level: "offline",
+          detail: "Frontend is not connected to the invoke bridge.",
+          updatedAt: "2026-03-17T00:00:00.000Z",
+        },
+      }),
+    );
+
+    expect(model.primaryRoute).toBe("/settings");
+    expect(model.primaryLabel).toBe("修复运行时");
+    expect(model.launchChecks.map((check) => check.id)).toEqual([
+      "install",
+      "config",
+      "service",
+      "runtime",
+      "settings",
+    ]);
+  });
 });

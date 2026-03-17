@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { buildInstallWizardModel, currentPlatformCard } from "../../services/installWizardService";
+import { buildInstallWizardModel, buildPlatformGuidance } from "../../services/installWizardService";
 import type { InstallActionResult, InstallEnvironment } from "../../types/install";
 import { ModalDialog } from "../common/ModalDialog";
 
@@ -40,7 +40,7 @@ export function InstallWizardDialog({
   if (!open) return null;
 
   const model = buildInstallWizardModel({ environment, installResult, configReady, serviceReady });
-  const platform = currentPlatformCard(environment?.platform);
+  const platformCards = buildPlatformGuidance(environment?.platform);
   const currentStep = model.steps.find((step) => step.status === "current") ?? model.steps[0] ?? null;
   const currentIndex = currentStep ? model.steps.findIndex((step) => step.id === currentStep.id) : -1;
   const nextStep = currentIndex >= 0 ? model.steps[currentIndex + 1] ?? null : null;
@@ -154,11 +154,64 @@ export function InstallWizardDialog({
             完成当前步骤后，下一步是：{translateStepTitle(nextStep.id)}
           </p>
         ) : null}
-        {platform ? (
-          <p style={{ margin: 0, fontSize: 13, color: "#64748b" }}>
-            平台提示：{platform.title} | {platform.installSource} | {platform.pathHint}
-          </p>
-        ) : null}
+        <div
+          style={{
+            borderTop: "1px solid #e2e8f0",
+            paddingTop: 4,
+            display: "grid",
+            gap: 10,
+          }}
+        >
+          <div>
+            <h3 style={{ margin: 0 }}>按你的系统看这一张</h3>
+            <p style={{ margin: "6px 0 0", color: "#64748b" }}>
+              三个平台共用同一条安装路径，但命令、权限和排障重点不同。
+            </p>
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 10 }}>
+            {platformCards.map((card) => (
+              <article
+                key={card.platform}
+                style={{
+                  border: card.isCurrent ? "1px solid #93c5fd" : "1px solid #e2e8f0",
+                  borderRadius: 12,
+                  background: card.isCurrent ? "#f8fbff" : "#ffffff",
+                  padding: 14,
+                  display: "grid",
+                  gap: 8,
+                  boxShadow: card.isCurrent ? "0 0 0 1px rgba(147, 197, 253, 0.2)" : "none",
+                }}
+              >
+                <div style={{ display: "flex", justifyContent: "space-between", gap: 8, alignItems: "center" }}>
+                  <strong>{card.title}</strong>
+                  {card.isCurrent ? (
+                    <span
+                      style={{
+                        borderRadius: 999,
+                        padding: "4px 10px",
+                        fontSize: 12,
+                        fontWeight: 700,
+                        background: "#dbeafe",
+                        color: "#1d4ed8",
+                      }}
+                    >
+                      当前系统
+                    </span>
+                  ) : null}
+                </div>
+                <p style={{ margin: 0, color: "#475569" }}>
+                  <strong>安装方式：</strong>
+                  {card.installSource}
+                </p>
+                <p style={{ margin: 0, color: "#475569" }}>
+                  <strong>路径提示：</strong>
+                  {card.pathHint}
+                </p>
+                <p style={{ margin: 0, color: "#64748b", fontSize: 13 }}>{card.troubleshooting}</p>
+              </article>
+            ))}
+          </div>
+        </div>
       </section>
     </ModalDialog>
   );

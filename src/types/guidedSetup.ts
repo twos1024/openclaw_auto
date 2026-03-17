@@ -12,7 +12,7 @@ export interface GuidedSetupStep {
 }
 
 export interface GuidedLaunchCheck {
-  id: "install" | "config" | "service";
+  id: "install" | "config" | "service" | "runtime" | "settings";
   title: string;
   level: "healthy" | "degraded" | "offline" | "unknown";
   detail: string;

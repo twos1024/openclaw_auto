@@ -149,6 +149,20 @@ function buildLaunchChecks(status: OverviewStatus): GuidedLaunchCheck[] {
       detail: status.service.detail,
       route: "/service",
     },
+    {
+      id: "runtime",
+      title: "运行时检查",
+      level: status.runtime.level,
+      detail: status.runtime.detail,
+      route: "/settings",
+    },
+    {
+      id: "settings",
+      title: "设置检查",
+      level: status.settings.level,
+      detail: status.settings.detail,
+      route: "/settings",
+    },
   ];
 }
 
@@ -256,14 +270,16 @@ export function buildRunbookModel(status: OverviewStatus): RunbookModel {
   const blockers = buildBlockers(status);
   const currentBlocker = blockers[0] ?? null;
   const primaryStep = steps.find((step) => step.status === "current" || step.status === "ready") ?? steps[0];
+  const primaryRoute = currentBlocker?.route ?? primaryStep.route;
+  const primaryLabel = currentBlocker?.actionLabel ?? primaryStep.actionLabel;
 
   return {
     headline: currentBlocker ? `下一步：${currentBlocker.title}` : "已经可以开始使用了",
     summary: currentBlocker
       ? "一次只做一件事。完成当前步骤后，再继续下一步。"
       : "安装、API Key 配置和 Gateway 都已经就绪，现在可以直接打开 Dashboard。",
-    primaryRoute: primaryStep.route,
-    primaryLabel: primaryStep.actionLabel,
+    primaryRoute,
+    primaryLabel,
     lastCheckedAt: status.overall.updatedAt,
     overallLevel: status.overall.level,
     launchChecks,

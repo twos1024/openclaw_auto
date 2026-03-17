@@ -67,10 +67,12 @@ test.describe("Runbook workspace", () => {
     await page.goto("/#/runbook");
 
     await expect(page.getByRole("heading", { name: "Runbook" })).toBeVisible();
-    await expect(page.getByText("Resolve the current blocker before continuing.")).toBeVisible();
-    await expect(page.getByRole("link", { name: "Resolve Install", exact: true })).toBeVisible();
+    await expect(page.locator("h3").filter({ hasText: "下一步：" }).first()).toBeVisible();
     await expect(page.getByRole("heading", { name: "Launch Checks" })).toBeVisible();
+    await expect(page.getByText("运行时检查")).toBeVisible();
+    await expect(page.getByText("设置检查")).toBeVisible();
     await expect(page.getByRole("heading", { name: "Guided Workflow" })).toBeVisible();
-    await expect(page.getByRole("link", { name: /Open Logs/i })).toBeVisible();
+    await expect(page.getByRole("link", { name: "查看日志" })).toBeVisible();
+    await expect(page.getByRole("link", { name: "去安装" }).first()).toBeVisible();
   });
 });

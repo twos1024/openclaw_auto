@@ -255,7 +255,12 @@ test.describe("Install failure diagnostics", () => {
     const dialog = page.getByRole("dialog", { name: "OpenClaw 安装向导" });
     await expect(dialog.getByRole("heading", { name: "OpenClaw 安装向导" })).toBeVisible();
     await expect(dialog.getByRole("heading", { name: "按这个顺序走就行" })).toBeVisible();
-    await expect(dialog.getByText(/平台提示：Windows/)).toBeVisible();
+    await expect(dialog.getByRole("article")).toHaveCount(3);
+    await expect(dialog.getByText("按你的系统看这一张")).toBeVisible();
+    await expect(dialog.getByText("Windows")).toBeVisible();
+    await expect(dialog.getByText("macOS")).toBeVisible();
+    await expect(dialog.getByText("Linux")).toBeVisible();
+    await expect(dialog.getByText("当前系统")).toBeVisible();
   });
 
   test("shows progress UI while the install command is still running", async ({ page }) => {

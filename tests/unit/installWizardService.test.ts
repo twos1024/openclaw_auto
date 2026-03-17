@@ -71,6 +71,7 @@ describe("installWizardService", () => {
     const cards = buildPlatformGuidance("linux");
     const current = cards.find((card) => card.isCurrent);
 
+    expect(cards).toHaveLength(3);
     expect(current?.platform).toBe("linux");
     expect(current?.title).toBe("Linux");
   });

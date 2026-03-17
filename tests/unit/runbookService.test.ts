@@ -111,6 +111,8 @@ describe("runbookService", () => {
       route: "/settings",
       actionLabel: "修复运行时",
     });
+    expect(model.primaryRoute).toBe("/settings");
+    expect(model.primaryLabel).toBe("修复运行时");
     expect(model.supportActions[0]).toMatchObject({
       route: "/settings",
       label: "修复运行时",
@@ -170,6 +172,21 @@ describe("runbookService", () => {
     expect(model.banner.primaryAction).toMatchObject({
       label: "打开 Dashboard",
       route: "/dashboard",
+    });
+    expect(model.launchChecks.map((check) => check.id)).toEqual([
+      "install",
+      "config",
+      "service",
+      "runtime",
+      "settings",
+    ]);
+    expect(model.launchChecks[3]).toMatchObject({
+      title: "运行时检查",
+      route: "/settings",
+    });
+    expect(model.launchChecks[4]).toMatchObject({
+      title: "设置检查",
+      route: "/settings",
     });
   });
 });
