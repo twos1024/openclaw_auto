@@ -13,7 +13,7 @@ import {
   type DiagnosticsExportFormat,
 } from "../services/diagnosticsService";
 import { settingsService } from "../services/settingsService";
-import { invokeCommand, isTauriRuntime } from "../services/tauriClient";
+import { getRuntimeDiagnostics, invokeCommand } from "../services/tauriClient";
 import { extractErrorSummaries, mapErrorCode, mapStderr } from "../utils/errorMap";
 
 export interface UseLogsResult {
@@ -128,9 +128,18 @@ export function useLogs(initialSource: LogSource = "gateway"): UseLogsResult {
     setExportFeedback(null);
     setBundleFeedback(null);
 
-    if (!isTauriRuntime()) {
+    const runtime = getRuntimeDiagnostics();
+    if (runtime.mode === "browser-preview") {
       setRawLines([]);
       setLoadError("当前运行在浏览器预览模式，无法读取本地日志文件。");
+      setLastUpdatedAt(new Date().toISOString());
+      setIsLoading(false);
+      return;
+    }
+
+    if (runtime.mode === "tauri-runtime-unavailable") {
+      setRawLines([]);
+      setLoadError("当前已进入桌面窗口，但 Tauri 命令桥不可用，无法读取本地日志文件。");
       setLastUpdatedAt(new Date().toISOString());
       setIsLoading(false);
       return;
@@ -192,13 +201,16 @@ export function useLogs(initialSource: LogSource = "gateway"): UseLogsResult {
       setFeedback(null);
 
       const text = buildDiagnosticSummaryText(diagnosticSummary, visibleLines);
-      if (!isTauriRuntime()) {
+      const runtime = getRuntimeDiagnostics();
+      if (runtime.mode === "browser-preview" || runtime.mode === "tauri-runtime-unavailable") {
         const filename = buildDiagnosticsDownloadName(source, "text");
         downloadTextFile(filename, text);
         setFeedback(
-          format === "bundle"
-            ? `当前为预览模式，已回退导出文本摘要 ${filename}`
-            : `诊断信息已导出：${filename}`,
+          runtime.mode === "browser-preview"
+            ? format === "bundle"
+              ? `当前为预览模式，已回退导出文本摘要 ${filename}`
+              : `诊断信息已导出：${filename}`
+            : `桌面命令桥不可用，已回退导出文本摘要 ${filename}`,
         );
         setLoading(false);
         return;

@@ -226,6 +226,14 @@ async function mockSettingsBackend(page: Page): Promise<void> {
 }
 
 test.describe("Install failure diagnostics", () => {
+  test("keeps install flow read-only in browser preview mode", async ({ page }) => {
+    await page.goto("/#/install");
+
+    await expect(page.getByText("环境探测失败")).toBeVisible();
+    await expect(page.getByText("浏览器预览模式")).toBeVisible();
+    await expect(page.getByRole("button", { name: "Desktop Runtime Required" })).toBeDisabled();
+  });
+
   test("installs OpenClaw from the install page and refreshes environment state", async ({ page }) => {
     await mockInstallBackend(page);
     await page.goto("/#/install");

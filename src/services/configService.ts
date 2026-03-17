@@ -9,8 +9,13 @@ import {
   type ReadConfigData,
   type WriteConfigData,
 } from "../types/config";
-import { invokeCommand, isTauriRuntime } from "./tauriClient";
-import type { BackendError } from "../types/api";
+import {
+  createRuntimeAccessError,
+  getRuntimeDiagnostics,
+  invokeCommand,
+  isTauriRuntime,
+} from "./tauriClient";
+import type { BackendError, RuntimeDiagnostics } from "../types/api";
 
 function stripTrailingSlash(value: string): string {
   return value.replace(/\/+$/, "");
@@ -97,6 +102,30 @@ function toConnectionTestResult(data: ConnectionTestData): ConnectionTestResult 
   };
 }
 
+function buildConfigRuntimeIssue(runtime: RuntimeDiagnostics): BackendError {
+  if (runtime.mode === "browser-preview") {
+    return {
+      code: "E_PREVIEW_MODE",
+      message: "当前运行在浏览器预览模式，尚未读取本地 OpenClaw 配置文件。",
+      suggestion: "请使用 ClawDesk 桌面应用或 `npm run tauri:dev` 后再读取和保存真实配置。",
+      details: {
+        runtimeMode: runtime.mode,
+        bridgeSource: runtime.bridgeSource,
+      },
+    };
+  }
+
+  return {
+    code: "E_TAURI_UNAVAILABLE",
+    message: "当前已进入桌面窗口，但 Tauri 命令桥不可用，无法读取本地 OpenClaw 配置。",
+    suggestion: "请重启或重新安装 ClawDesk；若问题持续，请检查前端是否正确集成 Tauri API。",
+    details: {
+      runtimeMode: runtime.mode,
+      bridgeSource: runtime.bridgeSource,
+    },
+  };
+}
+
 async function fetchWithTimeout(
   url: string,
   timeoutMs: number,
@@ -129,15 +158,12 @@ export const configService = {
       };
     }
 
-    if (result.error?.code === "E_TAURI_UNAVAILABLE") {
+    if (result.error?.code === "E_PREVIEW_MODE" || result.error?.code === "E_TAURI_UNAVAILABLE") {
+      const runtime = getRuntimeDiagnostics();
       return {
         values: defaultConfigValues,
         usedDefaultValues: true,
-        issue: {
-          code: "E_PREVIEW_MODE",
-          message: "当前运行在浏览器预览模式，尚未读取本地 OpenClaw 配置文件。",
-          suggestion: "请使用 `npm run tauri:dev` 启动桌面模式后再读取和保存真实配置。",
-        },
+        issue: buildConfigRuntimeIssue(runtime),
       };
     }
 
@@ -150,7 +176,9 @@ export const configService = {
   },
 
   async testConnection(values: ConfigFormValues): Promise<ConnectionTestResult> {
-    if (isTauriRuntime()) {
+    const runtime = getRuntimeDiagnostics();
+
+    if (runtime.mode === "tauri-runtime-available") {
       try {
         const result = await invokeCommand<ConnectionTestData>("test_connection", {
           content: toConfigPayload(values),
@@ -169,6 +197,13 @@ export const configService = {
           "Check backend network access, provider URL, and local certificates, then retry.",
         );
       }
+    }
+
+    if (runtime.mode === "tauri-runtime-unavailable") {
+      return toActionErrorResult(
+        createRuntimeAccessError(runtime),
+        "Check desktop runtime initialization and retry.",
+      );
     }
 
     const startedAt = performance.now();
@@ -235,11 +270,12 @@ export const configService = {
 
   async saveConfig(values: ConfigFormValues): Promise<SaveConfigResult> {
     if (!isTauriRuntime()) {
+      const runtimeError = createRuntimeAccessError();
       return {
-        status: "error",
-        detail: "Tauri invoke is unavailable in current runtime.",
-        suggestion: "Run inside Tauri shell to save config to local file.",
-        code: "E_TAURI_UNAVAILABLE",
+        status: runtimeError.code === "E_PREVIEW_MODE" ? "failure" : "error",
+        detail: runtimeError.message,
+        suggestion: runtimeError.suggestion,
+        code: runtimeError.code,
       };
     }
 

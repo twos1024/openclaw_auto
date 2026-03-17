@@ -7,7 +7,7 @@ import {
   type SettingsLoadResult,
   type WriteAppSettingsData,
 } from "../types/settings";
-import { invokeCommand } from "./tauriClient";
+import { getRuntimeDiagnostics, invokeCommand } from "./tauriClient";
 
 function normalizeSettings(raw: ReadAppSettingsData["content"] | undefined): AppSettings {
   return {
@@ -60,14 +60,31 @@ export const settingsService = {
       };
     }
 
-    if (result.error?.code === "E_TAURI_UNAVAILABLE") {
+    if (result.error?.code === "E_PREVIEW_MODE") {
       return {
         values: defaultAppSettings,
         exists: false,
         issue: {
           code: "E_PREVIEW_MODE",
           message: "当前运行在浏览器预览模式，尚未读取本地 ClawDesk 设置文件。",
-          suggestion: "请使用 `npm run tauri:dev` 启动桌面模式后再读取和保存真实设置。",
+          suggestion: "请使用 ClawDesk 桌面应用或 `npm run tauri:dev` 后再读取和保存真实设置。",
+        },
+      };
+    }
+
+    if (result.error?.code === "E_TAURI_UNAVAILABLE") {
+      const runtime = getRuntimeDiagnostics();
+      return {
+        values: defaultAppSettings,
+        exists: false,
+        issue: {
+          code: "E_TAURI_UNAVAILABLE",
+          message: "当前已进入桌面窗口，但 Tauri 命令桥不可用，尚未读取本地 ClawDesk 设置。",
+          suggestion: "请重启或重新安装 ClawDesk；若问题持续，请检查前端是否正确集成 Tauri API。",
+          details: {
+            runtimeMode: runtime.mode,
+            bridgeSource: runtime.bridgeSource,
+          },
         },
       };
     }

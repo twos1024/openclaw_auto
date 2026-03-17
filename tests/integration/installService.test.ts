@@ -31,6 +31,21 @@ describe("installService integration", () => {
       writable: true,
       value: undefined,
     });
+    Object.defineProperty(window, "__TAURI_INTERNALS__", {
+      configurable: true,
+      writable: true,
+      value: undefined,
+    });
+    Object.defineProperty(window, "isTauri", {
+      configurable: true,
+      writable: true,
+      value: undefined,
+    });
+    Object.defineProperty(globalThis, "isTauri", {
+      configurable: true,
+      writable: true,
+      value: undefined,
+    });
   });
 
   it("maps detect_env payload into install environment shape", async () => {
@@ -343,6 +358,31 @@ describe("installService integration", () => {
     });
     expect(phases.find((item) => item.id === "verify")).toMatchObject({
       status: "warning",
+    });
+  });
+
+  it("returns a prerequisite-stage runtime bridge issue when desktop shell is present without invoke bridge", async () => {
+    Object.defineProperty(window, "isTauri", {
+      configurable: true,
+      writable: true,
+      value: true,
+    });
+    Object.defineProperty(globalThis, "isTauri", {
+      configurable: true,
+      writable: true,
+      value: true,
+    });
+
+    const envResult = await installService.detectEnv();
+    const installResult = await installService.installOpenClaw();
+
+    expect(envResult.ok).toBe(false);
+    expect(envResult.error?.code).toBe("E_TAURI_UNAVAILABLE");
+    expect(installResult.stage).toBe("prerequisite");
+    expect(installResult.issue).toMatchObject({
+      failureKind: "runtime-bridge-unavailable",
+      code: "E_TAURI_UNAVAILABLE",
+      step: "initialize the Tauri command bridge",
     });
   });
 });

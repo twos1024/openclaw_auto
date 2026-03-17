@@ -204,6 +204,10 @@ function classifyErrorStage(error?: BackendError): InstallPhaseId {
 
   const code = error?.code ?? "";
 
+  if (code === "E_PREVIEW_MODE" || code === "E_TAURI_UNAVAILABLE") {
+    return "prerequisite";
+  }
+
   if (looksLikeMissingNpmSpawnError(error)) {
     return "prerequisite";
   }
@@ -221,6 +225,30 @@ function classifyErrorStage(error?: BackendError): InstallPhaseId {
 
 function buildIssueFromError(error?: BackendError): InstallIssue | null {
   if (!error) return null;
+
+  if (error.code === "E_PREVIEW_MODE") {
+    return {
+      stage: "prerequisite",
+      failureKind: "preview-mode",
+      code: error.code,
+      message: error.message,
+      suggestion: error.suggestion,
+      step: "launch ClawDesk in the desktop shell",
+      sample: null,
+    };
+  }
+
+  if (error.code === "E_TAURI_UNAVAILABLE") {
+    return {
+      stage: "prerequisite",
+      failureKind: "runtime-bridge-unavailable",
+      code: error.code,
+      message: error.message,
+      suggestion: error.suggestion,
+      step: "initialize the Tauri command bridge",
+      sample: null,
+    };
+  }
 
   const fallbackStage = classifyErrorStage(error);
   const structured = normalizeInstallIssue(error.details, {

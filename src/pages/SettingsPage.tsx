@@ -1,4 +1,5 @@
 import { useSettingsForm } from "../hooks/useSettingsForm";
+import { getRuntimeDiagnostics } from "../services/tauriClient";
 
 function FieldHint(props: { text?: string }): JSX.Element | null {
   if (!props.text) return null;
@@ -6,6 +7,7 @@ function FieldHint(props: { text?: string }): JSX.Element | null {
 }
 
 export function SettingsPage(): JSX.Element {
+  const runtime = getRuntimeDiagnostics();
   const {
     form,
     errors,
@@ -59,6 +61,29 @@ export function SettingsPage(): JSX.Element {
           gap: 14,
         }}
       >
+        <div
+          style={{
+            border: "1px solid #dbeafe",
+            borderRadius: 10,
+            background: "#eff6ff",
+            color: "#1e3a8a",
+            padding: 12,
+            display: "grid",
+            gap: 6,
+          }}
+        >
+          <strong>Runtime Diagnostics</strong>
+          <p style={{ margin: 0 }}>
+            <strong>Mode:</strong> {runtime.mode}
+          </p>
+          <p style={{ margin: 0 }}>
+            <strong>Tauri Shell:</strong> {runtime.hasTauriShell ? "detected" : "not-detected"}
+          </p>
+          <p style={{ margin: 0 }}>
+            <strong>Invoke Bridge:</strong> {runtime.hasInvokeBridge ? runtime.bridgeSource : "missing"}
+          </p>
+        </div>
+
         <p style={{ margin: 0, fontSize: 13, color: "#64748b" }}>
           Settings Path: <strong>{loadedPath ?? "(default path not resolved yet)"}</strong>
         </p>

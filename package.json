@@ -19,6 +19,7 @@
     "tauri:build": "node scripts/with-rust.mjs tauri build"
   },
   "dependencies": {
+    "@tauri-apps/api": "^2.10.1",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-router-dom": "^6.30.1",
@@ -37,8 +38,8 @@
     "eslint-plugin-react-hooks": "^5.1.0",
     "eslint-plugin-react-refresh": "^0.4.9",
     "jsdom": "^24.1.1",
-    "typescript-eslint": "^8.41.0",
     "typescript": "^5.5.4",
+    "typescript-eslint": "^8.41.0",
     "vite": "^5.4.0",
     "vitest": "^2.0.5"
   }

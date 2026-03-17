@@ -1,4 +1,4 @@
-import type { CommandResult } from "../../types/api";
+import type { CommandResult, RuntimeDiagnostics } from "../../types/api";
 import type {
   HealthLevel,
   OverviewAction,
@@ -51,7 +51,15 @@ function buildSection(
   };
 }
 
-export function buildPreviewOverview(updatedAt: string): OverviewStatus {
+function runtimeMeta(runtime: RuntimeDiagnostics): OverviewSection["meta"] {
+  return [
+    { label: "Mode", value: runtime.mode },
+    { label: "Tauri Shell", value: runtime.hasTauriShell ? "detected" : "not-detected" },
+    { label: "Invoke Bridge", value: runtime.hasInvokeBridge ? runtime.bridgeSource : "missing" },
+  ];
+}
+
+export function buildPreviewOverview(updatedAt: string, runtime: RuntimeDiagnostics): OverviewStatus {
   const previewSections = {
     runtime: buildSection(
       "openclaw-runtime",
@@ -61,6 +69,7 @@ export function buildPreviewOverview(updatedAt: string): OverviewStatus {
       "unknown",
       "浏览器预览模式下无法访问 Rust 命令桥接。",
       updatedAt,
+      runtimeMeta(runtime),
     ),
     install: buildSection(
       "openclaw-install",
@@ -103,7 +112,7 @@ export function buildPreviewOverview(updatedAt: string): OverviewStatus {
   return {
     appVersion: APP_VERSION,
     platform: "preview",
-    dashboardUrl: "http://127.0.0.1:18789",
+    dashboardUrl: "Unavailable in preview",
     mode: "preview",
     overall: {
       level: "unknown",
@@ -123,9 +132,92 @@ export function buildPreviewOverview(updatedAt: string): OverviewStatus {
   };
 }
 
+export function buildRuntimeUnavailableOverview(
+  updatedAt: string,
+  runtime: RuntimeDiagnostics,
+): OverviewStatus {
+  const unavailableSections = {
+    runtime: buildSection(
+      "openclaw-runtime",
+      "桌面 Runtime",
+      "/settings",
+      "查看 Settings",
+      "offline",
+      "已检测到桌面 shell，但 Tauri 命令桥不可用，因此当前无法访问本地 Rust 命令层。",
+      updatedAt,
+      runtimeMeta(runtime),
+    ),
+    install: buildSection(
+      "openclaw-install",
+      "OpenClaw 安装",
+      installWizardRoute,
+      "查看 Install",
+      "offline",
+      "在桌面命令桥恢复前，无法执行本机安装、CLI 探测和 Gateway 托管安装。",
+      updatedAt,
+    ),
+    config: buildSection(
+      "openclaw-config",
+      "OpenClaw 配置",
+      "/config",
+      "查看 Config",
+      "offline",
+      "在桌面命令桥恢复前，无法读取或写入本地 OpenClaw 配置。",
+      updatedAt,
+    ),
+    service: buildSection(
+      "openclaw-service",
+      "Gateway 服务",
+      "/service",
+      "查看 Service",
+      "offline",
+      "在桌面命令桥恢复前，无法查询或控制 Gateway 服务。",
+      updatedAt,
+    ),
+    settings: buildSection(
+      "clawdesk-settings",
+      "ClawDesk 设置",
+      "/settings",
+      "查看 Settings",
+      "offline",
+      "在桌面命令桥恢复前，无法读取本地 ClawDesk 设置文件。",
+      updatedAt,
+    ),
+  };
+
+  return {
+    appVersion: APP_VERSION,
+    platform: "desktop-shell",
+    dashboardUrl: "Unavailable",
+    mode: "runtime-unavailable",
+    overall: {
+      level: "offline",
+      headline: "桌面运行时异常",
+      summary: "当前已进入 ClawDesk 桌面窗口，但前端没有连上 Tauri 命令桥，安装、配置、日志和服务控制都会不可用。",
+      updatedAt,
+    },
+    ...unavailableSections,
+    nextActions: [
+      {
+        id: "review-runtime-diagnostics",
+        label: "检查运行时诊断",
+        route: "/settings",
+        description: "先确认当前是否检测到 Tauri shell 与 invoke bridge，再决定是否重启或重装桌面应用。",
+      },
+      {
+        id: "review-logs",
+        label: "查看日志与诊断",
+        route: "/logs",
+        description: "若问题持续存在，可导出诊断摘要并附上运行时诊断信息。",
+      },
+    ],
+  };
+}
+
 export function buildRuntimeSection(
   envResult: CommandResult<DetectEnvData>,
   updatedAt: string,
+  runtime: RuntimeDiagnostics,
 ): OverviewSection {
   if (!envResult.success || !envResult.data) {
     return buildSection(
@@ -136,6 +228,7 @@ export function buildRuntimeSection(
       "offline",
       envResult.error?.message ?? "Rust 命令桥接当前不可用。",
       updatedAt,
+      runtimeMeta(runtime),
     );
   }
 
@@ -150,6 +243,8 @@ export function buildRuntimeSection(
       : "Rust 命令桥接正常，但尚未检测到 npm。",
     updatedAt,
     [
+      { label: "Mode", value: runtime.mode },
+      { label: "Invoke Bridge", value: runtime.bridgeSource },
       { label: "平台", value: envResult.data.platform ?? "unknown" },
       { label: "npm", value: envResult.data.npm_version ?? "missing" },
     ],
@@ -275,13 +370,15 @@ export function buildServiceSection(
       running
         ? gatewayResult.data.statusDetail ??
             gatewayResult.data.status_detail ??
-            `Gateway 正在 ${gatewayResult.data.address ?? "http://127.0.0.1:18789"} 运行。`
+            (gatewayResult.data.address
+              ? `Gateway 正在 ${gatewayResult.data.address} 运行。`
+              : "Gateway 当前处于运行状态。")
         : gatewayResult.data.statusDetail ??
             gatewayResult.data.status_detail ??
             "Gateway 当前未启动。",
       updatedAt,
       [
-        { label: "Address", value: gatewayResult.data.address ?? "http://127.0.0.1:18789" },
+        { label: "Address", value: gatewayResult.data.address ?? "-" },
         { label: "PID", value: gatewayResult.data.pid ? String(gatewayResult.data.pid) : "-" },
       ],
     );
@@ -309,6 +406,18 @@ export function buildSettingsSection(
       "/settings",
       "查看 Settings",
       "unknown",
+      settingsResult.issue.message,
+      updatedAt,
+    );
+  }
+
+  if (settingsResult.issue?.code === "E_TAURI_UNAVAILABLE") {
+    return buildSection(
+      "clawdesk-settings",
+      "ClawDesk 设置",
+      "/settings",
+      "查看 Settings",
+      "offline",
       settingsResult.issue.message,
       updatedAt,
     );

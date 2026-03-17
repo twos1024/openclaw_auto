@@ -1,12 +1,13 @@
 import type { OverviewStatus, ServiceResult } from "../types/status";
 import { settingsService } from "./settingsService";
-import { invokeCommand, isTauriRuntime } from "./tauriClient";
+import { getRuntimeDiagnostics, invokeCommand } from "./tauriClient";
 import {
   buildConfigSection,
   buildInstallSection,
   buildNextActions,
   buildOverall,
   buildPreviewOverview,
+  buildRuntimeUnavailableOverview,
   buildRuntimeSection,
   buildServiceSection,
   buildSettingsSection,
@@ -20,10 +21,18 @@ function nowIso(): string {
 export const statusService = {
   async getOverviewStatus(): Promise<ServiceResult<OverviewStatus>> {
     const updatedAt = nowIso();
-    if (!isTauriRuntime()) {
+    const runtime = getRuntimeDiagnostics();
+    if (runtime.mode === "browser-preview") {
       return {
         ok: true,
-        data: buildPreviewOverview(updatedAt),
+        data: buildPreviewOverview(updatedAt, runtime),
+      };
+    }
+
+    if (runtime.mode === "tauri-runtime-unavailable") {
+      return {
+        ok: true,
+        data: buildRuntimeUnavailableOverview(updatedAt, runtime),
       };
     }
 
@@ -34,12 +43,12 @@ export const statusService = {
       settingsService.readSettings(),
     ]);
 
-    const runtime = buildRuntimeSection(envResult, updatedAt);
+    const runtimeSection = buildRuntimeSection(envResult, updatedAt, runtime);
     const install = buildInstallSection(envResult, updatedAt);
     const config = buildConfigSection(configResult, updatedAt);
     const service = buildServiceSection(gatewayResult, updatedAt);
     const settings = buildSettingsSection(settingsResult, updatedAt);
-    const overall = buildOverall({ runtime, install, config, service, settings }, updatedAt);
+    const overall = buildOverall({ runtime: runtimeSection, install, config, service, settings }, updatedAt);
     const nextActions = buildNextActions({ install, config, service, settings });
 
     return {
@@ -47,10 +56,10 @@ export const statusService = {
       data: {
         appVersion: APP_VERSION,
         platform: envResult.data?.platform ?? "unknown",
-        dashboardUrl: gatewayResult.data?.address ?? "http://127.0.0.1:18789",
+        dashboardUrl: gatewayResult.data?.address ?? "Unavailable",
         mode: "live",
         overall,
-        runtime,
+        runtime: runtimeSection,
         install,
         config,
         service,

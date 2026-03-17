@@ -31,6 +31,21 @@ describe("statusService integration", () => {
       writable: true,
       value: undefined,
     });
+    Object.defineProperty(window, "__TAURI_INTERNALS__", {
+      configurable: true,
+      writable: true,
+      value: undefined,
+    });
+    Object.defineProperty(window, "isTauri", {
+      configurable: true,
+      writable: true,
+      value: undefined,
+    });
+    Object.defineProperty(globalThis, "isTauri", {
+      configurable: true,
+      writable: true,
+      value: undefined,
+    });
   });
 
   it("builds install-first next actions when OpenClaw is not installed", async () => {
@@ -159,5 +174,38 @@ describe("statusService integration", () => {
       route: "/dashboard",
       kind: "open-dashboard",
     });
+  });
+
+  it("builds a runtime-unavailable overview when desktop shell is present without invoke bridge", async () => {
+    Object.defineProperty(window, "isTauri", {
+      configurable: true,
+      writable: true,
+      value: true,
+    });
+    Object.defineProperty(globalThis, "isTauri", {
+      configurable: true,
+      writable: true,
+      value: true,
+    });
+
+    const result = await statusService.getOverviewStatus();
+    const data = result.data as {
+      mode: string;
+      overall: { level: string; headline: string };
+      runtime: { level: string; detail: string; meta?: Array<{ label: string; value: string }> };
+      dashboardUrl: string;
+    };
+
+    expect(result.ok).toBe(true);
+    expect(data.mode).toBe("runtime-unavailable");
+    expect(data.overall.headline).toBe("桌面运行时异常");
+    expect(data.runtime.level).toBe("offline");
+    expect(data.runtime.meta).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ label: "Mode", value: "tauri-runtime-unavailable" }),
+        expect.objectContaining({ label: "Invoke Bridge", value: "missing" }),
+      ]),
+    );
+    expect(data.dashboardUrl).toBe("Unavailable");
   });
 });

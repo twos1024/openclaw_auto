@@ -31,6 +31,21 @@ describe("settingsService integration", () => {
       writable: true,
       value: undefined,
     });
+    Object.defineProperty(window, "__TAURI_INTERNALS__", {
+      configurable: true,
+      writable: true,
+      value: undefined,
+    });
+    Object.defineProperty(window, "isTauri", {
+      configurable: true,
+      writable: true,
+      value: undefined,
+    });
+    Object.defineProperty(globalThis, "isTauri", {
+      configurable: true,
+      writable: true,
+      value: undefined,
+    });
   });
 
   it("reads app settings from backend payload", async () => {
@@ -78,5 +93,26 @@ describe("settingsService integration", () => {
 
     expect(result.status).toBe("success");
     expect(result.backupPath).toContain(".bak");
+  });
+
+  it("surfaces desktop runtime bridge failures without pretending to be browser preview", async () => {
+    Object.defineProperty(window, "isTauri", {
+      configurable: true,
+      writable: true,
+      value: true,
+    });
+    Object.defineProperty(globalThis, "isTauri", {
+      configurable: true,
+      writable: true,
+      value: true,
+    });
+
+    const result = await settingsService.readSettings();
+
+    expect(result.issue).toMatchObject({
+      code: "E_TAURI_UNAVAILABLE",
+    });
+    expect(result.issue?.message).toContain("桌面窗口");
+    expect(result.issue?.message).not.toContain("浏览器预览模式");
   });
 });

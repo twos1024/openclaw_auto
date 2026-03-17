@@ -24,6 +24,12 @@ export function InstallPage(): JSX.Element {
     installOpenClaw,
   } = useInstallFlow();
   const installBlockedByEnv = Boolean(environment && !environment.npmFound);
+  const runtimeBlockMode =
+    envError?.code === "E_PREVIEW_MODE"
+      ? "preview"
+      : envError?.code === "E_TAURI_UNAVAILABLE"
+        ? "runtime-unavailable"
+        : null;
   const visibleIssue = installResult?.issue ?? installResult?.data?.gatewayInstallIssue ?? null;
   const platformCards = buildPlatformGuidance(environment?.platform);
   const isWizardOpen = searchParams.get("wizard") === "1";
@@ -85,6 +91,7 @@ export function InstallPage(): JSX.Element {
         isLoading={isLoading}
         isInstalling={isInstalling}
         installBlockedByEnv={installBlockedByEnv}
+        runtimeBlockMode={runtimeBlockMode}
         onRefresh={() => void refreshEnvironment()}
         onInstall={() => void installOpenClaw()}
       />

@@ -1,6 +1,6 @@
 import type { BackendError } from "../types/api";
 import type { DashboardProbeResult } from "../types/dashboard";
-import { invokeCommand, isTauriRuntime } from "./tauriClient";
+import { getRuntimeDiagnostics, invokeCommand } from "./tauriClient";
 
 export type GatewayRuntimeState = "running" | "stopped" | "starting" | "stopping" | "error";
 
@@ -122,12 +122,26 @@ function buildPreviewStatus(): GatewayStatus {
   return {
     state: "error",
     running: false,
-    port: 18789,
-    address: "http://127.0.0.1:18789",
+    port: null,
+    address: null,
     pid: null,
     lastStartedAt: null,
     statusDetail: "Gateway status is unavailable in browser preview mode.",
     suggestion: "Run ClawDesk inside Tauri to manage the local OpenClaw Gateway.",
+    portConflictPort: null,
+  };
+}
+
+function buildUnavailableRuntimeStatus(): GatewayStatus {
+  return {
+    state: "error",
+    running: false,
+    port: null,
+    address: null,
+    pid: null,
+    lastStartedAt: null,
+    statusDetail: "ClawDesk is running in a desktop shell, but the Tauri command bridge is unavailable.",
+    suggestion: "Relaunch or reinstall ClawDesk and verify the frontend bundles the Tauri API bridge.",
     portConflictPort: null,
   };
 }
@@ -232,12 +246,19 @@ function buildLiveErrorStatus(error?: BackendError): GatewayStatus {
 }
 
 async function invokeAction(command: string): Promise<ServiceActionResult> {
-  if (!isTauriRuntime()) {
+  const runtime = getRuntimeDiagnostics();
+  if (runtime.mode !== "tauri-runtime-available") {
     return {
       status: "error",
-      detail: "Gateway controls are unavailable in browser preview mode.",
-      suggestion: "Start ClawDesk in Tauri to run local process commands.",
-      code: "E_PREVIEW_MODE",
+      detail:
+        runtime.mode === "browser-preview"
+          ? "Gateway controls are unavailable in browser preview mode."
+          : "Gateway controls are unavailable because the Tauri command bridge is not ready in this desktop runtime.",
+      suggestion:
+        runtime.mode === "browser-preview"
+          ? "Start ClawDesk in Tauri to run local process commands."
+          : "Relaunch or reinstall ClawDesk and verify the frontend bundles the Tauri API bridge.",
+      code: runtime.mode === "browser-preview" ? "E_PREVIEW_MODE" : "E_TAURI_UNAVAILABLE",
     };
   }
 
@@ -251,8 +272,12 @@ async function invokeAction(command: string): Promise<ServiceActionResult> {
 
 export const serviceService = {
   async getGatewayStatus(): Promise<GatewayStatus> {
-    if (!isTauriRuntime()) {
+    const runtime = getRuntimeDiagnostics();
+    if (runtime.mode === "browser-preview") {
       return buildPreviewStatus();
+    }
+    if (runtime.mode === "tauri-runtime-unavailable") {
+      return buildUnavailableRuntimeStatus();
     }
 
     const result = await invokeCommand<Record<string, unknown>>("get_gateway_status");
@@ -291,14 +316,18 @@ export const serviceService = {
       };
     }
 
-    if (!isTauriRuntime()) {
+    const runtime = getRuntimeDiagnostics();
+    if (runtime.mode !== "tauri-runtime-available") {
       return {
         address,
         reachable: false,
-        result: "idle",
+        result: runtime.mode === "browser-preview" ? "idle" : "unreachable",
         httpStatus: null,
         responseTimeMs: null,
-        detail: "Endpoint probe is only available in the Tauri runtime.",
+        detail:
+          runtime.mode === "browser-preview"
+            ? "Endpoint probe is only available in the Tauri runtime."
+            : "Endpoint probe is unavailable because the Tauri command bridge is not ready.",
       };
     }
 

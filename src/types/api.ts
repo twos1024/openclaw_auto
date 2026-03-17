@@ -27,6 +27,20 @@ export type ErrorCode =
   | "E_UNKNOWN"
   | string;
 
+export type RuntimeMode =
+  | "browser-preview"
+  | "tauri-runtime-available"
+  | "tauri-runtime-unavailable";
+
+export type RuntimeBridgeSource = "official-api" | "global-fallback" | "none";
+
+export interface RuntimeDiagnostics {
+  mode: RuntimeMode;
+  hasTauriShell: boolean;
+  hasInvokeBridge: boolean;
+  bridgeSource: RuntimeBridgeSource;
+}
+
 export interface BackendError {
   code: ErrorCode;
   message: string;

@@ -33,6 +33,7 @@ export interface InstallEnvironmentPanelProps {
   isLoading: boolean;
   isInstalling: boolean;
   installBlockedByEnv: boolean;
+  runtimeBlockMode: "preview" | "runtime-unavailable" | null;
   onRefresh: () => void;
   onInstall: () => void;
 }
@@ -42,9 +43,13 @@ export function InstallEnvironmentPanel({
   isLoading,
   isInstalling,
   installBlockedByEnv,
+  runtimeBlockMode,
   onRefresh,
   onInstall,
 }: InstallEnvironmentPanelProps): JSX.Element {
+  const installBlockedByRuntime = runtimeBlockMode !== null;
+  const installBlocked = installBlockedByEnv || installBlockedByRuntime;
+
   return (
     <section
       style={{
@@ -102,7 +107,7 @@ export function InstallEnvironmentPanel({
         <button
           type="button"
           onClick={onInstall}
-          disabled={isLoading || isInstalling || installBlockedByEnv}
+          disabled={isLoading || isInstalling || installBlocked}
           style={{
             border: "none",
             background: "#1d4ed8",
@@ -110,11 +115,19 @@ export function InstallEnvironmentPanel({
             borderRadius: 8,
             padding: "10px 14px",
             fontWeight: 600,
-            cursor: isLoading || isInstalling || installBlockedByEnv ? "not-allowed" : "pointer",
-            opacity: isLoading || isInstalling || installBlockedByEnv ? 0.6 : 1,
+            cursor: isLoading || isInstalling || installBlocked ? "not-allowed" : "pointer",
+            opacity: isLoading || isInstalling || installBlocked ? 0.6 : 1,
           }}
         >
-          {isInstalling ? "Installing..." : installBlockedByEnv ? "npm Required" : "Install OpenClaw"}
+          {isInstalling
+            ? "Installing..."
+            : runtimeBlockMode === "preview"
+              ? "Desktop Runtime Required"
+              : installBlockedByRuntime
+              ? "Desktop Bridge Required"
+              : installBlockedByEnv
+                ? "npm Required"
+                : "Install OpenClaw"}
         </button>
 
         <Link
@@ -135,7 +148,15 @@ export function InstallEnvironmentPanel({
         </Link>
       </div>
 
-      {installBlockedByEnv ? (
+      {runtimeBlockMode === "preview" ? (
+        <p style={{ margin: 0, fontSize: 13, color: "#92400e" }}>
+          当前为浏览器预览模式，安装按钮已禁用。请使用 ClawDesk 桌面应用或 `npm run tauri:dev` 再执行本机安装。
+        </p>
+      ) : installBlockedByRuntime ? (
+        <p style={{ margin: 0, fontSize: 13, color: "#991b1b" }}>
+          当前桌面命令桥不可用，安装按钮已禁用。请先修复 Tauri 运行时集成，再继续执行本机安装。
+        </p>
+      ) : installBlockedByEnv ? (
         <p style={{ margin: 0, fontSize: 13, color: "#92400e" }}>
           当前未检测到 npm，安装按钮已禁用。请先安装 Node.js / npm，然后刷新环境检查。
         </p>

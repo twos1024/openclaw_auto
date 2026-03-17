@@ -38,7 +38,7 @@ export interface OverviewStatus {
   appVersion: string;
   platform: string;
   dashboardUrl: string;
-  mode: "live" | "preview";
+  mode: "live" | "preview" | "runtime-unavailable";
   overall: OverviewOverall;
   service: OverviewSection;
   runtime: OverviewSection;
