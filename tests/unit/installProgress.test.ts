@@ -124,6 +124,35 @@ describe("installProgress", () => {
     expect(phases.find((phase) => phase.id === "verify")?.status).toBe("warning");
   });
 
+  it("bounds running progress estimate between 18 and 95 percent", () => {
+    const earlyProgress = buildInstallProgressModel({
+      environment: readyEnvironment,
+      installResult: null,
+      isInstalling: true,
+      elapsedMs: 0,
+      telemetry: null,
+    });
+    const midProgress = buildInstallProgressModel({
+      environment: readyEnvironment,
+      installResult: null,
+      isInstalling: true,
+      elapsedMs: 4000,
+      telemetry: null,
+    });
+    const lateProgress = buildInstallProgressModel({
+      environment: readyEnvironment,
+      installResult: null,
+      isInstalling: true,
+      elapsedMs: 120_000,
+      telemetry: null,
+    });
+
+    for (const progress of [earlyProgress, midProgress, lateProgress]) {
+      expect(progress.percent).toBeGreaterThanOrEqual(18);
+      expect(progress.percent).toBeLessThanOrEqual(95);
+    }
+  });
+
   it("prefers install log telemetry over elapsed-only inference when building progress", () => {
     const progress = buildInstallProgressModel({
       environment: readyEnvironment,

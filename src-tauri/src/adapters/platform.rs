@@ -108,7 +108,13 @@ pub fn default_gateway_port() -> u16 {
 
 pub fn locator_command(binary_name: &str) -> (String, Vec<String>) {
     match current_platform() {
-        RuntimePlatform::Windows => ("where".to_string(), vec![binary_name.to_string()]),
+        RuntimePlatform::Windows => {
+            // On Windows, npm creates both a bare shell script (not executable on
+            // Windows) and a .cmd batch wrapper.  Searching for "openclaw.cmd"
+            // avoids resolving to the non-executable shell script first.
+            let target = format!("{binary_name}.cmd");
+            ("where".to_string(), vec![target])
+        }
         RuntimePlatform::MacOS | RuntimePlatform::Linux | RuntimePlatform::Unknown => {
             ("which".to_string(), vec![binary_name.to_string()])
         }
@@ -164,6 +170,19 @@ pub fn desktop_runtime_bin_dirs() -> Vec<PathBuf> {
                     .map(|p| format!("{p}\\AppData\\Roaming"))
             }) {
                 dirs.push(PathBuf::from(app_data).join("npm"));
+            }
+
+            // WinGet-installed Node.js may place npm global binaries under %LOCALAPPDATA%\npm.
+            if let Some(local_app_data) = env::var("LOCALAPPDATA").ok() {
+                dirs.push(PathBuf::from(&local_app_data).join("npm"));
+            }
+
+            // Also include the Node.js installation directory itself (some setups
+            // keep global bins next to the node binary, e.g. nvm-windows).
+            if let Ok(node_path) = which_sync("node") {
+                if let Some(node_dir) = node_path.parent() {
+                    dirs.push(node_dir.to_path_buf());
+                }
             }
         }
         RuntimePlatform::MacOS => {
@@ -249,6 +268,20 @@ fn xdg_config_home(home: &str) -> PathBuf {
         .map(|value| PathBuf::from(value.trim()))
         .filter(|path| !path.as_os_str().is_empty())
         .unwrap_or_else(|| PathBuf::from(home).join(".config"))
+}
+
+fn which_sync(binary: &str) -> Result<PathBuf, ()> {
+    let output = std::process::Command::new(if cfg!(windows) { "where" } else { "which" })
+        .arg(binary)
+        .output()
+        .map_err(|_| ())?;
+    output
+        .stdout
+        .split(|&b| b == b'\n' || b == b'\r')
+        .next()
+        .filter(|line| !line.is_empty())
+        .map(|line| PathBuf::from(String::from_utf8_lossy(line).trim().to_string()))
+        .ok_or(())
 }
 
 fn dedupe_paths(paths: Vec<PathBuf>) -> Vec<PathBuf> {
