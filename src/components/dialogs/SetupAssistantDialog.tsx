@@ -8,22 +8,6 @@ export interface SetupAssistantDialogProps {
   onClose: () => void;
 }
 
-function translateStepTitle(id: string): string {
-  if (id === "install") return "安装 OpenClaw";
-  if (id === "config") return "配置 API Key";
-  if (id === "service") return "启动 Gateway";
-  if (id === "dashboard") return "打开 Dashboard";
-  return id;
-}
-
-function translateStepAction(route: string): string {
-  if (route === "/install?wizard=1") return "开始安装";
-  if (route === "/config") return "去配置 API Key";
-  if (route === "/service") return "去启动 Gateway";
-  if (route === "/dashboard") return "去打开 Dashboard";
-  return "继续";
-}
-
 export function SetupAssistantDialog({ open, onClose }: SetupAssistantDialogProps): JSX.Element | null {
   const { model, isLoading, errorText, refresh } = useSetupAssistant(open);
   const footerAction = model?.currentBlocker
@@ -131,7 +115,7 @@ export function SetupAssistantDialog({ open, onClose }: SetupAssistantDialogProp
                 >
                   <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "center" }}>
                     <strong style={{ color: "#0f172a" }}>
-                      {index + 1}. {translateStepTitle(step.id)}
+                      {index + 1}. {step.title}
                     </strong>
                   </div>
                   <p style={{ margin: 0, color: "#475569" }}>{step.description}</p>
@@ -150,7 +134,7 @@ export function SetupAssistantDialog({ open, onClose }: SetupAssistantDialogProp
                           display: "inline-block",
                         }}
                       >
-                        {translateStepAction(step.route)}
+                        {step.actionLabel}
                       </Link>
                     </div>
                   ) : null}

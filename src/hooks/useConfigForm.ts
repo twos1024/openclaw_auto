@@ -29,6 +29,27 @@ export interface UseConfigFormResult {
   testConnection: () => Promise<void>;
   saveConfig: () => Promise<void>;
   resetToDefault: () => void;
+  reload: () => Promise<void>;
+}
+
+function buildUnexpectedLoadIssue(error: unknown): BackendError {
+  return {
+    code: "E_UNKNOWN",
+    message: error instanceof Error ? error.message : "Failed to load OpenClaw config.",
+    suggestion: "Retry the action or restart ClawDesk.",
+  };
+}
+
+function buildUnexpectedActionResult(
+  error: unknown,
+  fallbackSuggestion: string,
+): ConnectionTestResult | SaveConfigResult {
+  return {
+    status: "error",
+    detail: error instanceof Error ? error.message : "Unknown error",
+    suggestion: fallbackSuggestion,
+    code: "E_UNKNOWN",
+  };
 }
 
 export function useConfigForm(): UseConfigFormResult {
@@ -43,22 +64,28 @@ export function useConfigForm(): UseConfigFormResult {
   const [testResult, setTestResult] = useState<ConnectionTestResult | null>(null);
   const [saveResult, setSaveResult] = useState<SaveConfigResult | null>(null);
 
-  useEffect(() => {
-    let mounted = true;
-    const load = async (): Promise<void> => {
+  const reload = useCallback(async () => {
+    setIsLoading(true);
+    try {
       const loaded = await configService.readConfig();
-      if (!mounted) return;
       setForm(loaded.values);
+      setErrors({});
       setLoadIssue(loaded.issue ?? null);
       setLoadedPath(loaded.path ?? null);
       setUsedDefaultValues(loaded.usedDefaultValues);
+    } catch (error: unknown) {
+      setForm(defaultConfigValues);
+      setLoadIssue(buildUnexpectedLoadIssue(error));
+      setLoadedPath(null);
+      setUsedDefaultValues(true);
+    } finally {
       setIsLoading(false);
-    };
-    void load();
-    return () => {
-      mounted = false;
-    };
+    }
   }, []);
+
+  useEffect(() => {
+    void reload();
+  }, [reload]);
 
   const setField = useCallback((field: keyof ConfigFormValues, value: string | number) => {
     setForm((prev) => ({
@@ -105,9 +132,19 @@ export function useConfigForm(): UseConfigFormResult {
     if (!validate(form)) return;
 
     setIsTesting(true);
-    const result = await configService.testConnection(form);
-    setTestResult(result);
-    setIsTesting(false);
+    try {
+      const result = await configService.testConnection(form);
+      setTestResult(result);
+    } catch (error: unknown) {
+      setTestResult(
+        buildUnexpectedActionResult(
+          error,
+          "Check backend network access, provider URL, and local certificates, then retry.",
+        ) as ConnectionTestResult,
+      );
+    } finally {
+      setIsTesting(false);
+    }
   }, [form, validate]);
 
   const saveConfig = useCallback(async () => {
@@ -115,10 +152,25 @@ export function useConfigForm(): UseConfigFormResult {
     if (!validate(form)) return;
 
     setIsSaving(true);
-    const result = await configService.saveConfig(form);
-    setSaveResult(result);
-    setIsSaving(false);
-  }, [form, validate]);
+    let shouldReload = false;
+    try {
+      const result = await configService.saveConfig(form);
+      setSaveResult(result);
+      shouldReload = result.status === "success";
+    } catch (error: unknown) {
+      setSaveResult(
+        buildUnexpectedActionResult(
+          error,
+          "Check app logs and filesystem permissions, then retry.",
+        ) as SaveConfigResult,
+      );
+    } finally {
+      setIsSaving(false);
+    }
+    if (shouldReload) {
+      await reload();
+    }
+  }, [form, reload, validate]);
 
   const resetToDefault = useCallback(() => {
     setForm(defaultConfigValues);
@@ -145,6 +197,7 @@ export function useConfigForm(): UseConfigFormResult {
       testConnection,
       saveConfig,
       resetToDefault,
+      reload,
     }),
     [
       form,
@@ -163,6 +216,7 @@ export function useConfigForm(): UseConfigFormResult {
       testConnection,
       saveConfig,
       resetToDefault,
+      reload,
     ],
   );
 }

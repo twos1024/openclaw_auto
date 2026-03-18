@@ -14,10 +14,18 @@ export function useAppSettingsSnapshot(): AppSettingsSnapshot {
   useEffect(() => {
     let mounted = true;
     const load = async (): Promise<void> => {
-      const result = await settingsService.readSettings();
-      if (!mounted) return;
-      setSettings(result.values);
-      setIsLoading(false);
+      try {
+        const result = await settingsService.readSettings();
+        if (!mounted) return;
+        setSettings(result.values);
+      } catch {
+        if (!mounted) return;
+        setSettings(defaultAppSettings);
+      } finally {
+        if (mounted) {
+          setIsLoading(false);
+        }
+      }
     };
     void load();
 

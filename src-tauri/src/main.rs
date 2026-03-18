@@ -25,6 +25,8 @@ fn main() {
             commands::logs::export_diagnostics,
             commands::settings::read_app_settings,
             commands::settings::write_app_settings,
+            commands::overview::get_overview_status,
+            commands::runbook::get_runbook_model,
         ])
         .run(tauri::generate_context!())
         .expect("error while running ClawDesk");

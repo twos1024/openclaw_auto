@@ -5,8 +5,7 @@ import { createRoot } from "react-dom/client";
 import { MemoryRouter } from "react-router-dom";
 import { afterAll, afterEach, describe, expect, it, vi } from "vitest";
 import { SetupAssistantDialog } from "../../src/components/dialogs/SetupAssistantDialog";
-import { buildRunbookModel } from "../../src/services/runbookService";
-import type { OverviewStatus } from "../../src/types/status";
+import type { RunbookModel } from "../../src/types/workspace";
 
 const mockUseSetupAssistant = vi.hoisted(() => vi.fn());
 
@@ -16,64 +15,148 @@ vi.mock("../../src/hooks/useSetupAssistant", () => ({
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
-function createStatus(overrides?: Partial<OverviewStatus>): OverviewStatus {
+function createRunbookModel(overrides?: Partial<RunbookModel>): RunbookModel {
   return {
-    appVersion: "0.2.0",
-    platform: "windows",
-    dashboardUrl: "http://127.0.0.1:18789",
-    mode: "runtime-unavailable",
-    overall: {
-      level: "degraded",
-      headline: "Setup required",
-      summary: "Complete install and startup.",
-      updatedAt: "2026-03-17T00:00:00.000Z",
-    },
-    runtime: {
-      id: "runtime",
-      title: "Runtime",
-      route: "/settings",
-      ctaLabel: "Inspect Runtime",
-      level: "offline",
+    headline: "下一步：修复桌面运行时桥接",
+    summary: "一次只做一件事。完成当前步骤后，再继续下一步。",
+    primaryRoute: "/settings",
+    primaryLabel: "修复运行时",
+    lastCheckedAt: "2026-03-17T00:00:00.000Z",
+    overallLevel: "offline",
+    launchChecks: [
+      {
+        id: "install",
+        title: "安装检查",
+        level: "offline",
+        detail: "Install missing",
+        route: "/install?wizard=1",
+      },
+      {
+        id: "config",
+        title: "配置检查",
+        level: "offline",
+        detail: "Config missing",
+        route: "/config",
+      },
+      {
+        id: "service",
+        title: "服务检查",
+        level: "offline",
+        detail: "Gateway stopped",
+        route: "/service",
+      },
+      {
+        id: "runtime",
+        title: "运行时检查",
+        level: "offline",
+        detail: "Frontend is not connected to the invoke bridge.",
+        route: "/settings",
+      },
+      {
+        id: "settings",
+        title: "设置检查",
+        level: "healthy",
+        detail: "Settings loaded",
+        route: "/settings",
+      },
+    ],
+    steps: [
+      {
+        id: "install",
+        title: "安装 OpenClaw",
+        description: "Install missing",
+        route: "/install?wizard=1",
+        actionLabel: "去安装",
+        status: "blocked",
+      },
+      {
+        id: "config",
+        title: "填写 API Key",
+        description: "Config missing",
+        route: "/config",
+        actionLabel: "去填写 API Key",
+        status: "blocked",
+      },
+      {
+        id: "service",
+        title: "启动 Gateway",
+        description: "Gateway stopped",
+        route: "/service",
+        actionLabel: "去启动 Gateway",
+        status: "blocked",
+      },
+      {
+        id: "dashboard",
+        title: "开始使用 OpenClaw",
+        description: "需要先启动 Gateway，才能打开 Dashboard 正常使用。",
+        route: "/dashboard",
+        actionLabel: "打开 Dashboard",
+        status: "blocked",
+      },
+    ],
+    blockers: [
+      {
+        id: "runtime-bridge",
+        title: "修复桌面运行时桥接",
+        detail: "Frontend is not connected to the invoke bridge.",
+        level: "offline",
+        route: "/settings",
+        actionLabel: "修复运行时",
+      },
+      {
+        id: "install",
+        title: "OpenClaw 安装",
+        detail: "Install missing",
+        level: "offline",
+        route: "/install?wizard=1",
+        actionLabel: "去安装",
+      },
+    ],
+    currentBlocker: {
+      id: "runtime-bridge",
+      title: "修复桌面运行时桥接",
       detail: "Frontend is not connected to the invoke bridge.",
-      updatedAt: "2026-03-17T00:00:00.000Z",
-    },
-    install: {
-      id: "install",
-      title: "Install",
-      route: "/install",
-      ctaLabel: "Install",
       level: "offline",
-      detail: "Install missing",
-      updatedAt: "2026-03-17T00:00:00.000Z",
-    },
-    config: {
-      id: "config",
-      title: "Config",
-      route: "/config",
-      ctaLabel: "Config",
-      level: "offline",
-      detail: "Config missing",
-      updatedAt: "2026-03-17T00:00:00.000Z",
-    },
-    service: {
-      id: "service",
-      title: "Service",
-      route: "/service",
-      ctaLabel: "Service",
-      level: "offline",
-      detail: "Gateway stopped",
-      updatedAt: "2026-03-17T00:00:00.000Z",
-    },
-    settings: {
-      id: "settings",
-      title: "Settings",
       route: "/settings",
-      ctaLabel: "Settings",
-      level: "healthy",
-      detail: "Settings loaded",
-      updatedAt: "2026-03-17T00:00:00.000Z",
+      actionLabel: "修复运行时",
     },
-    nextActions: [],
+    supportActions: [
+      {
+        id: "primary",
+        label: "修复运行时",
+        route: "/settings",
+        description: "先完成当前这一步，再继续下面的流程。",
+      },
+      {
+        id: "runbook",
+        label: "查看完整步骤",
+        route: "/runbook",
+        description: "如果你想看完整流程顺序，再打开这里。",
+      },
+      {
+        id: "logs",
+        label: "查看日志",
+        route: "/logs",
+        description: "只有安装或启动失败时，再来这里看错误日志。",
+      },
+    ],
+    banner: {
+      mode: "runtime-unavailable",
+      tone: "error",
+      headline: "Desktop Runtime Bridge Unavailable",
+      summary: "当前已进入桌面窗口，但前端未连上 Tauri 命令桥。",
+      primaryAction: {
+        label: "先修复桌面运行时",
+        route: "/settings",
+        description: "先让桌面命令桥恢复正常，再继续安装、配置 API Key 和启动 Gateway。",
+      },
+      meta: [
+        { label: "Runtime Mode", value: "Desktop Runtime Unavailable" },
+        { label: "Tauri Shell", value: "detected" },
+        { label: "Invoke Bridge", value: "missing" },
+        { label: "Bridge Source", value: "missing" },
+      ],
+    },
     ...overrides,
   };
 }
@@ -88,7 +171,7 @@ afterAll(() => {
 
 describe("SetupAssistantDialog", () => {
   it("routes the footer CTA to the active blocker when runtime is unavailable", () => {
-    const model = buildRunbookModel(createStatus());
+    const model = createRunbookModel();
     mockUseSetupAssistant.mockReturnValue({
       model,
       isLoading: false,

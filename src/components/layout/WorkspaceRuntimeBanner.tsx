@@ -22,13 +22,17 @@ export function WorkspaceRuntimeBanner({
 }: WorkspaceRuntimeBannerProps): JSX.Element | null {
   if (isLoading && !model) {
     return (
-      <SurfaceCard title="Workspace Runtime" subtitle="Loading current runtime and workflow summary..." />
+      <SurfaceCard title="Workspace Runtime" subtitle="Loading current runtime and workflow summary...">
+        {null}
+      </SurfaceCard>
     );
   }
 
   if (errorText) {
     return (
-      <SurfaceCard title="Workspace Runtime" subtitle={errorText} />
+      <SurfaceCard title="Workspace Runtime" subtitle={errorText}>
+        {null}
+      </SurfaceCard>
     );
   }
 

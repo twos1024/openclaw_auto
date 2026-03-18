@@ -4,4 +4,6 @@ pub mod env;
 pub mod gateway;
 pub mod install;
 pub mod logs;
+pub mod overview;
+pub mod runbook;
 pub mod settings;

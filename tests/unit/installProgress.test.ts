@@ -24,6 +24,10 @@ describe("installProgress", () => {
       "[phase] stage=install-gateway state=running detail=Installing Gateway managed service.",
     ]);
 
+    if (!telemetry) {
+      throw new Error("Expected install telemetry to be parsed from phase events.");
+    }
+
     expect(telemetry.activePhaseId).toBe("install-gateway");
     expect(telemetry.phaseState).toBe("running");
     expect(telemetry.detail).toContain("Gateway managed service");
@@ -162,6 +166,7 @@ describe("installProgress", () => {
       telemetry: {
         activePhaseId: "install-gateway",
         phaseState: "running",
+        phaseStatus: "running",
         detail: "Installing Gateway managed service.",
         latestLogLine: "Gateway service registration requested.",
       },

@@ -88,19 +88,19 @@ export function useGatewayControl(pollMs = 5000): UseGatewayControlResult {
   );
 
   const startGateway = useCallback(async () => {
-    await runAction("start", () => serviceService.startGateway());
+    return await runAction("start", () => serviceService.startGateway());
   }, [runAction]);
 
   const stopGateway = useCallback(async () => {
-    await runAction("stop", () => serviceService.stopGateway());
+    return await runAction("stop", () => serviceService.stopGateway());
   }, [runAction]);
 
   const restartGateway = useCallback(async () => {
-    await runAction("restart", () => serviceService.restartGateway());
+    return await runAction("restart", () => serviceService.restartGateway());
   }, [runAction]);
 
   const openDashboard = useCallback(async () => {
-    await runAction("openDashboard", () => serviceService.openDashboard());
+    return await runAction("openDashboard", () => serviceService.openDashboard());
   }, [runAction]);
 
   useEffect(() => {

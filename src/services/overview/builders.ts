@@ -221,6 +221,89 @@ export function buildRuntimeUnavailableOverview(
   };
 }
 
+export function buildBackendUnavailableOverview(
+  updatedAt: string,
+  runtime: RuntimeDiagnostics,
+  message: string,
+): OverviewStatus {
+  const unavailableSections = {
+    runtime: buildSection(
+      "openclaw-runtime",
+      "桌面 Runtime",
+      "/settings",
+      "查看 Settings",
+      "healthy",
+      "桌面命令桥可用，但后端聚合命令执行失败。",
+      updatedAt,
+      runtimeMeta(runtime),
+    ),
+    install: buildSection(
+      "openclaw-install",
+      "OpenClaw 安装",
+      installWizardRoute,
+      "查看 Install",
+      "unknown",
+      "后端聚合状态不可用，暂时无法确认安装状态。",
+      updatedAt,
+    ),
+    config: buildSection(
+      "openclaw-config",
+      "OpenClaw 配置",
+      "/config",
+      "查看 Config",
+      "unknown",
+      "后端聚合状态不可用，暂时无法确认配置状态。",
+      updatedAt,
+    ),
+    service: buildSection(
+      "openclaw-service",
+      "Gateway 服务",
+      "/service",
+      "查看 Service",
+      "unknown",
+      "后端聚合状态不可用，暂时无法确认 Gateway 状态。",
+      updatedAt,
+    ),
+    settings: buildSection(
+      "clawdesk-settings",
+      "ClawDesk 设置",
+      "/settings",
+      "查看 Settings",
+      "unknown",
+      "后端聚合状态不可用，暂时无法确认本地设置状态。",
+      updatedAt,
+    ),
+  };
+
+  return {
+    appVersion: APP_VERSION,
+    platform: "desktop-runtime",
+    dashboardUrl: "Unavailable",
+    mode: "live",
+    overall: {
+      level: "offline",
+      headline: "后端聚合异常",
+      summary: "桌面命令桥已连接，但后端状态聚合失败。先看错误日志，再决定是否需要修复配置或服务。",
+      updatedAt,
+    },
+    ...unavailableSections,
+    nextActions: [
+      {
+        id: "review-logs",
+        label: "查看错误日志",
+        route: "/logs",
+        description: message,
+      },
+      {
+        id: "review-settings",
+        label: "打开 Settings",
+        route: "/settings",
+        description: "确认本地诊断目录和运行时信息，然后再继续排查后端命令失败原因。",
+      },
+    ],
+  };
+}
+
 export function buildRuntimeSection(
   envResult: CommandResult<DetectEnvData>,
   updatedAt: string,

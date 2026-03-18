@@ -14,10 +14,18 @@ export function useEnvironmentSnapshot(): EnvironmentSnapshotResult {
   useEffect(() => {
     let mounted = true;
     const load = async (): Promise<void> => {
-      const result = await installService.detectEnv();
-      if (!mounted) return;
-      setEnvironment(result.ok ? result.data ?? null : null);
-      setIsLoading(false);
+      try {
+        const result = await installService.detectEnv();
+        if (!mounted) return;
+        setEnvironment(result.ok ? result.data ?? null : null);
+      } catch {
+        if (!mounted) return;
+        setEnvironment(null);
+      } finally {
+        if (mounted) {
+          setIsLoading(false);
+        }
+      }
     };
     void load();
 

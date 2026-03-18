@@ -10,8 +10,13 @@ import {
 import { getRuntimeDiagnostics, invokeCommand } from "./tauriClient";
 
 function normalizeSettings(raw: ReadAppSettingsData["content"] | undefined): AppSettings {
+  const preferredInstallSource =
+    raw?.preferredInstallSource === "npm-global"
+      ? raw.preferredInstallSource
+      : defaultAppSettings.preferredInstallSource;
+
   return {
-    preferredInstallSource: raw?.preferredInstallSource === "npm-global" ? "npm-global" : "npm-global",
+    preferredInstallSource,
     diagnosticsDir: raw?.diagnosticsDir ?? defaultAppSettings.diagnosticsDir,
     logLineLimit: Number.isFinite(raw?.logLineLimit) ? Number(raw?.logLineLimit) : defaultAppSettings.logLineLimit,
     gatewayPollMs: Number.isFinite(raw?.gatewayPollMs) ? Number(raw?.gatewayPollMs) : defaultAppSettings.gatewayPollMs,

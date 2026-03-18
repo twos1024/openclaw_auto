@@ -1,200 +1,194 @@
-import { describe, expect, it } from "vitest";
-import { buildRunbookModel, buildWorkspaceBanner } from "../../src/services/runbookService";
-import type { OverviewStatus } from "../../src/types/status";
+/* @vitest-environment jsdom */
 
-function createStatus(overrides?: Partial<OverviewStatus>): OverviewStatus {
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { runbookService } from "../../src/services/runbookService";
+import type { RunbookModel } from "../../src/types/workspace";
+
+type InvokeHandler = (payload?: Record<string, unknown>) => unknown | Promise<unknown>;
+
+function createInvokeMock(handlers: Record<string, InvokeHandler>) {
+  const invoke = vi.fn(async (command: string, payload?: Record<string, unknown>) => {
+    const handler = handlers[command];
+    if (!handler) {
+      throw new Error(`Unhandled invoke command in test: ${command}`);
+    }
+    return handler(payload);
+  });
+
+  Object.defineProperty(window, "__TAURI__", {
+    configurable: true,
+    writable: true,
+    value: { core: { invoke } },
+  });
+
+  return invoke;
+}
+
+function createRunbookModel(overrides?: Partial<RunbookModel>): RunbookModel {
   return {
-    appVersion: "0.2.0",
-    platform: "windows",
-    dashboardUrl: "http://127.0.0.1:18789",
-    mode: "live",
-    overall: {
-      level: "degraded",
-      headline: "Setup required",
-      summary: "Complete install and startup.",
-      updatedAt: "2026-03-17T00:00:00.000Z",
-    },
-    runtime: {
-      id: "runtime",
-      title: "Runtime",
-      route: "/settings",
-      ctaLabel: "Inspect Runtime",
-      level: "healthy",
-      detail: "Runtime ready",
-      updatedAt: "2026-03-17T00:00:00.000Z",
-    },
-    install: {
-      id: "install",
-      title: "Install",
-      route: "/install",
-      ctaLabel: "Install",
-      level: "offline",
-      detail: "Install missing",
-      updatedAt: "2026-03-17T00:00:00.000Z",
-    },
-    config: {
-      id: "config",
-      title: "Config",
-      route: "/config",
-      ctaLabel: "Config",
-      level: "offline",
-      detail: "Config missing",
-      updatedAt: "2026-03-17T00:00:00.000Z",
-    },
-    service: {
-      id: "service",
-      title: "Service",
-      route: "/service",
-      ctaLabel: "Service",
-      level: "offline",
-      detail: "Gateway stopped",
-      updatedAt: "2026-03-17T00:00:00.000Z",
-    },
-    settings: {
-      id: "settings",
-      title: "Settings",
-      route: "/settings",
-      ctaLabel: "Settings",
-      level: "healthy",
-      detail: "Settings loaded",
-      updatedAt: "2026-03-17T00:00:00.000Z",
-    },
-    nextActions: [
-      {
-        id: "install",
-        label: "安装 OpenClaw",
-        route: "/install?wizard=1",
-        description: "先完成安装。",
-      },
+    headline: "下一步：安装 OpenClaw",
+    summary: "一次只做一件事。完成当前步骤后，再继续下一步。",
+    primaryRoute: "/install?wizard=1",
+    primaryLabel: "去安装",
+    lastCheckedAt: "2026-03-19T10:00:00.000Z",
+    overallLevel: "degraded",
+    launchChecks: [
+      { id: "install", title: "安装检查", level: "degraded", detail: "尚未检测到 OpenClaw CLI，请先完成安装。", route: "/install?wizard=1" },
+      { id: "config", title: "配置检查", level: "degraded", detail: "OpenClaw 已安装，下一步请填写 API Key、接口地址和模型。", route: "/config" },
+      { id: "service", title: "服务检查", level: "offline", detail: "Gateway 当前未启动。", route: "/service" },
+      { id: "runtime", title: "运行时检查", level: "healthy", detail: "Rust 命令桥接正常。", route: "/settings" },
+      { id: "settings", title: "设置检查", level: "healthy", detail: "ClawDesk 应用设置已加载。", route: "/settings" },
     ],
+    steps: [
+      { id: "install", title: "安装 OpenClaw", description: "尚未检测到 OpenClaw CLI，请先完成安装。", route: "/install?wizard=1", actionLabel: "去安装", status: "current" },
+      { id: "config", title: "填写 API Key", description: "OpenClaw 已安装，下一步请填写 API Key、接口地址和模型。", route: "/config", actionLabel: "去填写 API Key", status: "blocked" },
+      { id: "service", title: "启动 Gateway", description: "Gateway 当前未启动。", route: "/service", actionLabel: "去启动 Gateway", status: "blocked" },
+      { id: "dashboard", title: "开始使用 OpenClaw", description: "需要先启动 Gateway，才能打开 Dashboard 正常使用。", route: "/dashboard", actionLabel: "打开 Dashboard", status: "blocked" },
+    ],
+    blockers: [
+      { id: "install", title: "OpenClaw 安装", detail: "尚未检测到 OpenClaw CLI，请先完成安装。", level: "degraded", route: "/install?wizard=1", actionLabel: "去安装" },
+      { id: "config", title: "OpenClaw 配置", detail: "OpenClaw 已安装，下一步请填写 API Key、接口地址和模型。", level: "degraded", route: "/config", actionLabel: "去填写 API Key" },
+      { id: "service", title: "Gateway 服务", detail: "Gateway 当前未启动。", level: "offline", route: "/service", actionLabel: "去启动 Gateway" },
+    ],
+    currentBlocker: {
+      id: "install",
+      title: "OpenClaw 安装",
+      detail: "尚未检测到 OpenClaw CLI，请先完成安装。",
+      level: "degraded",
+      route: "/install?wizard=1",
+      actionLabel: "去安装",
+    },
+    supportActions: [
+      { id: "primary", label: "去安装", route: "/install?wizard=1", description: "先完成当前这一步，再继续下面的流程。" },
+      { id: "runbook", label: "查看完整步骤", route: "/runbook", description: "如果你想看完整流程顺序，再打开这里。" },
+      { id: "logs", label: "查看日志", route: "/logs", description: "只有安装或启动失败时，再来这里看错误日志。" },
+      { id: "settings", label: "打开设置", route: "/settings", description: "当桌面运行时有问题时，再来这里检查设置和环境。" },
+    ],
+    banner: {
+      mode: "live",
+      tone: "warning",
+      headline: "下一步：安装 OpenClaw",
+      summary: "这是第 1 步。安装完成后，再去填写 API Key 并启动 Gateway。",
+      primaryAction: {
+        label: "开始安装 OpenClaw",
+        route: "/install?wizard=1",
+        description: "这是第 1 步。安装完成后，继续去填写 API Key。",
+      },
+      meta: [
+        { label: "Runtime Mode", value: "Live" },
+        { label: "Tauri Shell", value: "detected" },
+        { label: "Invoke Bridge", value: "detected" },
+        { label: "Bridge Source", value: "official API bridge" },
+        { label: "App Version", value: "0.6.0" },
+        { label: "Platform", value: "windows" },
+        { label: "Dashboard", value: "Unavailable" },
+      ],
+    },
     ...overrides,
   };
 }
 
 describe("runbookService", () => {
-  it("builds a preview banner with read-only guidance", () => {
-    const banner = buildWorkspaceBanner(
-      createStatus({
-        mode: "preview",
-        overall: {
-          level: "unknown",
-          headline: "Preview",
-          summary: "Preview",
-          updatedAt: "2026-03-17T00:00:00.000Z",
-        },
-      }),
-    );
+  beforeEach(() => {
+    vi.restoreAllMocks();
+    Object.defineProperty(window, "__TAURI__", {
+      configurable: true,
+      writable: true,
+      value: undefined,
+    });
+    Object.defineProperty(window, "__TAURI_INTERNALS__", {
+      configurable: true,
+      writable: true,
+      value: undefined,
+    });
+    Object.defineProperty(window, "isTauri", {
+      configurable: true,
+      writable: true,
+      value: undefined,
+    });
+    Object.defineProperty(globalThis, "isTauri", {
+      configurable: true,
+      writable: true,
+      value: undefined,
+    });
+  });
 
-    expect(banner.tone).toBe("warning");
-    expect(banner.headline).toBe("Browser Preview Mode");
-    expect(banner.summary).toContain("只读预览");
-    expect(banner.meta).toEqual(
+  it("returns the Rust runbook payload unchanged in live runtime", async () => {
+    const expected = createRunbookModel();
+    createInvokeMock({
+      get_runbook_model: async () => ({
+        success: true,
+        data: expected,
+      }),
+    });
+
+    const result = await runbookService.getRunbookModel();
+
+    expect(result.ok).toBe(true);
+    expect(result.data).toEqual(expected);
+  });
+
+  it("builds a preview fallback runbook outside desktop runtime", async () => {
+    const result = await runbookService.getRunbookModel();
+
+    expect(result.ok).toBe(true);
+    expect(result.data?.currentBlocker).toMatchObject({
+      id: "preview-mode",
+      route: "/runbook",
+      actionLabel: "查看说明",
+    });
+    expect(result.data?.banner.headline).toBe("Browser Preview Mode");
+    expect(result.data?.banner.meta).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ label: "Runtime Mode", value: "Browser Preview" }),
-        expect.objectContaining({ label: "Tauri Shell", value: "not-detected" }),
         expect.objectContaining({ label: "Invoke Bridge", value: "missing" }),
-        expect.objectContaining({ label: "Bridge Source", value: "missing" }),
       ]),
     );
   });
 
-  it("prioritizes runtime bridge blockers ahead of install/config/service", () => {
-    const model = buildRunbookModel(
-      createStatus({
-        mode: "runtime-unavailable",
-        runtime: {
-          id: "runtime",
-          title: "Runtime",
-          route: "/settings",
-          ctaLabel: "Inspect Runtime",
-          level: "offline",
-          detail: "Frontend is not connected to the invoke bridge.",
-          updatedAt: "2026-03-17T00:00:00.000Z",
-        },
-      }),
-    );
+  it("builds a runtime recovery runbook when desktop shell is present without invoke bridge", async () => {
+    Object.defineProperty(window, "isTauri", {
+      configurable: true,
+      writable: true,
+      value: true,
+    });
+    Object.defineProperty(globalThis, "isTauri", {
+      configurable: true,
+      writable: true,
+      value: true,
+    });
 
-    expect(model.currentBlocker).toMatchObject({
+    const result = await runbookService.getRunbookModel();
+
+    expect(result.ok).toBe(true);
+    expect(result.data?.currentBlocker).toMatchObject({
       id: "runtime-bridge",
       route: "/settings",
       actionLabel: "修复运行时",
     });
-    expect(model.primaryRoute).toBe("/settings");
-    expect(model.primaryLabel).toBe("修复运行时");
-    expect(model.supportActions[0]).toMatchObject({
-      route: "/settings",
-      label: "修复运行时",
-    });
+    expect(result.data?.supportActions.filter((action) => action.route === "/settings")).toHaveLength(1);
   });
 
-  it("marks dashboard ready only when install, config, and service are healthy", () => {
-    const model = buildRunbookModel(
-      createStatus({
-        overall: {
-          level: "healthy",
-          headline: "Ready",
-          summary: "Workspace is ready.",
-          updatedAt: "2026-03-17T00:00:00.000Z",
+  it("surfaces live backend aggregation failures instead of disguising them as runtime bridge issues", async () => {
+    const invoke = createInvokeMock({
+      get_runbook_model: async () => ({
+        success: false,
+        error: {
+          code: "E_INTERNAL",
+          message: "backend runbook aggregation failed",
+          suggestion: "inspect logs",
         },
-        install: {
-          id: "install",
-          title: "Install",
-          route: "/install",
-          ctaLabel: "Install",
-          level: "healthy",
-          detail: "Install done",
-          updatedAt: "2026-03-17T00:00:00.000Z",
-        },
-        config: {
-          id: "config",
-          title: "Config",
-          route: "/config",
-          ctaLabel: "Config",
-          level: "healthy",
-          detail: "Config done",
-          updatedAt: "2026-03-17T00:00:00.000Z",
-        },
-        service: {
-          id: "service",
-          title: "Service",
-          route: "/service",
-          ctaLabel: "Service",
-          level: "healthy",
-          detail: "Gateway running",
-          updatedAt: "2026-03-17T00:00:00.000Z",
-        },
-        nextActions: [
-          {
-            id: "dashboard",
-            label: "打开 Dashboard",
-            route: "/dashboard",
-            description: "Open the dashboard.",
-            kind: "open-dashboard",
-          },
-        ],
       }),
-    );
+    });
 
-    expect(model.currentBlocker).toBeNull();
-    expect(model.steps[3]?.status).toBe("ready");
-    expect(model.banner.primaryAction).toMatchObject({
-      label: "打开 Dashboard",
-      route: "/dashboard",
+    const result = await runbookService.getRunbookModel();
+
+    expect(result.ok).toBe(false);
+    expect(result.data).toBeUndefined();
+    expect(result.error).toMatchObject({
+      code: "E_INTERNAL",
+      message: "backend runbook aggregation failed",
     });
-    expect(model.launchChecks.map((check) => check.id)).toEqual([
-      "install",
-      "config",
-      "service",
-      "runtime",
-      "settings",
-    ]);
-    expect(model.launchChecks[3]).toMatchObject({
-      title: "运行时检查",
-      route: "/settings",
-    });
-    expect(model.launchChecks[4]).toMatchObject({
-      title: "设置检查",
-      route: "/settings",
-    });
+    expect(invoke).toHaveBeenCalledWith("get_runbook_model", undefined);
   });
 });

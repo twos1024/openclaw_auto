@@ -5,4 +5,6 @@ pub mod gateway_service;
 pub mod install_issue;
 pub mod install_service;
 pub mod log_service;
+pub mod overview_service;
+pub mod runbook_service;
 pub mod settings_service;

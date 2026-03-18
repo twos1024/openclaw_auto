@@ -1,8 +1,8 @@
-import type { RuntimeMode } from "./api";
 import type { GuidedLaunchCheck, GuidedSetupStep } from "./guidedSetup";
 import type { HealthLevel } from "./status";
 
 export type WorkspaceBannerTone = "info" | "warning" | "error" | "success";
+export type WorkspaceBannerMode = "live" | "preview" | "runtime-unavailable";
 
 export interface WorkspaceBannerAction {
   label: string;
@@ -11,7 +11,7 @@ export interface WorkspaceBannerAction {
 }
 
 export interface WorkspaceBannerModel {
-  mode: RuntimeMode | "live";
+  mode: WorkspaceBannerMode;
   tone: WorkspaceBannerTone;
   headline: string;
   summary: string;

@@ -18,13 +18,3 @@ export interface GuidedLaunchCheck {
   detail: string;
   route: string;
 }
-
-export interface GuidedSetupModel {
-  headline: string;
-  summary: string;
-  primaryRoute: string;
-  primaryLabel: string;
-  lastCheckedAt: string;
-  launchChecks: GuidedLaunchCheck[];
-  steps: GuidedSetupStep[];
-}

@@ -14,9 +14,23 @@ import { useRunbook } from "../hooks/useRunbook";
 import { useInstallFlow } from "../hooks/useInstallFlow";
 import { buildPlatformGuidance } from "../services/installWizardService";
 
+type NextStepState =
+  | {
+      title: string;
+      description: string;
+      actionLabel: string;
+      route: string;
+    }
+  | {
+      title: string;
+      description: string;
+      actionLabel: string;
+      onClick: () => void;
+    };
+
 export function InstallPage(): JSX.Element {
   const [searchParams, setSearchParams] = useSearchParams();
-  const { model: runbookModel, status: runbookStatus } = useRunbook(true, 30000);
+  const { model: runbookModel } = useRunbook(true, 30000);
   const {
     environment,
     envError,
@@ -37,8 +51,8 @@ export function InstallPage(): JSX.Element {
         : null;
   const visibleIssue = installResult?.issue ?? installResult?.data?.gatewayInstallIssue ?? null;
   const platformCards = buildPlatformGuidance(environment?.platform);
-  const configReady = runbookStatus?.config.level === "healthy";
-  const serviceReady = runbookStatus?.service.level === "healthy";
+  const configReady = runbookModel?.launchChecks.find((check) => check.id === "config")?.level === "healthy";
+  const serviceReady = runbookModel?.launchChecks.find((check) => check.id === "service")?.level === "healthy";
   const isWizardOpen = searchParams.get("wizard") === "1";
   const openWizard = useCallback(() => {
     const next = new URLSearchParams(searchParams);
@@ -50,7 +64,7 @@ export function InstallPage(): JSX.Element {
     next.delete("wizard");
     setSearchParams(next);
   }, [searchParams, setSearchParams]);
-  const nextStepState = runtimeBlockMode
+  const nextStepState: NextStepState = runtimeBlockMode
     ? {
         title: "先修复运行环境",
         description: "当前不是可执行本机安装的桌面环境。先切到桌面运行时，再继续。",
@@ -85,12 +99,14 @@ export function InstallPage(): JSX.Element {
             actionLabel: "刷新环境",
             onClick: () => void refreshEnvironment(),
           }
-        : {
-            title: "开始安装",
-            description: "打开向导，按提示完成 OpenClaw 安装。",
-            actionLabel: "打开安装向导",
-            onClick: openWizard,
-          };
+      : {
+          title: "开始安装",
+          description: "打开向导，按提示完成 OpenClaw 安装。",
+          actionLabel: "在此打开安装向导",
+          onClick: openWizard,
+        };
+  const nextStepRoute = "route" in nextStepState ? nextStepState.route : null;
+  const nextStepAction = "onClick" in nextStepState ? nextStepState.onClick : null;
 
   return (
     <div style={{ display: "grid", gap: 16 }}>
@@ -130,9 +146,9 @@ export function InstallPage(): JSX.Element {
         <strong style={{ color: "#0f172a" }}>{nextStepState.title}</strong>
         <p style={{ margin: 0, color: "#475569" }}>{nextStepState.description}</p>
         <div>
-          {"route" in nextStepState ? (
+          {nextStepRoute ? (
             <Link
-              to={nextStepState.route}
+              to={nextStepRoute}
               style={{
                 display: "inline-block",
                 borderRadius: 8,
@@ -148,7 +164,7 @@ export function InstallPage(): JSX.Element {
           ) : (
             <button
               type="button"
-              onClick={nextStepState.onClick}
+              onClick={nextStepAction ?? undefined}
               style={{
                 border: "none",
                 borderRadius: 8,

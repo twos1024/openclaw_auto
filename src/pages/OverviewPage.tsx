@@ -25,13 +25,14 @@ export function OverviewPage({ autoRefreshMs }: OverviewPageProps): JSX.Element 
     setLoadState("loading");
     setErrorText(null);
     const result = await statusService.getOverviewStatus();
-    if (!result.ok || !result.data) {
+    if (!result.data) {
       setLoadState("error");
       setErrorText(result.error?.message ?? "Failed to load overview status.");
       return;
     }
 
     setStatus(result.data);
+    setErrorText(result.ok ? null : result.error?.message ?? "Failed to load overview status.");
     setLoadState("loaded");
   };
 

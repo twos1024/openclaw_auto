@@ -1,320 +1,231 @@
-import type { GuidedLaunchCheck, GuidedSetupStep } from "../types/guidedSetup";
-import type { OverviewStatus } from "../types/status";
+import type { RuntimeDiagnostics } from "../types/api";
+import type { ServiceResult } from "../types/status";
 import type {
-  RunbookBlocker,
   RunbookModel,
   RunbookSupportAction,
   WorkspaceBannerAction,
   WorkspaceBannerModel,
-  WorkspaceBannerTone,
 } from "../types/workspace";
+import { getRuntimeDiagnostics, invokeCommand } from "./tauriClient";
 
-function resolveRuntimeModeLabel(mode: OverviewStatus["mode"]): string {
-  if (mode === "preview") return "Browser Preview";
-  if (mode === "runtime-unavailable") return "Desktop Runtime Unavailable";
-  return "Live";
+function nowIso(): string {
+  return new Date().toISOString();
 }
 
-function resolveBridgeSourceLabel(source: string | null): string {
-  if (!source || source === "none") return "missing";
-  if (source === "official-api") return "official API bridge";
-  if (source === "global-fallback") return "global fallback bridge";
-  return source;
-}
-
-function runtimeMetaValue(status: OverviewStatus, label: string): string | null {
-  return status.runtime.meta?.find((entry) => entry.label === label)?.value ?? null;
-}
-
-function resolveBannerTone(status: OverviewStatus): WorkspaceBannerTone {
-  if (status.mode === "runtime-unavailable") return "error";
-  if (status.mode === "preview") return "warning";
-  if (status.overall.level === "healthy") return "success";
-  if (status.overall.level === "degraded") return "warning";
-  if (status.overall.level === "offline") return "error";
-  return "info";
-}
-
-function resolveBannerHeadline(status: OverviewStatus): string {
-  if (status.mode === "preview") return "Browser Preview Mode";
-  if (status.mode === "runtime-unavailable") return "Desktop Runtime Bridge Unavailable";
-  return status.overall.headline;
-}
-
-function resolveBannerSummary(status: OverviewStatus): string {
-  if (status.mode === "preview") {
-    return "当前仅展示只读预览界面。需要在 Tauri 原生桌面壳中运行，才能使用安装、日志、配置和服务控制。";
-  }
-
-  if (status.mode === "runtime-unavailable") {
-    return "当前已进入桌面窗口，但前端未连上 Tauri 命令桥。这个问题应优先修复，否则本地命令和文件操作都不可用。";
-  }
-
-  return status.overall.summary;
-}
-
-function resolvePrimaryAction(status: OverviewStatus): WorkspaceBannerAction | null {
-  const action = status.nextActions[0];
-  if (!action) return null;
-  return {
-    label: action.label,
-    route: action.route,
-    description: action.description,
-  };
-}
-
-export function buildWorkspaceBanner(status: OverviewStatus): WorkspaceBannerModel {
-  const runtimeMode = runtimeMetaValue(status, "Mode") ?? resolveRuntimeModeLabel(status.mode);
-  const tauriShell = runtimeMetaValue(status, "Tauri Shell") ?? (status.mode === "preview" ? "not-detected" : "detected");
-  const invokeBridge = runtimeMetaValue(status, "Invoke Bridge") ?? (status.mode === "live" ? "detected" : "missing");
-  const bridgeSource = resolveBridgeSourceLabel(
-    runtimeMetaValue(status, "Bridge Source") ?? (status.mode === "live" ? "official-api" : null),
-  );
-
-  return {
-    mode: status.mode === "live" ? "live" : status.mode,
-    tone: resolveBannerTone(status),
-    headline: resolveBannerHeadline(status),
-    summary: resolveBannerSummary(status),
-    primaryAction: resolvePrimaryAction(status),
-    meta: [
-      { label: "Runtime Mode", value: runtimeMode },
-      { label: "Tauri Shell", value: tauriShell },
-      { label: "Invoke Bridge", value: invokeBridge },
-      { label: "Bridge Source", value: bridgeSource },
-      { label: "App Version", value: status.appVersion },
-      { label: "Platform", value: status.platform },
-      { label: "Dashboard", value: status.dashboardUrl },
-    ],
-  };
-}
-
-function isHealthy(level: OverviewStatus["overall"]["level"]): boolean {
-  return level === "healthy";
-}
-
-function stepStatus(
-  current: GuidedSetupStep["id"],
-  active: GuidedSetupStep["id"],
-  complete: boolean,
-): GuidedSetupStep["status"] {
-  if (complete) return "complete";
-  if (current === active) return current === "dashboard" ? "ready" : "current";
-  return "blocked";
-}
-
-function buildSteps(status: OverviewStatus): GuidedSetupStep[] {
-  const installReady = isHealthy(status.install.level);
-  const configReady = installReady && isHealthy(status.config.level);
-  const serviceReady = configReady && isHealthy(status.service.level);
-
-  const activeStep: GuidedSetupStep["id"] = !installReady
-    ? "install"
-    : !configReady
-      ? "config"
-      : !serviceReady
-        ? "service"
-        : "dashboard";
-
+function createBannerMeta(
+  runtime: RuntimeDiagnostics,
+  platform: string,
+  dashboard: string,
+): WorkspaceBannerModel["meta"] {
   return [
     {
-      id: "install",
-      title: "安装 OpenClaw",
-      description: status.install.detail,
-      route: "/install?wizard=1",
-      actionLabel: "去安装",
-      status: stepStatus("install", activeStep, installReady),
+      label: "Runtime Mode",
+      value:
+        runtime.mode === "browser-preview"
+          ? "Browser Preview"
+          : runtime.mode === "tauri-runtime-unavailable"
+            ? "Desktop Runtime Unavailable"
+            : "Live",
     },
+    { label: "Tauri Shell", value: runtime.hasTauriShell ? "detected" : "not-detected" },
+    { label: "Invoke Bridge", value: runtime.hasInvokeBridge ? "detected" : "missing" },
     {
-      id: "config",
-      title: "填写 API Key",
-      description: status.config.detail,
-      route: "/config",
-      actionLabel: "去填写 API Key",
-      status: stepStatus("config", activeStep, configReady),
+      label: "Bridge Source",
+      value:
+        runtime.bridgeSource === "official-api"
+          ? "official API bridge"
+          : runtime.bridgeSource === "global-fallback"
+            ? "global fallback bridge"
+            : "missing",
     },
-    {
-      id: "service",
-      title: "启动 Gateway",
-      description: status.service.detail,
-      route: "/service",
-      actionLabel: "去启动 Gateway",
-      status: stepStatus("service", activeStep, serviceReady),
-    },
-    {
-      id: "dashboard",
-      title: "开始使用 OpenClaw",
-      description: serviceReady
-        ? "Gateway 已就绪，现在可以直接打开 Dashboard 开始使用。"
-        : "需要先启动 Gateway，才能打开 Dashboard 正常使用。",
-      route: "/dashboard",
-      actionLabel: "打开 Dashboard",
-      status: stepStatus("dashboard", activeStep, false),
-    },
+    { label: "Platform", value: platform },
+    { label: "Dashboard", value: dashboard },
   ];
 }
 
-function buildLaunchChecks(status: OverviewStatus): GuidedLaunchCheck[] {
-  return [
-    {
-      id: "install",
-      title: "安装检查",
-      level: status.install.level,
-      detail: status.install.detail,
-      route: "/install?wizard=1",
-    },
-    {
-      id: "config",
-      title: "配置检查",
-      level: status.config.level,
-      detail: status.config.detail,
-      route: "/config",
-    },
-    {
-      id: "service",
-      title: "服务检查",
-      level: status.service.level,
-      detail: status.service.detail,
-      route: "/service",
-    },
-    {
-      id: "runtime",
-      title: "运行时检查",
-      level: status.runtime.level,
-      detail: status.runtime.detail,
-      route: "/settings",
-    },
-    {
-      id: "settings",
-      title: "设置检查",
-      level: status.settings.level,
-      detail: status.settings.detail,
-      route: "/settings",
-    },
-  ];
+function buildPreviewBanner(updatedAt: string, runtime: RuntimeDiagnostics): WorkspaceBannerModel {
+  const primaryAction: WorkspaceBannerAction = {
+    label: "查看桌面说明",
+    route: "/runbook",
+    description: `当前是浏览器预览模式，时间 ${new Date(updatedAt).toLocaleString()}。需要切回桌面壳才能继续本机安装和服务控制。`,
+  };
+
+  return {
+    mode: "preview",
+    tone: "warning",
+    headline: "Browser Preview Mode",
+    summary: "当前仅展示只读预览界面。需要在 Tauri 原生桌面壳中运行，才能使用安装、日志、配置和服务控制。",
+    primaryAction,
+    meta: createBannerMeta(runtime, "preview", "Unavailable in preview"),
+  };
 }
 
-function buildBlockers(status: OverviewStatus): RunbookBlocker[] {
-  const blockers: RunbookBlocker[] = [];
+function buildRuntimeUnavailableBanner(
+  updatedAt: string,
+  runtime: RuntimeDiagnostics,
+): WorkspaceBannerModel {
+  const primaryAction: WorkspaceBannerAction = {
+    label: "修复运行时",
+    route: "/settings",
+    description: `桌面窗口已打开，但命令桥不可用。检查时间 ${new Date(updatedAt).toLocaleString()}。`,
+  };
 
-  if (status.mode === "runtime-unavailable") {
-    blockers.push({
-      id: "runtime-bridge",
-      title: "修复桌面运行时桥接",
-      detail: status.runtime.detail,
-      level: status.runtime.level,
-      route: "/settings",
-      actionLabel: "修复运行时",
-    });
-  }
-
-  if (status.mode === "preview") {
-    blockers.push({
-      id: "preview-mode",
-      title: "切换到桌面模式",
-      detail: status.runtime.detail,
-      level: status.runtime.level,
-      route: "/runbook",
-      actionLabel: "查看说明",
-    });
-  }
-
-  if (!isHealthy(status.install.level)) {
-    blockers.push({
-      id: "install",
-      title: status.install.title,
-      detail: status.install.detail,
-      level: status.install.level,
-      route: "/install?wizard=1",
-      actionLabel: "去安装",
-    });
-  }
-
-  if (!isHealthy(status.config.level)) {
-    blockers.push({
-      id: "config",
-      title: status.config.title,
-      detail: status.config.detail,
-      level: status.config.level,
-      route: "/config",
-      actionLabel: "去填写 API Key",
-    });
-  }
-
-  if (!isHealthy(status.service.level)) {
-    blockers.push({
-      id: "service",
-      title: status.service.title,
-      detail: status.service.detail,
-      level: status.service.level,
-      route: "/service",
-      actionLabel: "去启动 Gateway",
-    });
-  }
-
-  return blockers;
+  return {
+    mode: "runtime-unavailable",
+    tone: "error",
+    headline: "Desktop Runtime Bridge Unavailable",
+    summary: "当前已进入桌面窗口，但前端未连上 Tauri 命令桥。这个问题应优先修复，否则本地命令和文件操作都不可用。",
+    primaryAction,
+    meta: createBannerMeta(runtime, "desktop-shell", "Unavailable"),
+  };
 }
 
-function buildSupportActions(currentBlocker: RunbookBlocker | null): RunbookSupportAction[] {
-  const actions: RunbookSupportAction[] = [];
-  if (currentBlocker) {
-    actions.push({
-      id: "primary",
-      label: currentBlocker.actionLabel,
-      route: currentBlocker.route,
-      description: "先完成当前这一步，再继续下面的流程。",
-    });
-  }
-
-  actions.push(
-    {
-      id: "runbook",
-      label: "查看完整步骤",
-      route: "/runbook",
-      description: "如果你想看完整流程顺序，再打开这里。",
-    },
-    {
-      id: "logs",
-      label: "查看日志",
-      route: "/logs",
-      description: "只有安装或启动失败时，再来这里看错误日志。",
-    },
-    {
-      id: "settings",
-      label: "打开设置",
-      route: "/settings",
-      description: "当桌面运行时有问题时，再来这里检查设置和环境。",
-    },
-  );
-
+function dedupeSupportActions(actions: RunbookSupportAction[]): RunbookSupportAction[] {
   return actions.filter(
     (action, index, list) => list.findIndex((candidate) => candidate.route === action.route) === index,
   );
 }
 
-export function buildRunbookModel(status: OverviewStatus): RunbookModel {
-  const steps = buildSteps(status);
-  const launchChecks = buildLaunchChecks(status);
-  const blockers = buildBlockers(status);
-  const currentBlocker = blockers[0] ?? null;
-  const primaryStep = steps.find((step) => step.status === "current" || step.status === "ready") ?? steps[0];
-  const primaryRoute = currentBlocker?.route ?? primaryStep.route;
-  const primaryLabel = currentBlocker?.actionLabel ?? primaryStep.actionLabel;
+function buildPreviewRunbook(updatedAt: string, runtime: RuntimeDiagnostics): RunbookModel {
+  const currentBlocker = {
+    id: "preview-mode",
+    title: "切换到桌面模式",
+    detail: "浏览器预览只能看界面，不能执行安装、写入 API Key 或启动 Gateway。",
+    level: "unknown" as const,
+    route: "/runbook",
+    actionLabel: "查看说明",
+  };
 
   return {
-    headline: currentBlocker ? `下一步：${currentBlocker.title}` : "已经可以开始使用了",
-    summary: currentBlocker
-      ? "一次只做一件事。完成当前步骤后，再继续下一步。"
-      : "安装、API Key 配置和 Gateway 都已经就绪，现在可以直接打开 Dashboard。",
-    primaryRoute,
-    primaryLabel,
-    lastCheckedAt: status.overall.updatedAt,
-    overallLevel: status.overall.level,
-    launchChecks,
-    steps,
-    blockers,
+    headline: "下一步：切换到桌面模式",
+    summary: "当前不是可执行本机命令的桌面环境。先进入桌面版 ClawDesk，再继续安装、配置和启动。",
+    primaryRoute: currentBlocker.route,
+    primaryLabel: currentBlocker.actionLabel,
+    lastCheckedAt: updatedAt,
+    overallLevel: "unknown",
+    launchChecks: [
+      { id: "install", title: "安装检查", level: "unknown", detail: "预览模式不会检测本机 OpenClaw CLI 与 npm 安装状态。", route: "/install?wizard=1" },
+      { id: "config", title: "配置检查", level: "unknown", detail: "预览模式不会读取真实 OpenClaw 配置文件。", route: "/config" },
+      { id: "service", title: "服务检查", level: "unknown", detail: "预览模式不会检测本地 Gateway 运行状态。", route: "/service" },
+      { id: "runtime", title: "运行时检查", level: "unknown", detail: "浏览器预览模式下无法访问 Rust 命令桥接。", route: "/settings" },
+      { id: "settings", title: "设置检查", level: "unknown", detail: "预览模式仅展示结构，不会读取本地 ClawDesk 设置。", route: "/settings" },
+    ],
+    steps: [
+      { id: "install", title: "安装 OpenClaw", description: "先切换到桌面模式，安装步骤才可执行。", route: "/install?wizard=1", actionLabel: "去安装", status: "blocked" },
+      { id: "config", title: "填写 API Key", description: "先切换到桌面模式，配置文件才可读写。", route: "/config", actionLabel: "去填写 API Key", status: "blocked" },
+      { id: "service", title: "启动 Gateway", description: "先切换到桌面模式，服务状态才可控制。", route: "/service", actionLabel: "去启动 Gateway", status: "blocked" },
+      { id: "dashboard", title: "开始使用 OpenClaw", description: "当前只能预览界面，不能打开可用的本地 Dashboard。", route: "/dashboard", actionLabel: "打开 Dashboard", status: "blocked" },
+    ],
+    blockers: [currentBlocker],
     currentBlocker,
-    supportActions: buildSupportActions(currentBlocker),
-    banner: buildWorkspaceBanner(status),
+    supportActions: dedupeSupportActions([
+      {
+        id: "primary",
+        label: currentBlocker.actionLabel,
+        route: currentBlocker.route,
+        description: "先确认如何进入桌面运行时，再继续后面的步骤。",
+      },
+      {
+        id: "settings",
+        label: "打开设置",
+        route: "/settings",
+        description: "需要确认当前运行环境时，再来这里看诊断信息。",
+      },
+    ]),
+    banner: buildPreviewBanner(updatedAt, runtime),
   };
 }
+
+function buildRuntimeUnavailableRunbook(updatedAt: string, runtime: RuntimeDiagnostics): RunbookModel {
+  const currentBlocker = {
+    id: "runtime-bridge",
+    title: "修复桌面运行时桥接",
+    detail: "已检测到桌面 shell，但 Tauri 命令桥不可用，因此当前无法访问本地 Rust 命令层。",
+    level: "offline" as const,
+    route: "/settings",
+    actionLabel: "修复运行时",
+  };
+
+  return {
+    headline: "下一步：修复桌面运行时桥接",
+    summary: "当前虽然已经打开桌面窗口，但本地命令桥没连上，所以安装、配置和启动都无法继续。",
+    primaryRoute: currentBlocker.route,
+    primaryLabel: currentBlocker.actionLabel,
+    lastCheckedAt: updatedAt,
+    overallLevel: "offline",
+    launchChecks: [
+      { id: "install", title: "安装检查", level: "offline", detail: "在桌面命令桥恢复前，无法执行本机安装、CLI 探测和 Gateway 托管安装。", route: "/install?wizard=1" },
+      { id: "config", title: "配置检查", level: "offline", detail: "在桌面命令桥恢复前，无法读取或写入本地 OpenClaw 配置。", route: "/config" },
+      { id: "service", title: "服务检查", level: "offline", detail: "在桌面命令桥恢复前，无法查询或控制 Gateway 服务。", route: "/service" },
+      { id: "runtime", title: "运行时检查", level: "offline", detail: currentBlocker.detail, route: "/settings" },
+      { id: "settings", title: "设置检查", level: "offline", detail: "在桌面命令桥恢复前，无法读取本地 ClawDesk 设置文件。", route: "/settings" },
+    ],
+    steps: [
+      { id: "install", title: "安装 OpenClaw", description: "先修复运行时桥接，安装步骤才可执行。", route: "/install?wizard=1", actionLabel: "去安装", status: "blocked" },
+      { id: "config", title: "填写 API Key", description: "先修复运行时桥接，配置文件才可读写。", route: "/config", actionLabel: "去填写 API Key", status: "blocked" },
+      { id: "service", title: "启动 Gateway", description: "先修复运行时桥接，服务状态才可控制。", route: "/service", actionLabel: "去启动 Gateway", status: "blocked" },
+      { id: "dashboard", title: "开始使用 OpenClaw", description: "先修复运行时桥接，之后才能正常打开 Dashboard。", route: "/dashboard", actionLabel: "打开 Dashboard", status: "blocked" },
+    ],
+    blockers: [currentBlocker],
+    currentBlocker,
+    supportActions: dedupeSupportActions([
+      {
+        id: "primary",
+        label: currentBlocker.actionLabel,
+        route: currentBlocker.route,
+        description: "先让桌面命令桥恢复正常，再继续下面的流程。",
+      },
+      {
+        id: "logs",
+        label: "查看日志",
+        route: "/logs",
+        description: "如果修复桌面运行时时遇到问题，再来这里查看错误日志。",
+      },
+      {
+        id: "settings",
+        label: "打开设置",
+        route: "/settings",
+        description: "检查运行时诊断、桥接状态和本地路径信息。",
+      },
+    ]),
+    banner: buildRuntimeUnavailableBanner(updatedAt, runtime),
+  };
+}
+
+export const runbookService = {
+  async getRunbookModel(): Promise<ServiceResult<RunbookModel>> {
+    const runtime = getRuntimeDiagnostics();
+    const updatedAt = nowIso();
+
+    if (runtime.mode === "browser-preview") {
+      return {
+        ok: true,
+        data: buildPreviewRunbook(updatedAt, runtime),
+      };
+    }
+
+    if (runtime.mode === "tauri-runtime-unavailable") {
+      return {
+        ok: true,
+        data: buildRuntimeUnavailableRunbook(updatedAt, runtime),
+      };
+    }
+
+    const result = await invokeCommand<RunbookModel>("get_runbook_model");
+    if (result.success && result.data) {
+      return {
+        ok: true,
+        data: result.data,
+      };
+    }
+
+    return {
+      ok: false,
+      error: result.error ?? {
+        code: "E_UNKNOWN",
+        message: "Failed to load runbook model.",
+        suggestion: "Check backend logs and retry.",
+      },
+    };
+  },
+};

@@ -25,6 +25,14 @@ export interface UseSettingsFormResult {
   reload: () => Promise<void>;
 }
 
+function buildUnexpectedLoadIssue(error: unknown): BackendError {
+  return {
+    code: "E_UNKNOWN",
+    message: error instanceof Error ? error.message : "Failed to load ClawDesk settings.",
+    suggestion: "Retry the action or restart ClawDesk.",
+  };
+}
+
 export function useSettingsForm(): UseSettingsFormResult {
   const [form, setForm] = useState<AppSettings>(defaultAppSettings);
   const [errors, setErrors] = useState<SettingsFormErrors>({});
@@ -38,13 +46,23 @@ export function useSettingsForm(): UseSettingsFormResult {
 
   const reload = useCallback(async () => {
     setIsLoading(true);
-    const loaded = await settingsService.readSettings();
-    setForm(loaded.values);
-    setLoadIssue(loaded.issue ?? null);
-    setLoadedPath(loaded.path ?? null);
-    setExists(loaded.exists);
-    setModifiedAt(loaded.modifiedAt ?? null);
-    setIsLoading(false);
+    try {
+      const loaded = await settingsService.readSettings();
+      setForm(loaded.values);
+      setErrors({});
+      setLoadIssue(loaded.issue ?? null);
+      setLoadedPath(loaded.path ?? null);
+      setExists(loaded.exists);
+      setModifiedAt(loaded.modifiedAt ?? null);
+    } catch (error: unknown) {
+      setForm(defaultAppSettings);
+      setLoadIssue(buildUnexpectedLoadIssue(error));
+      setLoadedPath(null);
+      setExists(false);
+      setModifiedAt(null);
+    } finally {
+      setIsLoading(false);
+    }
   }, []);
 
   useEffect(() => {
@@ -71,10 +89,24 @@ export function useSettingsForm(): UseSettingsFormResult {
     }
 
     setIsSaving(true);
-    const result = await settingsService.saveSettings(form);
-    setSaveResult(result);
-    setIsSaving(false);
-    await reload();
+    let shouldReload = false;
+    try {
+      const result = await settingsService.saveSettings(form);
+      setSaveResult(result);
+      shouldReload = result.status === "success";
+    } catch (error: unknown) {
+      setSaveResult({
+        status: "error",
+        detail: error instanceof Error ? error.message : "Unknown settings save error.",
+        suggestion: "Retry the action or inspect the ClawDesk logs.",
+        code: "E_UNKNOWN",
+      });
+    } finally {
+      setIsSaving(false);
+    }
+    if (shouldReload) {
+      await reload();
+    }
   }, [form, reload, validate]);
 
   const resetToDefault = useCallback(() => {
