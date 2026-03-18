@@ -271,8 +271,7 @@ fn xdg_config_home(home: &str) -> PathBuf {
 }
 
 fn which_sync(binary: &str) -> Result<PathBuf, ()> {
-    let mut command =
-        std::process::Command::new(if cfg!(windows) { "where" } else { "which" });
+    let mut command = std::process::Command::new(if cfg!(windows) { "where" } else { "which" });
     command
         .arg(binary)
         .stdout(std::process::Stdio::piped())
