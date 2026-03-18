@@ -271,10 +271,26 @@ fn xdg_config_home(home: &str) -> PathBuf {
 }
 
 fn which_sync(binary: &str) -> Result<PathBuf, ()> {
-    let output = std::process::Command::new(if cfg!(windows) { "where" } else { "which" })
+    let mut command =
+        std::process::Command::new(if cfg!(windows) { "where" } else { "which" });
+    command
         .arg(binary)
-        .output()
-        .map_err(|_| ())?;
+        .stdout(std::process::Stdio::piped())
+        .stderr(std::process::Stdio::piped());
+
+    // Suppress the visible console window that would otherwise flash when
+    // a GUI application spawns a console child process on Windows.
+    #[cfg(windows)]
+    {
+        use std::os::windows::process::CommandExt;
+        const CREATE_NO_WINDOW: u32 = 0x08000000;
+        command.creation_flags(CREATE_NO_WINDOW);
+    }
+
+    let output = command.output().map_err(|_| ())?;
+    if !output.status.success() {
+        return Err(());
+    }
     output
         .stdout
         .split(|&b| b == b'\n' || b == b'\r')
