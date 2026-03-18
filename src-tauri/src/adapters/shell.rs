@@ -31,6 +31,15 @@ pub async fn run_command(
         .stderr(Stdio::piped())
         .kill_on_drop(true);
 
+    // On Windows, prevent spawned processes from opening visible console
+    // windows.  Tauri is a GUI application, so child processes must not
+    // flash terminal windows to the user.
+    #[cfg(windows)]
+    {
+        const CREATE_NO_WINDOW: u32 = 0x08000000;
+        command.creation_flags(CREATE_NO_WINDOW);
+    }
+
     if let Some(path_env) = platform::normalized_path_env() {
         command.env("PATH", path_env);
     }
