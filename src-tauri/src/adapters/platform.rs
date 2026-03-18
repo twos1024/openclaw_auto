@@ -1,5 +1,6 @@
 use std::env;
 use std::path::PathBuf;
+use std::sync::OnceLock;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum RuntimePlatform {
@@ -179,10 +180,10 @@ pub fn desktop_runtime_bin_dirs() -> Vec<PathBuf> {
 
             // Also include the Node.js installation directory itself (some setups
             // keep global bins next to the node binary, e.g. nvm-windows).
-            if let Ok(node_path) = which_sync("node") {
-                if let Some(node_dir) = node_path.parent() {
-                    dirs.push(node_dir.to_path_buf());
-                }
+            // The result is cached for the process lifetime to avoid repeated
+            // synchronous blocking I/O on every command invocation.
+            if let Some(node_dir) = cached_node_bin_dir() {
+                dirs.push(node_dir);
             }
         }
         RuntimePlatform::MacOS => {
@@ -268,6 +269,21 @@ fn xdg_config_home(home: &str) -> PathBuf {
         .map(|value| PathBuf::from(value.trim()))
         .filter(|path| !path.as_os_str().is_empty())
         .unwrap_or_else(|| PathBuf::from(home).join(".config"))
+}
+
+// Cached node binary directory — resolved once per process lifetime on Windows
+// to avoid repeated synchronous I/O on every command invocation.
+static NODE_BIN_DIR: OnceLock<Option<PathBuf>> = OnceLock::new();
+
+#[cfg(windows)]
+fn cached_node_bin_dir() -> Option<PathBuf> {
+    NODE_BIN_DIR
+        .get_or_init(|| {
+            which_sync("node")
+                .ok()
+                .and_then(|p| p.parent().map(|d| d.to_path_buf()))
+        })
+        .clone()
 }
 
 fn which_sync(binary: &str) -> Result<PathBuf, ()> {

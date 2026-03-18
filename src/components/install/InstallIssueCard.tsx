@@ -1,13 +1,13 @@
 import type { InstallIssue } from "../../types/install";
 
-const kindLabelMap: Record<string, string> = {
-  "missing-npm": "缺少 npm",
+const kindTitleMap: Record<string, string> = {
+  "missing-npm": "缺少 Node.js / npm",
   "permission-denied": "权限不足",
-  "network-failure": "网络或镜像异常",
-  "command-timeout": "命令执行超时",
-  "binary-not-found": "无法定位 OpenClaw 可执行文件",
-  "gateway-install-failed": "Gateway 托管安装失败",
-  unknown: "未知安装问题",
+  "network-failure": "网络连接失败",
+  "command-timeout": "安装超时",
+  "binary-not-found": "未找到 OpenClaw 程序",
+  "gateway-install-failed": "Gateway 服务注册未完成",
+  unknown: "安装遇到问题",
 };
 
 export interface InstallIssueCardProps {
@@ -15,44 +15,23 @@ export interface InstallIssueCardProps {
 }
 
 export function InstallIssueCard({ issue }: InstallIssueCardProps): JSX.Element {
+  const title = kindTitleMap[issue.failureKind] ?? "安装遇到问题";
+  const isGatewayWarning = issue.failureKind === "gateway-install-failed";
+
   return (
     <section
       style={{
-        border: "1px solid #fcd34d",
+        border: isGatewayWarning ? "1px solid #fcd34d" : "1px solid #fca5a5",
         borderRadius: 12,
-        background: "#fffbeb",
+        background: isGatewayWarning ? "#fffbeb" : "#fef2f2",
         padding: 16,
         display: "grid",
         gap: 8,
       }}
     >
-      <strong>安装问题摘要</strong>
-      <p style={{ margin: 0, color: "#475569" }}>问题类型：{kindLabelMap[issue.failureKind] ?? issue.failureKind}</p>
-      <p style={{ margin: 0, color: "#475569" }}>执行步骤：{issue.step}</p>
-      <p style={{ margin: 0, color: "#475569" }}>说明：{issue.message}</p>
-      <p style={{ margin: 0, color: "#475569" }}>建议：{issue.suggestion}</p>
-      <p style={{ margin: 0, fontSize: 12, color: "#64748b" }}>
-        阶段：{issue.stage}
-        {issue.code ? ` | 错误码：${issue.code}` : ""}
-        {typeof issue.exitCode === "number" ? ` | Exit Code: ${issue.exitCode}` : ""}
-      </p>
-      {issue.sample ? (
-        <pre
-          style={{
-            margin: 0,
-            padding: 12,
-            borderRadius: 8,
-            background: "#0f172a",
-            color: "#e2e8f0",
-            fontSize: 12,
-            overflowX: "auto",
-            whiteSpace: "pre-wrap",
-            wordBreak: "break-word",
-          }}
-        >
-          {issue.sample}
-        </pre>
-      ) : null}
+      <strong>{title}</strong>
+      <p style={{ margin: 0, color: "#334155" }}>{issue.message}</p>
+      <p style={{ margin: 0, fontSize: 13, color: "#475569" }}>建议：{issue.suggestion}</p>
     </section>
   );
 }

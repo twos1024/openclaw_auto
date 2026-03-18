@@ -174,7 +174,7 @@ describe("installProgress", () => {
 
     expect(progress.activePhaseId).toBe("install-gateway");
     expect(progress.detail).toContain("Gateway managed service");
-    expect(progress.hint).toContain("实时阶段来自安装日志");
+    expect(progress.hint).toContain("安装正在后台运行");
     expect(progress.percent).toBeGreaterThanOrEqual(58);
     expect(progress.percent).toBeLessThan(100);
   });

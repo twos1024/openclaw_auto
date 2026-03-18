@@ -103,3 +103,8 @@ export interface InstallEnvResult {
   data?: InstallEnvironment;
   error?: BackendError;
 }
+
+export interface TerminalInstallData {
+  launched: boolean;
+  message: string;
+}

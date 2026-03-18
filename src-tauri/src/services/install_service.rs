@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::adapters::openclaw;
 use crate::adapters::platform;
-use crate::adapters::shell::{run_command, ShellOutput};
+use crate::adapters::shell::{self, run_command, ShellOutput};
 use crate::models::error::AppError;
 use crate::services::env_service;
 use crate::services::install_issue::{
@@ -229,6 +229,52 @@ fn append_install_log_line(source: LogSource, line: &str) {
     if let Err(error) = log_service::append_log_line(source, line) {
         eprintln!("install log append failed: {}", error.message);
     }
+}
+
+/// Result returned by the visible-terminal install path.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct TerminalInstallData {
+    pub launched: bool,
+    pub message: String,
+}
+
+/// Opens a new, persistent terminal window that runs
+/// `npm install -g openclaw@latest` with full live output visible to the user.
+/// Returns immediately after the window is opened — the install itself runs
+/// asynchronously inside the terminal.
+///
+/// Use this when the user wants to watch real-time install progress rather than
+/// relying solely on the background install log viewer.
+pub async fn install_openclaw_with_terminal() -> Result<TerminalInstallData, AppError> {
+    append_install_log_line(
+        LogSource::Install,
+        &format!(
+            "[info] {} install_openclaw_with_terminal started",
+            Utc::now().to_rfc3339()
+        ),
+    );
+
+    let npm_program = openclaw::npm_program().to_string();
+    let install_args = vec![
+        "install".to_string(),
+        "-g".to_string(),
+        "openclaw@latest".to_string(),
+    ];
+
+    shell::run_in_visible_terminal(&npm_program, &install_args, "OpenClaw Installer").await?;
+
+    append_install_log_line(
+        LogSource::Install,
+        "[info] install terminal window launched successfully",
+    );
+
+    Ok(TerminalInstallData {
+        launched: true,
+        message:
+            "Installation terminal opened. Check the terminal window for live progress and results."
+                .to_string(),
+    })
 }
 
 fn serialize_error_code(code: &crate::models::error::ErrorCode) -> String {

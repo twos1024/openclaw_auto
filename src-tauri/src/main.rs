@@ -11,6 +11,7 @@ fn main() {
         .invoke_handler(tauri::generate_handler![
             commands::env::detect_env,
             commands::install::install_openclaw,
+            commands::install::install_openclaw_in_terminal,
             commands::connectivity::test_connection,
             commands::config::backup_openclaw_config,
             commands::config::read_openclaw_config,

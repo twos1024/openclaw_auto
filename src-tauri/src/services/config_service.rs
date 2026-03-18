@@ -158,7 +158,9 @@ async fn backup_file(source: &Path) -> Result<PathBuf, AppError> {
             .with_details(json!({ "path": source.to_string_lossy() }))
         })?;
 
-    let backup_name = format!("{file_name}.bak.{}", Utc::now().format("%Y%m%d%H%M%S"));
+    // Include milliseconds to prevent collision when multiple backups are
+    // created within the same second (e.g. rapid successive writes).
+    let backup_name = format!("{file_name}.bak.{}", Utc::now().format("%Y%m%d%H%M%S%.3f"));
     let backup_path = source.with_file_name(backup_name);
 
     fs::copy(source, &backup_path)

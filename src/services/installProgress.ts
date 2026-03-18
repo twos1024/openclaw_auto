@@ -234,15 +234,11 @@ export function buildInstallingPhases({ environment, elapsedMs, telemetry }: Ins
       if (phaseId === telemetry.activePhaseId) {
         phases = updatePhase(phases, phaseId, {
           status: telemetry.phaseStatus,
-          detail:
-            telemetry.detail ??
-            (telemetry.latestLogLine
-              ? `最近输出：${telemetry.latestLogLine}`
-              : `正在${phaseTitles[phaseId]}。`),
+          detail: telemetry.detail ?? `正在${phaseTitles[phaseId]}，请稍候...`,
           suggestion:
             telemetry.phaseState === "failure"
-              ? "查看安装日志中的最新错误输出，并在修复后重试。"
-              : "当前阶段来自安装日志事件，等待后端继续推进安装流程。",
+              ? "可前往日志页面查看详细信息，修复后重新安装。"
+              : "安装正在后台进行，请保持页面开启。",
         });
       }
     });
@@ -334,12 +330,8 @@ export function buildInstallProgressModel({
             : telemetry.phaseState === "failure"
               ? `${phaseTitles[telemetry.activePhaseId]}出现问题`
               : `正在${phaseTitles[telemetry.activePhaseId]}`,
-        detail:
-          telemetry.detail ??
-          (telemetry.latestLogLine ? `最近输出：${telemetry.latestLogLine}` : phaseTitles[telemetry.activePhaseId]),
-        hint: telemetry.latestLogLine
-          ? `实时阶段来自安装日志。最近输出：${telemetry.latestLogLine}`
-          : "实时阶段来自安装日志，百分比为当前阶段内的估计值。",
+        detail: telemetry.detail ?? `正在${phaseTitles[telemetry.activePhaseId]}，请稍候...`,
+        hint: "安装正在后台运行，完成后将自动显示结果。",
       };
     }
 
@@ -353,7 +345,7 @@ export function buildInstallProgressModel({
       activePhaseId: segment.phaseId,
       headline: `正在${phaseTitles[segment.phaseId]}`,
       detail: segment.detail,
-      hint: "当前为前端估计进度，最终结果以后端返回为准。",
+      hint: "安装正在后台运行，完成后将自动显示结果。",
     };
   }
 

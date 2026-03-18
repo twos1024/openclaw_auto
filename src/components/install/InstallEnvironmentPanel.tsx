@@ -162,7 +162,7 @@ export function InstallEnvironmentPanel({
         </p>
       ) : (
         <p style={{ margin: 0, fontSize: 13, color: "#475569" }}>
-          安装过程会先完成 CLI 安装，再尝试托管 Gateway 安装；如遇 warning，可继续在 Service 和 Logs 页面处理。
+          点击"开始安装"后，安装会在后台自动进行，完成后将显示安装结果。
         </p>
       )}
     </section>

@@ -10,18 +10,21 @@ export function InstallResultCard({ result }: InstallResultCardProps): JSX.Eleme
     return null;
   }
 
-  const border =
-    result.status === "success" ? "#86efac" : result.status === "warning" ? "#fcd34d" : "#fca5a5";
-  const background =
-    result.status === "success" ? "#f0fdf4" : result.status === "warning" ? "#fffbeb" : "#fef2f2";
-  const nextRoute = result.status === "success" || result.status === "warning" ? "/config" : "/logs";
-  const nextLabel = result.status === "success" || result.status === "warning" ? "去配置 API Key" : "查看安装日志";
-  const nextHint =
-    result.status === "success"
-      ? "OpenClaw 已装好，下一步去配置 API Key。"
-      : result.status === "warning"
-        ? "安装已完成核心部分，先补齐 API Key，再继续启动服务。"
-        : "先看日志定位安装问题，再回到安装页重试。";
+  const isSuccess = result.status === "success";
+  const isWarning = result.status === "warning";
+  const isOk = isSuccess || isWarning;
+
+  const border = isSuccess ? "#86efac" : isWarning ? "#fcd34d" : "#fca5a5";
+  const background = isSuccess ? "#f0fdf4" : isWarning ? "#fffbeb" : "#fef2f2";
+  const nextRoute = isOk ? "/config" : "/logs";
+  const nextLabel = isOk ? "下一步：配置 API Key" : "查看详细日志";
+
+  const title = isSuccess ? "安装完成" : isWarning ? "安装基本完成" : "安装遇到问题";
+  const hint = isSuccess
+    ? "OpenClaw 已就绪，下一步去填入 API Key，然后就可以启动服务了。"
+    : isWarning
+      ? "核心组件已安装成功，先填写 API Key，后续可在服务页面继续处理剩余步骤。"
+      : "安装过程中出现了问题，可以查看日志了解详情，修复后重新安装。";
 
   return (
     <section
@@ -31,42 +34,19 @@ export function InstallResultCard({ result }: InstallResultCardProps): JSX.Eleme
         background,
         padding: 16,
         display: "grid",
-        gap: 8,
+        gap: 10,
       }}
     >
-      <strong>
-        {result.status === "success"
-          ? "安装完成"
-          : result.status === "warning"
-            ? "安装部分完成"
-            : "安装失败"}
-      </strong>
-      <p style={{ margin: 0 }}>{result.detail}</p>
-      <p style={{ margin: 0, fontSize: 13, color: "#475569" }}>建议：{result.suggestion}</p>
-      <p style={{ margin: 0, fontSize: 13, color: "#334155" }}>{nextHint}</p>
-      <p style={{ margin: 0, fontSize: 12, color: "#64748b" }}>当前阶段：{result.stage}</p>
-      {result.code ? (
-        <p style={{ margin: 0, fontSize: 12, color: "#64748b" }}>错误码：{result.code}</p>
-      ) : null}
-      {result.data?.executablePath ? (
-        <p style={{ margin: 0, fontSize: 12, color: "#64748b" }}>可执行文件：{result.data.executablePath}</p>
-      ) : null}
-      {result.data?.notes?.length ? (
-        <div style={{ display: "grid", gap: 6 }}>
-          {result.data.notes.map((note, index) => (
-            <p key={`${index}-${note}`} style={{ margin: 0, fontSize: 12, color: "#475569" }}>
-              - {note}
-            </p>
-          ))}
-        </div>
-      ) : null}
+      <strong style={{ fontSize: 15 }}>{title}</strong>
+      <p style={{ margin: 0, color: "#334155" }}>{result.detail}</p>
+      <p style={{ margin: 0, fontSize: 13, color: "#475569" }}>{hint}</p>
       <div>
         <Link
           to={nextRoute}
           style={{
             display: "inline-block",
             borderRadius: 8,
-            padding: "8px 12px",
+            padding: "9px 14px",
             background: "#0f172a",
             color: "#ffffff",
             textDecoration: "none",
