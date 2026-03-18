@@ -72,7 +72,7 @@ export function DashboardPage(): JSX.Element {
   const diagnosticsModel = useMemo(
     () =>
       buildDashboardDiagnosticsModel({
-        phase: isRunning ? embedPhase : "blocked",
+        phase: isRunning ? embedPhase : "unavailable",
         gatewayState: status?.state ?? null,
         gatewayRunning: Boolean(status?.running),
         address,
@@ -117,7 +117,7 @@ export function DashboardPage(): JSX.Element {
       />
 
       <DashboardDiagnosticsPanel
-        phase={isRunning ? embedPhase : "blocked"}
+        phase={isRunning ? embedPhase : "unavailable"}
         platformCard={platformCard}
         model={diagnosticsModel}
       />

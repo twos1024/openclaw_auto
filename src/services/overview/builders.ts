@@ -11,6 +11,12 @@ import { APP_VERSION, type ConfigReadData, type DetectEnvData, type GatewayStatu
 
 const installWizardRoute = "/install?wizard=1";
 
+function formatBridgeSource(source: RuntimeDiagnostics["bridgeSource"]): string {
+  if (source === "official-api") return "official API bridge";
+  if (source === "global-fallback") return "global fallback bridge";
+  return "missing";
+}
+
 function levelRank(level: HealthLevel): number {
   switch (level) {
     case "offline":
@@ -55,7 +61,8 @@ function runtimeMeta(runtime: RuntimeDiagnostics): OverviewSection["meta"] {
   return [
     { label: "Mode", value: runtime.mode },
     { label: "Tauri Shell", value: runtime.hasTauriShell ? "detected" : "not-detected" },
-    { label: "Invoke Bridge", value: runtime.hasInvokeBridge ? runtime.bridgeSource : "missing" },
+    { label: "Invoke Bridge", value: runtime.hasInvokeBridge ? "detected" : "missing" },
+    { label: "Bridge Source", value: formatBridgeSource(runtime.bridgeSource) },
   ];
 }
 
@@ -244,7 +251,9 @@ export function buildRuntimeSection(
     updatedAt,
     [
       { label: "Mode", value: runtime.mode },
-      { label: "Invoke Bridge", value: runtime.bridgeSource },
+      { label: "Tauri Shell", value: runtime.hasTauriShell ? "detected" : "not-detected" },
+      { label: "Invoke Bridge", value: runtime.hasInvokeBridge ? "detected" : "missing" },
+      { label: "Bridge Source", value: formatBridgeSource(runtime.bridgeSource) },
       { label: "平台", value: envResult.data.platform ?? "unknown" },
       { label: "npm", value: envResult.data.npm_version ?? "missing" },
     ],

@@ -13,6 +13,19 @@ function FieldHint(props: { text?: string }): JSX.Element | null {
   return <p style={{ margin: "6px 0 0", fontSize: 12, color: "#b91c1c" }}>{props.text}</p>;
 }
 
+function formatRuntimeModeLabel(mode: string): string {
+  if (mode === "browser-preview") return "Browser Preview";
+  if (mode === "tauri-runtime-unavailable") return "Desktop Runtime Unavailable";
+  return "Live";
+}
+
+function formatBridgeSourceLabel(source: string): string {
+  if (source === "official-api") return "official API bridge";
+  if (source === "global-fallback") return "global fallback bridge";
+  if (source === "none") return "missing";
+  return source;
+}
+
 export function SettingsPage(): JSX.Element {
   const runtime = getRuntimeDiagnostics();
   const { model: runbookModel } = useRunbook(true, 30000);
@@ -68,11 +81,14 @@ export function SettingsPage(): JSX.Element {
         >
           <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "center" }}>
             <strong>Runtime Diagnostics</strong>
-            <StatusBadge variant={runtime.mode === "browser-preview" ? "warning" : runtime.hasInvokeBridge ? "success" : "error"} label={runtime.mode} />
+            <StatusBadge
+              variant={runtime.mode === "browser-preview" ? "warning" : runtime.hasInvokeBridge ? "success" : "error"}
+              label={formatRuntimeModeLabel(runtime.mode)}
+            />
           </div>
           <p style={{ margin: 0 }}><strong>Tauri Shell:</strong> {runtime.hasTauriShell ? "detected" : "not-detected"}</p>
           <p style={{ margin: 0 }}><strong>Invoke Bridge:</strong> {runtime.hasInvokeBridge ? "detected" : "missing"}</p>
-          <p style={{ margin: 0 }}><strong>Bridge Source:</strong> {runtime.bridgeSource}</p>
+          <p style={{ margin: 0 }}><strong>Bridge Source:</strong> {formatBridgeSourceLabel(runtime.bridgeSource)}</p>
           <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
             <Link
               to="/runbook"

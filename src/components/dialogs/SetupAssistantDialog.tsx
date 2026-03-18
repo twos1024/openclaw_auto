@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { useSetupAssistant } from "../../hooks/useSetupAssistant";
 import { ModalDialog } from "../common/ModalDialog";
+import { RunbookLaunchChecks } from "../runbook/RunbookLaunchChecks";
 
 export interface SetupAssistantDialogProps {
   open: boolean;
@@ -36,6 +37,7 @@ export function SetupAssistantDialog({ open, onClose }: SetupAssistantDialogProp
       title="OpenClaw 设置助手"
       open={open}
       onClose={onClose}
+      width={920}
       footer={
         <>
           <button
@@ -86,7 +88,7 @@ export function SetupAssistantDialog({ open, onClose }: SetupAssistantDialogProp
           {errorText}
         </section>
       ) : null}
-      {model ? (
+          {model ? (
         <>
           <section
             style={{
@@ -109,6 +111,8 @@ export function SetupAssistantDialog({ open, onClose }: SetupAssistantDialogProp
               检查时间：{new Date(model.lastCheckedAt).toLocaleString()}
             </p>
           </section>
+
+          <RunbookLaunchChecks model={model} />
 
           <div style={{ display: "grid", gap: 12 }}>
             {model.steps.map((step, index) => {

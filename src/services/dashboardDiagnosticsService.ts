@@ -3,11 +3,12 @@ import type {
   DashboardDiagnosticsModel,
   DashboardEmbedPhase,
   DashboardProbeResult,
+  DashboardRecommendedAction,
 } from "../types/dashboard";
 import type { GatewayRuntimeState, ServiceActionResult } from "./serviceService";
 
 interface BuildDashboardDiagnosticsArgs {
-  phase: DashboardEmbedPhase;
+  phase: DashboardEmbedPhase | "unavailable";
   gatewayState: GatewayRuntimeState | null;
   gatewayRunning: boolean;
   address: string | null;
@@ -17,7 +18,7 @@ interface BuildDashboardDiagnosticsArgs {
   externalOpenResult: ServiceActionResult | null;
 }
 
-function buildEmbedItem(phase: DashboardEmbedPhase): DashboardDiagnosticsItem {
+function buildEmbedItem(phase: DashboardEmbedPhase | "unavailable"): DashboardDiagnosticsItem {
   switch (phase) {
     case "loaded":
       return {
@@ -46,6 +47,13 @@ function buildEmbedItem(phase: DashboardEmbedPhase): DashboardDiagnosticsItem {
         title: "Embed Frame",
         tone: "warning",
         detail: "Embedded dashboard appears blocked. Check iframe policy or security headers.",
+      };
+    case "unavailable":
+      return {
+        id: "embed",
+        title: "Embed Frame",
+        tone: "neutral",
+        detail: "Gateway is not running yet, so the embedded dashboard has not been loaded.",
       };
   }
 }
@@ -78,6 +86,15 @@ function buildProbeItem(probe: DashboardProbeResult | null, address: string | nu
     };
   }
 
+  if (probe.result === "idle") {
+    return {
+      id: "probe",
+      title: "Local Endpoint Probe",
+      tone: "neutral",
+      detail: probe.detail,
+    };
+  }
+
   if (probe.result === "reachable") {
     return {
       id: "probe",
@@ -107,6 +124,59 @@ function buildProbeItem(probe: DashboardProbeResult | null, address: string | nu
     title: "Local Endpoint Probe",
     tone: "error",
     detail: probe.detail,
+  };
+}
+
+function buildRecommendedAction({
+  phase,
+  gatewayRunning,
+  address,
+  probe,
+}: Pick<BuildDashboardDiagnosticsArgs, "phase" | "gatewayRunning" | "address" | "probe">): DashboardRecommendedAction {
+  if (phase === "blocked") {
+    return {
+      label: "Open Runbook",
+      route: "/runbook",
+      detail: "The embedded dashboard looks blocked. Review the Runbook for recovery steps and fallback actions.",
+    };
+  }
+
+  if (!gatewayRunning || !address) {
+    return {
+      label: "Open Service",
+      route: "/service",
+      detail: "Gateway is not running yet. Start it from Service before loading the embedded dashboard.",
+    };
+  }
+
+  if (probe?.result === "timeout") {
+    return {
+      label: "Open Service",
+      route: "/service",
+      detail: "The local endpoint timed out. Restart Gateway or inspect service logs for the failure.",
+    };
+  }
+
+  if (probe?.result === "unreachable" || probe?.result === "invalid-address") {
+    return {
+      label: "Open Service",
+      route: "/service",
+      detail: "The dashboard endpoint is unreachable. Check the address and Gateway state in Service.",
+    };
+  }
+
+  if (probe?.result === "reachable") {
+    return {
+      label: "Stay in Dashboard",
+      route: "/dashboard",
+      detail: "The local endpoint is healthy. Continue working in the embedded dashboard.",
+    };
+  }
+
+  return {
+    label: "Open Service",
+    route: "/service",
+    detail: "The dashboard endpoint is not ready yet. Open Service, then refresh status once Gateway is running.",
   };
 }
 
@@ -155,6 +225,7 @@ export function buildDashboardDiagnosticsModel({
       buildProbeItem(probe, address),
       buildExternalOpenItem(externalOpenResult),
     ],
+    recommendedAction: buildRecommendedAction({ phase, gatewayRunning, address, probe }),
     platformNote,
   };
 }

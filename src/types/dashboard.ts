@@ -33,7 +33,14 @@ export interface DashboardDiagnosticsItem {
   meta?: string;
 }
 
+export interface DashboardRecommendedAction {
+  label: string;
+  detail: string;
+  route: string;
+}
+
 export interface DashboardDiagnosticsModel {
   items: DashboardDiagnosticsItem[];
+  recommendedAction: DashboardRecommendedAction | null;
   platformNote: string;
 }

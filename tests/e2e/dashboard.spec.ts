@@ -153,9 +153,10 @@ test.describe("Dashboard workspace", () => {
     await expect(page.getByRole("dialog", { name: "OpenClaw 设置助手" })).toBeVisible();
     await expect(page.getByRole("heading", { name: "OpenClaw 设置助手" })).toBeVisible();
     await expect(page.getByText("当前先处理：OpenClaw 安装")).toBeVisible();
-    await expect(page.getByRole("link", { name: "继续下一步" })).toBeVisible();
+    await expect(page.getByText("Launch Checks")).toBeVisible();
+    await expect(page.getByRole("link", { name: "去安装" }).first()).toBeVisible();
 
-    await page.getByRole("link", { name: "继续下一步" }).click();
+    await page.getByRole("link", { name: "去安装" }).first().click();
     await expect(page).toHaveURL(/#\/install\?wizard=1$/);
     await expect(page.getByRole("dialog", { name: "OpenClaw 安装向导" })).toBeVisible();
   });

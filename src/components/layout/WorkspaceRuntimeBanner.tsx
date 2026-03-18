@@ -9,6 +9,12 @@ export interface WorkspaceRuntimeBannerProps {
   errorText: string | null;
 }
 
+function formatRuntimeModeLabel(mode: WorkspaceBannerModel["mode"]): string {
+  if (mode === "preview") return "Browser Preview";
+  if (mode === "runtime-unavailable") return "Desktop Runtime Unavailable";
+  return "Live";
+}
+
 export function WorkspaceRuntimeBanner({
   model,
   isLoading,
@@ -32,7 +38,7 @@ export function WorkspaceRuntimeBanner({
     <SurfaceCard
       title={model.headline}
       subtitle={model.summary}
-      action={<StatusBadge variant={model.tone} label={model.mode} />}
+      action={<StatusBadge variant={model.tone} label={formatRuntimeModeLabel(model.mode)} />}
       style={{
         background:
           model.tone === "error"

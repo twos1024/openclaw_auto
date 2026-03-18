@@ -1,18 +1,23 @@
+import { Link } from "react-router-dom";
 import type { PlatformGuidanceCard } from "../../types/installWizard";
 import type { DashboardDiagnosticsModel, DashboardEmbedPhase } from "../../types/dashboard";
 
-const phaseLabels: Record<DashboardEmbedPhase, string> = {
+type DashboardDiagnosticsPhase = DashboardEmbedPhase | "unavailable";
+
+const phaseLabels: Record<DashboardDiagnosticsPhase, string> = {
   loading: "Loading",
   loaded: "Loaded",
   timeout: "Timeout",
   blocked: "Blocked",
+  unavailable: "Unavailable",
 };
 
-const phaseColors: Record<DashboardEmbedPhase, { bg: string; text: string; border: string }> = {
+const phaseColors: Record<DashboardDiagnosticsPhase, { bg: string; text: string; border: string }> = {
   loading: { bg: "#eff6ff", text: "#1d4ed8", border: "#93c5fd" },
   loaded: { bg: "#f0fdf4", text: "#166534", border: "#86efac" },
   timeout: { bg: "#fff7ed", text: "#9a3412", border: "#fdba74" },
   blocked: { bg: "#fef2f2", text: "#991b1b", border: "#fca5a5" },
+  unavailable: { bg: "#f8fafc", text: "#475569", border: "#cbd5e1" },
 };
 
 const itemTones = {
@@ -23,7 +28,7 @@ const itemTones = {
 } as const;
 
 export interface DashboardDiagnosticsPanelProps {
-  phase: DashboardEmbedPhase;
+  phase: DashboardDiagnosticsPhase;
   platformCard: PlatformGuidanceCard | null;
   model: DashboardDiagnosticsModel;
 }
@@ -103,6 +108,52 @@ export function DashboardDiagnosticsPanel({ phase, platformCard, model }: Dashbo
             </article>
           );
         })}
+        {model.recommendedAction ? (
+          <article
+            style={{
+              border: "1px solid #cbd5e1",
+              borderRadius: 12,
+              background: "#f8fafc",
+              padding: 14,
+              display: "grid",
+              gap: 8,
+            }}
+          >
+            <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "center" }}>
+              <strong style={{ color: "#0f172a" }}>Recommended Next Action</strong>
+              <span
+                style={{
+                  borderRadius: 999,
+                  padding: "4px 10px",
+                  fontSize: 12,
+                  fontWeight: 700,
+                  background: "#eff6ff",
+                  color: "#1d4ed8",
+                  border: "1px solid #93c5fd",
+                }}
+              >
+                Next
+              </span>
+            </div>
+            <p style={{ margin: 0, color: "#475569" }}>{model.recommendedAction.detail}</p>
+            <div>
+              <Link
+                to={model.recommendedAction.route}
+                style={{
+                  borderRadius: 8,
+                  background: "#0f172a",
+                  color: "#ffffff",
+                  padding: "8px 12px",
+                  textDecoration: "none",
+                  fontWeight: 700,
+                  display: "inline-block",
+                }}
+              >
+                {model.recommendedAction.label}
+              </Link>
+            </div>
+          </article>
+        ) : null}
         <p style={{ margin: 0, color: "#475569" }}>
           <strong>Platform:</strong> {platformCard?.title ?? "Unknown"}
         </p>

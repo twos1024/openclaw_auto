@@ -88,6 +88,14 @@ describe("runbookService", () => {
     expect(banner.tone).toBe("warning");
     expect(banner.headline).toBe("Browser Preview Mode");
     expect(banner.summary).toContain("只读预览");
+    expect(banner.meta).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ label: "Runtime Mode", value: "Browser Preview" }),
+        expect.objectContaining({ label: "Tauri Shell", value: "not-detected" }),
+        expect.objectContaining({ label: "Invoke Bridge", value: "missing" }),
+        expect.objectContaining({ label: "Bridge Source", value: "missing" }),
+      ]),
+    );
   });
 
   it("prioritizes runtime bridge blockers ahead of install/config/service", () => {

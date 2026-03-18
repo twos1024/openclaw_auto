@@ -113,10 +113,14 @@ describe("SetupAssistantDialog", () => {
       );
     });
 
-    const footerLink = container.querySelector("a[href='/settings']");
+    const footerLink = Array.from(container.querySelectorAll("a[href='/settings']")).find(
+      (element) => element.textContent === "修复运行时",
+    );
     expect(footerLink).not.toBeNull();
     expect(footerLink?.textContent).toBe("修复运行时");
     expect(container.textContent).toContain("当前先处理：修复桌面运行时桥接");
+    expect(container.textContent).toContain("Launch Checks");
+    expect(container.textContent).toContain("安装检查");
 
     act(() => {
       root.unmount();

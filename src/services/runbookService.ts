@@ -9,6 +9,23 @@ import type {
   WorkspaceBannerTone,
 } from "../types/workspace";
 
+function resolveRuntimeModeLabel(mode: OverviewStatus["mode"]): string {
+  if (mode === "preview") return "Browser Preview";
+  if (mode === "runtime-unavailable") return "Desktop Runtime Unavailable";
+  return "Live";
+}
+
+function resolveBridgeSourceLabel(source: string | null): string {
+  if (!source || source === "none") return "missing";
+  if (source === "official-api") return "official API bridge";
+  if (source === "global-fallback") return "global fallback bridge";
+  return source;
+}
+
+function runtimeMetaValue(status: OverviewStatus, label: string): string | null {
+  return status.runtime.meta?.find((entry) => entry.label === label)?.value ?? null;
+}
+
 function resolveBannerTone(status: OverviewStatus): WorkspaceBannerTone {
   if (status.mode === "runtime-unavailable") return "error";
   if (status.mode === "preview") return "warning";
@@ -47,6 +64,13 @@ function resolvePrimaryAction(status: OverviewStatus): WorkspaceBannerAction | n
 }
 
 export function buildWorkspaceBanner(status: OverviewStatus): WorkspaceBannerModel {
+  const runtimeMode = runtimeMetaValue(status, "Mode") ?? resolveRuntimeModeLabel(status.mode);
+  const tauriShell = runtimeMetaValue(status, "Tauri Shell") ?? (status.mode === "preview" ? "not-detected" : "detected");
+  const invokeBridge = runtimeMetaValue(status, "Invoke Bridge") ?? (status.mode === "live" ? "detected" : "missing");
+  const bridgeSource = resolveBridgeSourceLabel(
+    runtimeMetaValue(status, "Bridge Source") ?? (status.mode === "live" ? "official-api" : null),
+  );
+
   return {
     mode: status.mode === "live" ? "live" : status.mode,
     tone: resolveBannerTone(status),
@@ -54,6 +78,10 @@ export function buildWorkspaceBanner(status: OverviewStatus): WorkspaceBannerMod
     summary: resolveBannerSummary(status),
     primaryAction: resolvePrimaryAction(status),
     meta: [
+      { label: "Runtime Mode", value: runtimeMode },
+      { label: "Tauri Shell", value: tauriShell },
+      { label: "Invoke Bridge", value: invokeBridge },
+      { label: "Bridge Source", value: bridgeSource },
       { label: "App Version", value: status.appVersion },
       { label: "Platform", value: status.platform },
       { label: "Dashboard", value: status.dashboardUrl },
