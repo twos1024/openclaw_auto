@@ -44,13 +44,7 @@ pub async fn detect_env() -> Result<DetectEnvData, AppError> {
     let (locator_program, locator_args) = platform::locator_command("openclaw");
     let locator_output = run_command(&locator_program, &locator_args, 5_000).await?;
 
-    let openclaw_path = locator_output
-        .stdout
-        .lines()
-        .next()
-        .map(str::trim)
-        .filter(|line| !line.is_empty())
-        .map(ToOwned::to_owned)
+    let openclaw_path = path_from_locator_output(&locator_output)
         .or_else(|| openclaw::resolve_binary_path().map(|path| path.to_string_lossy().to_string()));
 
     let openclaw_found = openclaw_path.is_some();
@@ -121,11 +115,28 @@ pub fn ensure_openclaw_available_sync() -> Option<String> {
 }
 
 fn path_from_locator_output(output: &ShellOutput) -> Option<String> {
-    output
+    let lines: Vec<&str> = output
         .stdout
         .lines()
-        .next()
         .map(str::trim)
         .filter(|line| !line.is_empty())
-        .map(ToOwned::to_owned)
+        .collect();
+
+    if lines.is_empty() {
+        return None;
+    }
+
+    // On Windows, `where` may return multiple hits.  Prefer paths ending with
+    // .cmd or .exe because the bare "openclaw" file is a Unix shell script
+    // that cannot be executed directly on Windows (OS error 193).
+    if cfg!(windows) {
+        if let Some(cmd_path) = lines.iter().find(|line| {
+            let lower = line.to_lowercase();
+            lower.ends_with(".cmd") || lower.ends_with(".exe")
+        }) {
+            return Some(cmd_path.to_string());
+        }
+    }
+
+    Some(lines[0].to_owned())
 }
