@@ -1,6 +1,6 @@
 [package]
 name = "clawdesk"
-version = "2.0.1"
+version = "2.0.2"
 description = "ClawDesk Desktop Controller"
 edition = "2021"
 

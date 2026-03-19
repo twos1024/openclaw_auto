@@ -1,7 +1,10 @@
 use std::env;
+use std::sync::{Arc, OnceLock};
+use std::time::{Duration, Instant};
 
 use serde::{Deserialize, Serialize};
 use serde_json::json;
+use tokio::sync::{Mutex, Notify};
 
 use crate::adapters::openclaw;
 use crate::adapters::platform;
@@ -26,7 +29,85 @@ pub struct DetectEnvData {
     pub version_output: Option<ShellOutput>,
 }
 
+#[derive(Debug, Clone)]
+struct DetectEnvCacheEntry {
+    result: Result<DetectEnvData, AppError>,
+    cached_at: Instant,
+}
+
+#[derive(Debug)]
+struct DetectEnvCacheState {
+    entry: Option<DetectEnvCacheEntry>,
+    in_flight: bool,
+    notify: Arc<Notify>,
+}
+
+impl DetectEnvCacheState {
+    fn new() -> Self {
+        Self {
+            entry: None,
+            in_flight: false,
+            notify: Arc::new(Notify::new()),
+        }
+    }
+}
+
+const DETECT_ENV_CACHE_TTL_MS: u64 = 2_000;
+static DETECT_ENV_CACHE: OnceLock<Mutex<DetectEnvCacheState>> = OnceLock::new();
+
+fn detect_env_cache() -> &'static Mutex<DetectEnvCacheState> {
+    DETECT_ENV_CACHE.get_or_init(|| Mutex::new(DetectEnvCacheState::new()))
+}
+
+fn is_detect_env_cache_valid(entry: &DetectEnvCacheEntry) -> bool {
+    entry.cached_at.elapsed() < Duration::from_millis(DETECT_ENV_CACHE_TTL_MS)
+}
+
+pub async fn invalidate_detect_env_cache() {
+    let mut state = detect_env_cache().lock().await;
+    state.entry = None;
+}
+
 pub async fn detect_env() -> Result<DetectEnvData, AppError> {
+    loop {
+        let wait_for = {
+            let mut state = detect_env_cache().lock().await;
+
+            if let Some(entry) = &state.entry {
+                if is_detect_env_cache_valid(entry) {
+                    return entry.result.clone();
+                }
+            }
+
+            if state.in_flight {
+                Some(state.notify.clone())
+            } else {
+                state.in_flight = true;
+                None
+            }
+        };
+
+        if let Some(notify) = wait_for {
+            notify.notified().await;
+            continue;
+        }
+
+        let result = detect_env_uncached().await;
+        let notify = {
+            let mut state = detect_env_cache().lock().await;
+            state.entry = Some(DetectEnvCacheEntry {
+                result: result.clone(),
+                cached_at: Instant::now(),
+            });
+            state.in_flight = false;
+            state.notify.clone()
+        };
+        notify.notify_waiters();
+        return result;
+    }
+}
+
+async fn detect_env_uncached() -> Result<DetectEnvData, AppError> {
     let npm_args = vec!["--version".to_string()];
     let npm_output = run_command(openclaw::npm_program(), &npm_args, 5_000)
         .await

@@ -1,5 +1,6 @@
 use std::env;
 use std::path::PathBuf;
+#[cfg(windows)]
 use std::sync::OnceLock;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -273,17 +274,25 @@ fn xdg_config_home(home: &str) -> PathBuf {
 
 // Cached node binary directory — resolved once per process lifetime on Windows
 // to avoid repeated synchronous I/O on every command invocation.
+#[cfg(windows)]
 static NODE_BIN_DIR: OnceLock<Option<PathBuf>> = OnceLock::new();
 
-#[cfg(windows)]
 fn cached_node_bin_dir() -> Option<PathBuf> {
-    NODE_BIN_DIR
-        .get_or_init(|| {
-            which_sync("node")
-                .ok()
-                .and_then(|p| p.parent().map(|d| d.to_path_buf()))
-        })
-        .clone()
+    #[cfg(windows)]
+    {
+        return NODE_BIN_DIR
+            .get_or_init(|| {
+                which_sync("node")
+                    .ok()
+                    .and_then(|p| p.parent().map(|d| d.to_path_buf()))
+            })
+            .clone();
+    }
+
+    #[cfg(not(windows))]
+    {
+        None
+    }
 }
 
 fn which_sync(binary: &str) -> Result<PathBuf, ()> {

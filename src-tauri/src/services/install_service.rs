@@ -80,6 +80,7 @@ pub async fn install_openclaw() -> Result<InstallOpenClawData, AppError> {
         ));
     }
     write_phase_event_to_install_log("install-cli", "success", "OpenClaw CLI install finished.");
+    env_service::invalidate_detect_env_cache().await;
 
     let executable_path = env_service::ensure_openclaw_available()
         .await

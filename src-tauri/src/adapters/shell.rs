@@ -60,6 +60,7 @@ pub async fn run_command(
 
     // Capture the PID now — wait_with_output() consumes the Child, so we
     // must read the PID before handing ownership to the timeout future.
+    #[cfg(windows)]
     let child_pid = child.id();
 
     let timeout_result = timeout(Duration::from_millis(timeout_ms), child.wait_with_output()).await;

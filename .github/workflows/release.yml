@@ -46,12 +46,17 @@ jobs:
           - name: windows
             os: windows-latest
             bundle: nsis
+            artifact_paths: src-tauri/target/release/bundle/nsis/*.exe
           - name: macos
             os: macos-latest
             bundle: dmg
+            artifact_paths: src-tauri/target/release/bundle/dmg/*.dmg
           - name: linux
             os: ubuntu-22.04
             bundle: deb,appimage
+            artifact_paths: |
+              src-tauri/target/release/bundle/deb/*.deb
+              src-tauri/target/release/bundle/appimage/*.AppImage
 
     steps:
       - name: Checkout
@@ -86,10 +91,11 @@ jobs:
         run: npm ci
 
       - name: Build Tauri app
-        uses: tauri-apps/tauri-action@v0
+        uses: tauri-apps/tauri-action@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
+          projectPath: .
           tagName: ${{ github.ref_name }}
           releaseName: ClawDesk ${{ github.ref_name }}
           releaseBody: Automated release build for ClawDesk.
@@ -101,5 +107,5 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: clawdesk-${{ matrix.platform.name }}-${{ github.ref_name }}
-          path: src-tauri/target/release/bundle/**
+          path: ${{ matrix.platform.artifact_paths }}
           if-no-files-found: error
