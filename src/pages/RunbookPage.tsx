@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { PageHero } from "../components/common/PageHero";
 import { NoticeBanner } from "../components/common/NoticeBanner";
 import { RunbookContextPanel } from "../components/runbook/RunbookContextPanel";
@@ -6,14 +7,15 @@ import { RunbookStepList } from "../components/runbook/RunbookStepList";
 import { useRunbook } from "../hooks/useRunbook";
 
 export function RunbookPage(): JSX.Element {
+  const { t } = useTranslation("runbook");
   const { model, isLoading, errorText, refresh } = useRunbook(true, 15000);
 
   return (
     <div style={{ display: "grid", gap: 16 }}>
       <PageHero
-        title="Runbook"
-        description="Runbook is the full-screen guided workflow for setup and recovery. Use it to see the current blocker, ordered next steps, and fast links to supporting pages."
-        meta={model ? `Last checked: ${new Date(model.lastCheckedAt).toLocaleString()}` : undefined}
+        title={t("page.title")}
+        description={t("page.description")}
+        meta={model ? t("page.lastCheckedAt", { value: new Date(model.lastCheckedAt).toLocaleString() }) : undefined}
         action={
           <button
             type="button"
@@ -30,13 +32,13 @@ export function RunbookPage(): JSX.Element {
               opacity: isLoading ? 0.6 : 1,
             }}
           >
-            {isLoading ? "Refreshing..." : "Refresh Runbook"}
+            {isLoading ? t("page.refreshing") : t("page.refresh")}
           </button>
         }
       />
 
       {errorText ? (
-        <NoticeBanner title="Runbook Unavailable" tone="error">
+        <NoticeBanner title={t("page.unavailable")} tone="error">
           <p style={{ margin: 0 }}>{errorText}</p>
         </NoticeBanner>
       ) : null}

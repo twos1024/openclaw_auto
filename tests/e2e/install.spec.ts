@@ -83,7 +83,7 @@ async function mockLogsBackend(page: Page, fixtures: Record<LogSource, string[]>
                     { label: "Tauri Shell", value: "detected" },
                     { label: "Invoke Bridge", value: "detected" },
                     { label: "Bridge Source", value: "official API bridge" },
-                    { label: "App Version", value: "0.6.0" },
+                    { label: "App Version", value: "2.0.4" },
                     { label: "Platform", value: "windows" },
                     { label: "Dashboard", value: "Unavailable" },
                   ],
@@ -96,7 +96,7 @@ async function mockLogsBackend(page: Page, fixtures: Record<LogSource, string[]>
             return {
               success: true,
               data: {
-                appVersion: "0.6.0",
+                appVersion: "2.0.4",
                 platform: "windows",
                 dashboardUrl: "Unavailable",
                 mode: "live",
@@ -291,7 +291,7 @@ async function mockInstallBackend(page: Page, options?: { installDelayMs?: numbe
                 { label: "Tauri Shell", value: "detected" },
                 { label: "Invoke Bridge", value: "detected" },
                 { label: "Bridge Source", value: "official API bridge" },
-                { label: "App Version", value: "0.6.0" },
+                { label: "App Version", value: "2.0.4" },
                 { label: "Platform", value: "windows" },
                 { label: "Dashboard", value: state.openclawFound ? "http://127.0.0.1:18789" : "Unavailable" },
               ],
@@ -309,7 +309,7 @@ async function mockInstallBackend(page: Page, options?: { installDelayMs?: numbe
             return {
               success: true,
               data: {
-                appVersion: "0.6.0",
+                appVersion: "2.0.4",
                 platform: "windows",
                 dashboardUrl: state.openclawFound ? "http://127.0.0.1:18789" : "Unavailable",
                 mode: "live",
@@ -567,7 +567,7 @@ async function mockSettingsBackend(page: Page): Promise<void> {
                     { label: "Tauri Shell", value: "detected" },
                     { label: "Invoke Bridge", value: "detected" },
                     { label: "Bridge Source", value: "official API bridge" },
-                    { label: "App Version", value: "0.6.0" },
+                    { label: "App Version", value: "2.0.4" },
                     { label: "Platform", value: "windows" },
                     { label: "Dashboard", value: "Unavailable" },
                   ],
@@ -580,7 +580,7 @@ async function mockSettingsBackend(page: Page): Promise<void> {
             return {
               success: true,
               data: {
-                appVersion: "0.6.0",
+                appVersion: "2.0.4",
                 platform: "windows",
                 dashboardUrl: "Unavailable",
                 mode: "live",
@@ -685,7 +685,7 @@ test.describe("Install failure diagnostics", () => {
   test("keeps install flow read-only in browser preview mode", async ({ page }) => {
     await page.goto("/#/install");
 
-    const envErrorBanner = page.getByText("环境探测失败").locator("..");
+    const envErrorBanner = page.getByText("Environment check failed").locator("..");
     await expect(envErrorBanner).toBeVisible();
     await expect(envErrorBanner.getByText("Local commands are unavailable in browser preview mode.")).toBeVisible();
     await expect(page.getByRole("button", { name: "Desktop Runtime Required" })).toBeDisabled();
@@ -696,10 +696,10 @@ test.describe("Install failure diagnostics", () => {
     await page.goto("/#/install");
 
     await expect(page.getByText("OpenClaw Missing")).toBeVisible();
-    await expect(page.getByText("安装阶段")).toBeVisible();
+    await expect(page.getByText("Install steps")).toBeVisible();
     await page.getByRole("button", { name: "Install OpenClaw" }).click();
 
-    await expect(page.getByRole("progressbar", { name: "安装进度" })).toHaveAttribute("aria-valuenow", "100");
+    await expect(page.getByRole("progressbar", { name: "Install progress" })).toHaveAttribute("aria-valuenow", "100");
     await expect(page.getByText("OpenClaw Installed")).toBeVisible();
     await expect(page.getByText("3. 安装 Gateway 托管服务", { exact: true })).toBeVisible();
   });
@@ -708,16 +708,16 @@ test.describe("Install failure diagnostics", () => {
     await mockInstallBackend(page);
     await page.goto("/#/install");
 
-    await page.getByRole("button", { name: "打开安装向导", exact: true }).click();
-    const dialog = page.getByRole("dialog", { name: "OpenClaw 安装向导" });
-    await expect(dialog.getByRole("heading", { name: "OpenClaw 安装向导" })).toBeVisible();
-    await expect(dialog.getByRole("heading", { name: "按这个顺序走就行" })).toBeVisible();
+    await page.getByRole("button", { name: "Open installer", exact: true }).click();
+    const dialog = page.getByRole("dialog", { name: "OpenClaw installation wizard" });
+    await expect(dialog.getByRole("heading", { name: "OpenClaw installation wizard" })).toBeVisible();
+    await expect(dialog.getByRole("heading", { name: "Follow this order" })).toBeVisible();
     await expect(dialog.getByRole("article")).toHaveCount(3);
-    await expect(dialog.getByText("按你的系统看这一张")).toBeVisible();
+    await expect(dialog.getByText("Look at the right system card")).toBeVisible();
     await expect(dialog.getByText("Windows")).toBeVisible();
     await expect(dialog.getByText("macOS")).toBeVisible();
     await expect(dialog.getByText("Linux")).toBeVisible();
-    await expect(dialog.getByText("当前系统")).toBeVisible();
+    await expect(dialog.getByText("Current system")).toBeVisible();
   });
 
   test("shows progress UI while the install command is still running", async ({ page }) => {
@@ -726,11 +726,11 @@ test.describe("Install failure diagnostics", () => {
 
     await page.getByRole("button", { name: "Install OpenClaw" }).click();
 
-    const progressBar = page.getByRole("progressbar", { name: "安装进度" });
+    const progressBar = page.getByRole("progressbar", { name: "Install progress" });
     await expect(progressBar).toBeVisible();
     await expect(progressBar).toHaveAttribute("aria-valuenow", /^(?:[1-9]|[1-8]\d|9[0-5])$/);
-    await expect(page.getByText(/^当前阶段：安装 OpenClaw CLI$/)).toBeVisible();
-    await expect(page.getByText(/^当前阶段：安装 Gateway 托管服务$/)).toBeVisible();
+    await expect(page.getByText(/^正在安装 OpenClaw CLI$/)).toBeVisible();
+    await expect(page.getByText(/^正在安装 Gateway 托管服务$/)).toBeVisible();
 
     await expect(page.getByText("OpenClaw Installed")).toBeVisible();
     await expect(progressBar).toHaveAttribute("aria-valuenow", "100");
@@ -750,7 +750,7 @@ test.describe("Install failure diagnostics", () => {
     await page.goto("/#/logs");
 
     await page.getByRole("button", { name: "安装日志" }).click();
-    await page.getByRole("button", { name: "导出诊断信息" }).click();
+    await page.getByRole("button", { name: "Export diagnostics info" }).click();
 
     await expect(page.getByText("诊断信息已导出到 C:\\Temp\\clawdesk-diagnostics.txt")).toBeVisible();
   });
@@ -760,7 +760,7 @@ test.describe("Install failure diagnostics", () => {
     await page.goto("/#/logs");
 
     await page.getByRole("button", { name: "安装日志" }).click();
-    await page.getByRole("button", { name: "导出诊断包 ZIP" }).click();
+    await page.getByRole("button", { name: "Export diagnostics ZIP" }).click();
 
     await expect(page.getByText("诊断包已导出到 C:\\Temp\\clawdesk-diagnostics.zip（共 2 个文件）")).toBeVisible();
   });
@@ -770,8 +770,8 @@ test.describe("Install failure diagnostics", () => {
     await page.goto("/#/settings");
 
     await page.getByLabel("Log Line Limit").fill("800");
-    await page.getByRole("button", { name: "Save Settings" }).click();
+    await page.getByRole("button", { name: "Save settings" }).click();
 
-    await expect(page.getByText("设置已保存")).toBeVisible();
+    await expect(page.getByRole("button", { name: "Saved" })).toBeVisible();
   });
 });

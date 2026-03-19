@@ -1,6 +1,5 @@
 import {
   defaultConfigValues,
-  type BackupConfigData,
   type ConfigLoadResult,
   type ConfigFormValues,
   type ConnectionTestData,
@@ -39,23 +38,164 @@ function toConfigPayload(values: ConfigFormValues): Record<string, unknown> {
   };
 }
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
+}
+
+function readNestedValue(root: unknown, path: string[]): unknown {
+  let current: unknown = root;
+  for (const key of path) {
+    if (!isRecord(current) || !(key in current)) {
+      return undefined;
+    }
+    current = current[key];
+  }
+  return current;
+}
+
+function readString(root: unknown, path: string[], fallback = ""): string {
+  const value = readNestedValue(root, path);
+  return typeof value === "string" ? value : fallback;
+}
+
+function stripOllamaSuffix(value: string): string {
+  const trimmed = value.trim().replace(/\/+$/, "");
+  return trimmed.replace(/\/v1$/i, "");
+}
+
+function resolveOfficialProvider(content: Record<string, unknown>): {
+  providerId: string;
+  provider: Record<string, unknown>;
+  primaryModelPath: string | null;
+} | null {
+  const providersRaw = readNestedValue(content, ["models", "providers"]);
+  if (!isRecord(providersRaw)) {
+    return null;
+  }
+
+  const primary = readString(content, ["agents", "defaults", "model", "primary"], "").trim();
+  const primaryProviderId = primary.includes("/") ? primary.split("/")[0] : "";
+  if (primaryProviderId && isRecord(providersRaw[primaryProviderId])) {
+    return {
+      providerId: primaryProviderId,
+      provider: providersRaw[primaryProviderId] as Record<string, unknown>,
+      primaryModelPath: primary || null,
+    };
+  }
+
+  const entries = Object.entries(providersRaw).filter(([, value]) => isRecord(value));
+  if (entries.length === 0) {
+    return null;
+  }
+
+  const [providerId, provider] = entries[0];
+  return {
+    providerId,
+    provider: provider as Record<string, unknown>,
+    primaryModelPath: primary || null,
+  };
+}
+
+function parseModelFromPrimary(primaryModelPath: string | null): string {
+  if (!primaryModelPath) {
+    return defaultConfigValues.model;
+  }
+  const parts = primaryModelPath.split("/");
+  const last = parts[parts.length - 1] ?? "";
+  return last.trim() || defaultConfigValues.model;
+}
+
+function readModelParams(
+  content: Record<string, unknown>,
+  primaryModelPath: string | null,
+): Record<string, unknown> | null {
+  if (!primaryModelPath) {
+    return null;
+  }
+
+  const direct = readNestedValue(content, ["agents", "defaults", "models", primaryModelPath, "params"]);
+  return isRecord(direct) ? direct : null;
+}
+
 function fromUnknownConfig(content: Record<string, unknown>): ConfigFormValues {
-  const provider =
+  const legacyProvider =
     content.providerType === "ollama"
       ? "ollama"
       : content.providerType === "openai-compatible"
         ? "openai-compatible"
-        : defaultConfigValues.providerType;
+        : null;
+
+  if (legacyProvider) {
+    return {
+      providerType: legacyProvider,
+      baseUrl: String(content.baseUrl ?? defaultConfigValues.baseUrl),
+      apiKey: String(content.apiKey ?? defaultConfigValues.apiKey),
+      model: String(content.model ?? defaultConfigValues.model),
+      timeout: toFiniteNumber(content.timeout, defaultConfigValues.timeout),
+      maxTokens: toFiniteNumber(content.maxTokens, defaultConfigValues.maxTokens),
+      temperature: toFiniteNumber(content.temperature, defaultConfigValues.temperature),
+      ollamaHost: String(content.ollamaHost ?? defaultConfigValues.ollamaHost),
+    };
+  }
+
+  const official = resolveOfficialProvider(content);
+  if (!official) {
+    return defaultConfigValues;
+  }
+
+  const providerApi = readString(official.provider, ["api"], "").toLowerCase();
+  const baseUrl = readString(official.provider, ["baseUrl"], defaultConfigValues.baseUrl);
+  const apiKey =
+    readString(official.provider, ["apiKey"], "") ||
+    readString(official.provider, ["auth", "apiKey"], "") ||
+    defaultConfigValues.apiKey;
+  const primaryModel = parseModelFromPrimary(official.primaryModelPath);
+  const providerModels = readNestedValue(official.provider, ["models"]);
+  const firstModel =
+    Array.isArray(providerModels) && providerModels.length > 0 && isRecord(providerModels[0])
+      ? String(
+          providerModels[0].id ??
+            providerModels[0].name ??
+            providerModels[0].modelId ??
+            primaryModel,
+        )
+      : primaryModel;
+  const params = readModelParams(content, official.primaryModelPath);
+
+  const timeoutValue =
+    toFiniteNumber(params?.timeoutMs, Number.NaN) ||
+    toFiniteNumber(params?.timeout, Number.NaN) ||
+    toFiniteNumber(content.timeout, defaultConfigValues.timeout);
+  const maxTokensValue =
+    toFiniteNumber(params?.maxTokens, Number.NaN) ||
+    toFiniteNumber(params?.max_tokens, Number.NaN) ||
+    toFiniteNumber(content.maxTokens, defaultConfigValues.maxTokens);
+  const temperatureValue =
+    toFiniteNumber(params?.temperature, Number.NaN) ||
+    toFiniteNumber(content.temperature, defaultConfigValues.temperature);
+
+  const providerType =
+    providerApi === "ollama" || official.providerId.toLowerCase().includes("ollama")
+      ? "ollama"
+      : "openai-compatible";
 
   return {
-    providerType: provider,
-    baseUrl: String(content.baseUrl ?? defaultConfigValues.baseUrl),
-    apiKey: String(content.apiKey ?? defaultConfigValues.apiKey),
-    model: String(content.model ?? defaultConfigValues.model),
-    timeout: toFiniteNumber(content.timeout, defaultConfigValues.timeout),
-    maxTokens: toFiniteNumber(content.maxTokens, defaultConfigValues.maxTokens),
-    temperature: toFiniteNumber(content.temperature, defaultConfigValues.temperature),
-    ollamaHost: String(content.ollamaHost ?? defaultConfigValues.ollamaHost),
+    providerType,
+    baseUrl:
+      providerType === "ollama"
+        ? stripOllamaSuffix(baseUrl) || defaultConfigValues.ollamaHost
+        : baseUrl || defaultConfigValues.baseUrl,
+    apiKey,
+    model: firstModel || defaultConfigValues.model,
+    timeout: Number.isFinite(timeoutValue) ? timeoutValue : defaultConfigValues.timeout,
+    maxTokens: Number.isFinite(maxTokensValue) ? maxTokensValue : defaultConfigValues.maxTokens,
+    temperature: Number.isFinite(temperatureValue)
+      ? temperatureValue
+      : defaultConfigValues.temperature,
+    ollamaHost:
+      providerType === "ollama"
+        ? stripOllamaSuffix(baseUrl) || defaultConfigValues.ollamaHost
+        : String(content.ollamaHost ?? defaultConfigValues.ollamaHost),
   };
 }
 
@@ -280,19 +420,6 @@ export const configService = {
     }
 
     try {
-      const backupResult = await invokeCommand<BackupConfigData>("backup_openclaw_config", {
-        path: null,
-      });
-      if (!backupResult.success) {
-        return {
-          status: "failure",
-          detail: backupResult.error?.message ?? "Failed to backup configuration.",
-          suggestion:
-            backupResult.error?.suggestion ?? "Check config directory permissions before retrying.",
-          code: backupResult.error?.code ?? "E_CONFIG_BACKUP_FAILED",
-        };
-      }
-
       const writeResult = await invokeCommand<WriteConfigData>("write_openclaw_config", {
         path: null,
         content: toConfigPayload(values),
@@ -314,7 +441,7 @@ export const configService = {
         detail: "Configuration saved successfully.",
         suggestion: "Restart gateway if model/provider settings changed.",
         savedPath: writeResult.data.path,
-        backupPath: backupResult.data?.backup_path ?? writeResult.data.backup_path ?? undefined,
+        backupPath: writeResult.data.backup_path ?? undefined,
       };
     } catch (error: unknown) {
       return buildUnexpectedErrorResult(

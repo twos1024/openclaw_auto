@@ -32,13 +32,13 @@ pub fn install_error_from_output(stage: &str, step: &str, output: &ShellOutput) 
 pub fn classify_install_error(stage: &str, step: &str, error: &AppError) -> InstallIssue {
     let haystack = collect_error_haystack(error);
 
-    if looks_like_missing_npm(&haystack) {
+    if looks_like_missing_installer_prereq(&haystack) {
         return build_install_issue(
             "prerequisite",
-            "missing-npm",
+            "missing-installer-prerequisite",
             ErrorCode::PathNotFound,
             "OpenClaw install prerequisites are missing.",
-            "Install Node.js and npm first, then refresh the environment and retry.",
+            "Ensure PowerShell (Windows) or bash/curl (macOS/Linux) are available, then retry.",
             step,
             None,
             find_sample(&haystack),
@@ -63,8 +63,8 @@ pub fn classify_install_error(stage: &str, step: &str, error: &AppError) -> Inst
             stage,
             "network-failure",
             ErrorCode::NetworkFailed,
-            "OpenClaw install failed while downloading dependencies from npm.",
-            "Check network access, npm registry settings, and proxy configuration, then retry.",
+            "OpenClaw install failed while downloading required components.",
+            "Check network access, DNS/proxy/TLS settings, then retry.",
             step,
             None,
             find_sample(&haystack),
@@ -77,7 +77,7 @@ pub fn classify_install_error(stage: &str, step: &str, error: &AppError) -> Inst
             "binary-not-found",
             ErrorCode::PathNotFound,
             "OpenClaw CLI appears installed, but its executable path could not be resolved.",
-            "Check the npm global bin directory, PATH configuration, and whether the OpenClaw binary is available after install.",
+            "Check PATH configuration, the OpenClaw install prefix, and whether the binary was installed successfully.",
             step,
             None,
             find_sample(&haystack),
@@ -90,7 +90,7 @@ pub fn classify_install_error(stage: &str, step: &str, error: &AppError) -> Inst
             "command-timeout",
             ErrorCode::ShellTimeout,
             "The install command timed out before finishing.",
-            "Check whether npm or OpenClaw is blocked by the network or a stalled process, then retry.",
+            "Check whether downloads are blocked by the network or a stalled process, then retry.",
             step,
             None,
             find_sample(&haystack),
@@ -136,12 +136,12 @@ pub fn classify_install_output(stage: &str, step: &str, output: &ShellOutput) ->
             if stage == "install-gateway" {
                 "Gateway managed install could not write the local service registration."
             } else {
-                "OpenClaw CLI installation could not write to the global npm directory."
+                "OpenClaw installer could not write to the destination directory."
             },
             if stage == "install-gateway" {
                 "Run with elevated privileges or use a service directory that ClawDesk can write to."
             } else {
-                "Run the install with elevated privileges or change the npm global directory to a writable location."
+                "Run the install with elevated privileges or change the install prefix to a writable location."
             },
             step,
             output.exit_code,
@@ -154,8 +154,8 @@ pub fn classify_install_output(stage: &str, step: &str, output: &ShellOutput) ->
             stage,
             "network-failure",
             ErrorCode::NetworkFailed,
-            "OpenClaw install failed while downloading packages from npm.",
-            "Check npm registry connectivity, proxy settings, and retry the install.",
+            "OpenClaw install failed while downloading required components.",
+            "Check network connectivity, proxy/TLS settings, and retry the install.",
             step,
             output.exit_code,
             sample,
@@ -193,7 +193,7 @@ pub fn classify_install_output(stage: &str, step: &str, output: &ShellOutput) ->
         "unknown",
         ErrorCode::InstallCommandFailed,
         "OpenClaw installation command returned a non-zero exit code.",
-        "Check npm output, network access, and package manager permissions, then retry.",
+        "Check installer output, network access, and permissions, then retry.",
         step,
         output.exit_code,
         sample,
@@ -283,10 +283,17 @@ fn collect_json_strings(value: &Value, parts: &mut Vec<String>) {
     }
 }
 
-fn looks_like_missing_npm(haystack: &str) -> bool {
-    haystack.contains("spawn npm enoent")
-        || haystack.contains("failed to spawn command: npm")
-        || haystack.contains("npm not found")
+fn looks_like_missing_installer_prereq(haystack: &str) -> bool {
+    haystack.contains("failed to spawn command: powershell")
+        || haystack.contains("spawn powershell enoent")
+        || haystack.contains("failed to spawn command: bash")
+        || haystack.contains("spawn bash enoent")
+        || haystack.contains("curl: command not found")
+        || haystack.contains("curl: not found")
+        || haystack.contains("iwr : the term")
+        || haystack.contains("node: command not found")
+        || haystack.contains("npm: command not found")
+        || haystack.contains("nodejs not found")
 }
 
 fn looks_like_permission_denied(haystack: &str) -> bool {
@@ -298,7 +305,9 @@ fn looks_like_permission_denied(haystack: &str) -> bool {
 }
 
 fn looks_like_network_failure(haystack: &str) -> bool {
-    haystack.contains("registry.npmjs.org")
+    haystack.contains("openclaw.ai")
+        || haystack.contains("nodejs.org")
+        || haystack.contains("github.com")
         || haystack.contains("enotfound")
         || haystack.contains("econnreset")
         || haystack.contains("socket hang up")
@@ -350,12 +359,8 @@ mod tests {
 
     fn shell_output(stderr: &str, stdout: &str, exit_code: Option<i32>) -> ShellOutput {
         ShellOutput {
-            program: "npm".to_string(),
-            args: vec![
-                "install".to_string(),
-                "-g".to_string(),
-                "openclaw@latest".to_string(),
-            ],
+            program: "powershell".to_string(),
+            args: vec!["-Command".to_string(), "install.ps1".to_string()],
             stdout: stdout.to_string(),
             stderr: stderr.to_string(),
             exit_code,
@@ -364,31 +369,30 @@ mod tests {
     }
 
     #[test]
-    fn classifies_missing_npm_issue() {
+    fn classifies_missing_installer_prereq_issue() {
         let error = AppError::new(
             ErrorCode::ShellSpawnFailed,
-            "Failed to spawn command: npm",
+            "Failed to spawn command: powershell",
             "Check whether the binary exists and is executable.",
         )
         .with_details(json!({
-            "program": "npm",
-            "os_error": "spawn npm ENOENT",
+            "program": "powershell",
+            "os_error": "spawn powershell ENOENT",
         }));
 
         let issue =
-            classify_install_error("prerequisite", "npm install -g openclaw@latest", &error);
+            classify_install_error("prerequisite", "powershell install.ps1", &error);
 
         assert_eq!(issue.stage, "prerequisite");
-        assert_eq!(issue.failure_kind, "missing-npm");
+        assert_eq!(issue.failure_kind, "missing-installer-prerequisite");
         assert_eq!(issue.code, "E_PATH_NOT_FOUND");
     }
 
     #[test]
     fn classifies_permission_denied_install_output() {
-        let output = shell_output("npm ERR! code EACCES\npermission denied", "", Some(243));
+        let output = shell_output("access is denied", "", Some(243));
 
-        let issue =
-            classify_install_output("install-cli", "npm install -g openclaw@latest", &output);
+        let issue = classify_install_output("install-cli", "powershell install.ps1", &output);
 
         assert_eq!(issue.failure_kind, "permission-denied");
         assert_eq!(issue.code, "E_PERMISSION_DENIED");
@@ -398,13 +402,12 @@ mod tests {
     #[test]
     fn classifies_network_failure_install_output() {
         let output = shell_output(
-            "npm ERR! request to https://registry.npmjs.org/openclaw failed, reason: getaddrinfo ENOTFOUND registry.npmjs.org",
+            "curl: (6) Could not resolve host: openclaw.ai",
             "",
             Some(1),
         );
 
-        let issue =
-            classify_install_output("install-cli", "npm install -g openclaw@latest", &output);
+        let issue = classify_install_output("install-cli", "bash install-cli.sh", &output);
 
         assert_eq!(issue.failure_kind, "network-failure");
         assert_eq!(issue.code, "E_NETWORK_FAILED");
@@ -412,10 +415,9 @@ mod tests {
 
     #[test]
     fn classifies_unknown_non_zero_install_output_as_install_command_failed() {
-        let output = shell_output("npm ERR! something unexpected happened", "", Some(1));
+        let output = shell_output("something unexpected happened", "", Some(1));
 
-        let issue =
-            classify_install_output("install-cli", "npm install -g openclaw@latest", &output);
+        let issue = classify_install_output("install-cli", "powershell install.ps1", &output);
 
         assert_eq!(issue.failure_kind, "unknown");
         assert_eq!(issue.code, "E_INSTALL_COMMAND_FAILED");

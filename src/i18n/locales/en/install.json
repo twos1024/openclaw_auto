@@ -2,7 +2,7 @@
   "page": {
     "hero": {
       "title": "Install OpenClaw",
-      "description": "Finish installation first, then fill in the API Key, and finally start Gateway. This page turns the onboarding path into one clear flow.",
+      "description": "Check the environment, install OpenClaw with the official bootstrapper, fill in the API Key, and finally start Gateway. This page turns the onboarding path into one clear flow.",
       "meta": "Platform: {{platform}} / {{architecture}}",
       "action": "Open installer"
     },
@@ -28,8 +28,8 @@
         "actionLabel": "Configure API Key"
       },
       "env": {
-        "title": "Install npm first",
-        "description": "Install Node.js / npm first, then come back and refresh the environment.",
+        "title": "Refresh environment",
+        "description": "The official installer can bootstrap missing Node.js / npm automatically, but you can still refresh the environment at any time.",
         "actionLabel": "Refresh environment"
       },
       "start": {
@@ -57,6 +57,8 @@
     "title": "Installation prep",
     "description": "Check the local environment and OpenClaw detection state before starting installation.",
     "pills": {
+      "nodeReady": "Node.js Ready",
+      "nodeMissing": "Node.js Missing",
       "npmReady": "npm Ready",
       "npmMissing": "npm Missing",
       "openclawInstalled": "OpenClaw Installed",
@@ -66,6 +68,8 @@
       "platform": "Platform",
       "homeDir": "Home Dir",
       "configPath": "Config Path",
+      "nodeVersion": "Node.js Version",
+      "nodePath": "Node.js Path",
       "npmVersion": "npm Version",
       "openclawPath": "OpenClaw Path",
       "openclawVersion": "OpenClaw Version"
@@ -84,8 +88,9 @@
     "npmRequired": "npm Required",
     "previewMode": "You are in browser preview mode, so installation is disabled. Use the ClawDesk desktop app or `npm run tauri:dev` to install locally.",
     "runtimeUnavailable": "The desktop command bridge is unavailable, so installation is disabled. Fix the Tauri runtime integration first.",
-    "npmMissing": "npm is not detected, so installation is disabled. Install Node.js / npm first and refresh the environment check.",
-    "installHint": "Click \"Start installation\" and the install will run in the background. The result will appear when it finishes."
+    "npmMissing": "Node.js / npm is not detected, but the official installer can bootstrap them automatically.",
+    "bootstrapHint": "The official installer will bootstrap missing Node.js / npm automatically, so you can continue.",
+    "installHint": "Click \"Install OpenClaw\" and the install will run in the background. The result will appear when it finishes."
   },
   "issue": {
     "title": "Installation issue",
@@ -135,7 +140,7 @@
     },
     "after": {
       "title": "What to do after install",
-      "description": "1. Save the provider config and fill in the API Key. 2. Start Gateway. 3. Open the Dashboard to begin using the app."
+      "description": "1. Save the config and fill in the API Key. 2. Start Gateway. 3. Open the Dashboard to begin using the app."
     },
     "platform": {
       "title": "Look at the right system card",

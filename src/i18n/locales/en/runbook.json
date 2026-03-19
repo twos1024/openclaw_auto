@@ -1,4 +1,12 @@
 {
+  "page": {
+    "title": "Runbook",
+    "description": "Runbook turns install, config, and service control into one executable path. Use this page to review the current blocker, ordered steps, and navigation shortcuts.",
+    "refresh": "Refresh",
+    "refreshing": "Refreshing...",
+    "unavailable": "Runbook unavailable",
+    "lastCheckedAt": "Last checked: {{value}}"
+  },
   "context": {
     "empty": "There is no clear blocker right now, so you can continue directly to the relevant page."
   },
@@ -13,5 +21,9 @@
     "title": "Launch Checks",
     "subtitle": "These checks decide whether setup can continue cleanly from install to dashboard.",
     "open": "Open"
+  },
+  "stepList": {
+    "title": "Guided Workflow",
+    "subtitle": "Follow the ordered steps below. The active step reflects the current blocker chain."
   }
 }

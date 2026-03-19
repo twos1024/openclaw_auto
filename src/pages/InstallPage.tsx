@@ -44,7 +44,6 @@ export function InstallPage(): JSX.Element {
     refreshEnvironment,
     installOpenClaw,
   } = useInstallFlow();
-  const installBlockedByEnv = Boolean(environment && !environment.npmFound);
   const runtimeBlockMode =
     envError?.code === "E_PREVIEW_MODE"
       ? "preview"
@@ -94,13 +93,6 @@ export function InstallPage(): JSX.Element {
           actionLabel: t("install:page.nextStep.config.actionLabel"),
           route: "/config",
         }
-      : installBlockedByEnv
-        ? {
-            title: t("install:page.nextStep.env.title"),
-            description: t("install:page.nextStep.env.description"),
-            actionLabel: t("install:page.nextStep.env.actionLabel"),
-            onClick: () => void refreshEnvironment(),
-          }
       : {
           title: t("install:page.nextStep.start.title"),
           description: t("install:page.nextStep.start.description"),
@@ -200,7 +192,6 @@ export function InstallPage(): JSX.Element {
         environment={environment}
         isLoading={isLoading}
         isInstalling={isInstalling}
-        installBlockedByEnv={installBlockedByEnv}
         runtimeBlockMode={runtimeBlockMode}
         onRefresh={() => void refreshEnvironment()}
         onInstall={() => void installOpenClaw()}

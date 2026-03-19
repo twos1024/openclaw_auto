@@ -1,7 +1,7 @@
 {
   "page": {
-    "title": "Setup Wizard",
-    "description": "Complete runtime checks, provider setup, and gateway startup step by step.",
+    "title": "Initial Setup",
+    "description": "Check the machine, install OpenClaw with the official installer, configure an OpenAI-compatible API key, and start Gateway.",
     "badges": {
       "completed": "Completed",
       "fresh": "First Run"
@@ -9,97 +9,107 @@
     "stepIndex": "Step {{current}} / {{total}}"
   },
   "steps": {
-    "welcome": "Welcome",
-    "runtime": "Runtime",
-    "provider": "Provider",
+    "environment": "Environment",
     "install": "Install",
+    "config": "Configuration",
+    "gateway": "Gateway",
     "complete": "Complete"
   },
-  "welcome": {
-    "body": "This wizard will help you finish the minimum setup needed for the first launch.",
-    "hint": "We recommend completing the steps in order to avoid integration issues later."
+  "stepStates": {
+    "done": "Done",
+    "current": "Current",
+    "pending": "Pending"
   },
-  "runtime": {
-    "actions": {
-      "check": "Check Environment"
+  "environment": {
+    "title": "Check the environment",
+    "description": "OpenClaw can bootstrap Node.js and npm if they are missing, so this step is informational and never blocks the install flow.",
+    "pills": {
+      "nodeReady": "Node.js ready",
+      "nodeMissing": "Node.js missing",
+      "npmReady": "npm ready",
+      "npmMissing": "npm missing",
+      "openclawReady": "OpenClaw ready",
+      "openclawMissing": "OpenClaw missing"
     },
-    "state": {
-      "passed": "Ready",
-      "pending": "Pending"
-    },
-    "fields": {
-      "platform": "Platform: {{value}}",
-      "npm": "npm: {{value}}",
-      "openclaw": "OpenClaw: {{value}}"
+    "labels": {
+      "platform": "Platform",
+      "node": "Node.js",
+      "npm": "npm",
+      "openclaw": "OpenClaw",
+      "configPath": "Config path"
     },
     "values": {
       "installed": "Installed",
-      "missing": "Missing"
-    },
-    "requirement": "The current environment does not meet the requirements. Install the missing dependencies first.",
-    "idle": "Click “Check Environment” to start.",
-    "errors": {
-      "detectFailed": "Environment detection failed. Please try again."
-    }
-  },
-  "provider": {
-    "modeLabel": "Setup Mode",
-    "defaults": {
-      "name": "Primary Provider"
-    },
-    "modes": {
-      "existing": "Use Existing Provider",
-      "new": "Create New Provider"
-    },
-    "placeholders": {
-      "selectExisting": "Select an existing provider",
-      "name": "Provider name",
-      "apiKey": "API Key",
-      "apiKeyOllama": "Ollama does not require an API key",
-      "baseUrl": "Base URL (optional)"
+      "missing": "Missing",
+      "waiting": "Waiting"
     },
     "actions": {
-      "validate": "Validate Provider",
-      "createAndValidate": "Create and Validate"
-    },
-    "state": {
-      "validated": "Validated",
-      "pending": "Pending"
-    },
-    "errors": {
-      "selectExisting": "Please select an existing provider.",
-      "validateFailed": "Provider validation failed. Please check the configuration.",
-      "nameRequired": "Please enter a provider name.",
-      "apiKeyRequired": "Please enter an API key.",
-      "createFailed": "Failed to create the provider. Please try again.",
-      "missingRecord": "The newly created provider record could not be found."
+      "refresh": "Refresh Environment",
+      "next": "Continue to Install",
+      "nextShortcut": "Skip to Install"
     }
   },
   "install": {
-    "idle": "Ready to start installation and startup.",
-    "installing": "Installing OpenClaw...",
-    "skipExisting": "OpenClaw is already installed. Skipping installation.",
-    "startedWithAddress": "Gateway started: {{value}}",
-    "started": "Gateway started",
-    "actions": {
-      "install": "Install and Start Gateway"
+    "title": "Install OpenClaw",
+    "description": "Run the official installer script, then register the local Gateway service.",
+    "notice": {
+      "title": "Official bootstrap",
+      "description": "The installer can automatically install Node.js / npm when needed, so you do not need to prepare the runtime manually."
     },
-    "state": {
+    "actions": {
+      "install": "Install OpenClaw",
+      "skipToConfig": "Skip to Configuration"
+    }
+  },
+  "config": {
+    "title": "Configure the provider",
+    "description": "Enter an OpenAI-compatible base URL, API key, and model, then save the official OpenClaw config.",
+    "defaultValues": "The configuration file is missing, so the form is using default values.",
+    "loadedPath": "Loaded config: ",
+    "actions": {
+      "test": "Test Connection",
+      "save": "Save & Continue",
+      "next": "Continue to Gateway"
+    }
+  },
+  "gateway": {
+    "title": "Start Gateway",
+    "description": "Start the local Gateway runtime and verify that it is listening on loopback.",
+    "status": {
       "running": "Running",
-      "pending": "Pending"
+      "pending": "Pending",
+      "idle": "Gateway has not started yet.",
+      "helper": "After Gateway starts, the dashboard and command surface become available."
+    },
+    "meta": {
+      "port": "Port {{value}}"
     },
     "errors": {
-      "startFailed": "Failed to start the gateway. Please try again.",
-      "statusFailed": "Failed to fetch gateway status."
+      "startFailed": "Failed to start Gateway.",
+      "statusFailed": "Failed to fetch Gateway status."
+    },
+    "actions": {
+      "start": "Start Gateway",
+      "openDashboard": "Open Dashboard",
+      "next": "Continue"
     }
   },
   "complete": {
-    "title": "Setup Complete",
-    "description": "The environment is ready. Go to the chat page to begin."
+    "title": "Setup complete",
+    "description": "OpenClaw is installed, configured, and Gateway is ready to use.",
+    "summaryTitle": "What is ready now",
+    "summary": "You can open the dashboard, manage providers, and continue into the rest of the workspace.",
+    "badges": {
+      "installReady": "Installer finished",
+      "configReady": "Config saved",
+      "gatewayReady": "Gateway ready"
+    },
+    "actions": {
+      "openDashboard": "Open Dashboard",
+      "enterApp": "Enter App"
+    }
   },
   "actions": {
-    "previous": "Previous",
-    "next": "Next",
-    "finish": "Enter App"
+    "previous": "Previous"
   }
 }

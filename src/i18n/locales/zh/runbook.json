@@ -1,4 +1,12 @@
 {
+  "page": {
+    "title": "运行手册",
+    "description": "运行手册会把安装、配置和服务控制串成一条可执行路径。你可以在这里查看当前 blocker、顺序步骤和跳转入口。",
+    "refresh": "重新检查",
+    "refreshing": "正在刷新...",
+    "unavailable": "运行手册不可用",
+    "lastCheckedAt": "检查时间：{{value}}"
+  },
   "context": {
     "empty": "当前没有明确 blocker，可以按当前任务直接进入相关页面继续操作。"
   },
@@ -11,7 +19,11 @@
   },
   "launchChecks": {
     "title": "启动检查",
-    "subtitle": "这些检查决定了 Setup 是否可以从安装到 Dashboard 顺畅继续。",
+    "subtitle": "这些检查决定了初始化流程是否可以从安装顺畅继续到 Dashboard。",
     "open": "打开"
+  },
+  "stepList": {
+    "title": "引导流程",
+    "subtitle": "按顺序完成下面的步骤，当前高亮项就是此刻的阻塞链。"
   }
 }

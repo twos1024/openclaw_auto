@@ -37,8 +37,8 @@ const runningSegments = [
     endMs: 3200,
     startPercent: 18,
     endPercent: 58,
-    detail: "通过 npm 全局安装 OpenClaw CLI，准备后续 Gateway 托管安装。",
-    suggestion: "请保持窗口开启，等待 CLI 安装命令返回结果。",
+    detail: "调用官方安装脚本安装 OpenClaw CLI，并自动补齐本机运行环境。",
+    suggestion: "请保持窗口开启，等待官方安装脚本返回结果。",
   },
   {
     phaseId: "install-gateway" as const,
@@ -66,15 +66,15 @@ function createBasePhases(): InstallPhase[] {
       id: "prerequisite",
       title: phaseTitles.prerequisite,
       status: "pending",
-      detail: "等待检查 npm 与本地安装条件。",
-      suggestion: "先刷新环境，确认 npm 和本地路径可用。",
+      detail: "等待检查 Node.js、npm 与本地安装条件。",
+      suggestion: "先刷新环境，确认 Node.js 和 npm 的可见性。",
     },
     {
       id: "install-cli",
       title: phaseTitles["install-cli"],
       status: "pending",
       detail: "等待执行 OpenClaw CLI 安装。",
-      suggestion: "安装命令会通过 npm 全局安装 OpenClaw。",
+      suggestion: "安装命令会调用官方安装脚本，并在必要时自动补齐 Node.js。",
     },
     {
       id: "install-gateway",
@@ -176,41 +176,63 @@ export function buildInstallingPhases({ environment, elapsedMs, telemetry }: Ins
     return phases;
   }
 
-  const npmReady = environment.npmFound;
+  const runtimeReady = environment.nodeFound || environment.npmFound;
   phases = updatePhase(phases, "prerequisite", {
-    status: npmReady ? "success" : "failure",
-    detail: npmReady
-      ? `已检测到 npm${environment.npmVersion ? ` ${environment.npmVersion}` : ""}。`
-      : "未检测到 npm，当前无法开始安装。",
-    suggestion: npmReady
+    status: runtimeReady ? "success" : "warning",
+    detail: runtimeReady
+      ? [
+          environment.nodeFound
+            ? `已检测到 Node.js${environment.nodeVersion ? ` ${environment.nodeVersion}` : ""}。`
+            : "未检测到 Node.js，但安装脚本可以自动补齐。",
+          environment.npmFound
+            ? `已检测到 npm${environment.npmVersion ? ` ${environment.npmVersion}` : ""}。`
+            : "未检测到 npm，但安装脚本会自动处理依赖。",
+        ].join(" ")
+      : "未检测到 Node.js / npm，但官方安装脚本会自动处理依赖。",
+    suggestion: runtimeReady
       ? "前置条件满足，可以开始执行 OpenClaw 安装。"
-      : "先安装 Node.js / npm，再刷新环境检查。",
+      : "即使环境未完全就绪，安装器也会自动补齐缺失依赖。",
   });
 
-  if (!npmReady && environment.openclawFound) {
+  if (environment.openclawFound) {
+    const downstreamStatus = runtimeReady ? "success" : "warning";
     phases = updatePhase(phases, "install-cli", {
-      status: "warning",
-      detail: `已检测到 OpenClaw${environment.openclawVersion ? ` ${environment.openclawVersion}` : ""}，但 npm 当前不可用。`,
-      suggestion: "先恢复 npm 与 PATH，再继续安装、重装或修复 OpenClaw CLI。",
+      status: downstreamStatus,
+      detail: runtimeReady
+        ? `已检测到 OpenClaw${environment.openclawVersion ? ` ${environment.openclawVersion}` : ""}。`
+        : `已检测到 OpenClaw${environment.openclawVersion ? ` ${environment.openclawVersion}` : ""}，但环境仍需要自动补齐或修复。`,
+      suggestion: runtimeReady
+        ? "如需重装，可重新执行安装流程。"
+        : "安装脚本仍可自动修复环境后重装或升级 OpenClaw CLI。",
     });
     phases = updatePhase(phases, "verify", {
-      status: "warning",
-      detail: environment.openclawPath
-        ? `当前 CLI 路径仍可解析：${environment.openclawPath}，但环境前置检查未通过。`
-        : "当前已检测到 OpenClaw CLI，但环境前置检查未通过。",
-      suggestion: "先修复 npm / PATH 环境，再继续后续安装和验证步骤。",
+      status: downstreamStatus,
+      detail: runtimeReady
+        ? environment.openclawPath
+          ? `当前 CLI 路径：${environment.openclawPath}`
+          : "当前已检测到 OpenClaw CLI。"
+        : environment.openclawPath
+          ? `当前 CLI 路径仍可解析：${environment.openclawPath}，但环境仍需要自动补齐或修复。`
+          : "当前已检测到 OpenClaw CLI，但环境仍需要自动补齐或修复。",
+      suggestion: runtimeReady
+        ? "继续前往 Config 与 Service 页面完成配置和启动。"
+        : "安装器可以继续自动补齐环境，再完成后续配置和启动。",
     });
     return phases;
   }
 
-  if (!npmReady) {
-    return phases;
-  }
+  phases = updatePhase(phases, "install-cli", {
+    status: "pending",
+    detail: "等待执行官方 OpenClaw 安装脚本。",
+    suggestion: "安装脚本会自动检测并补齐 Node.js / npm。",
+  });
 
   if (telemetry?.activePhaseId) {
     phases = updatePhase(phases, "prerequisite", {
       status: "success",
-      detail: `已检测到 npm${environment.npmVersion ? ` ${environment.npmVersion}` : ""}。`,
+      detail: runtimeReady
+        ? "环境检查已通过，正在执行安装。"
+        : "环境检查未完全就绪，但安装脚本会自动补齐依赖。",
       suggestion: "前置条件满足，可以继续执行 OpenClaw 安装。",
     });
 
@@ -283,6 +305,8 @@ export function buildInstallProgressModel({
   telemetry,
   telemetryStageElapsedMs = 0,
 }: ProgressModelArgs): InstallProgressModel {
+  void environment;
+
   if (installResult) {
     const tone = toneFromResult(installResult);
     return {
@@ -302,18 +326,6 @@ export function buildInstallProgressModel({
   }
 
   if (isInstalling) {
-    if (!environment?.npmFound) {
-      return {
-        visible: true,
-        percent: 12,
-        tone: "blocked",
-        activePhaseId: "prerequisite",
-        headline: "等待修复安装前置条件",
-        detail: "当前未检测到 npm，无法继续执行 OpenClaw 安装。",
-        hint: "先修复 Node.js / npm 环境，再重新开始安装。",
-      };
-    }
-
     if (telemetry?.activePhaseId) {
       return {
         visible: true,

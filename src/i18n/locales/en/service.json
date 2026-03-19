@@ -10,10 +10,8 @@
   "status": {
     "portConflict": {
       "title": "Port conflict",
-      "prefix": "Gateway ",
-      "portLabel": "port",
-      "targetPort": "target port",
-      "suffix": "is already in use by another process.",
+      "withPort": "Gateway port {{port}} is already in use by another process.",
+      "withoutPort": "The target port is already in use by another process.",
       "suggestion": "Free the port or choose an unused one, then start Gateway again."
     }
   },
@@ -28,5 +26,28 @@
     "no": "No",
     "pid": "PID:",
     "lastStarted": "Last started:"
+  },
+  "controls": {
+    "title": "Gateway Service Control",
+    "waiting": "Waiting for gateway status...",
+    "refresh": "Refresh",
+    "start": "Start Gateway",
+    "stop": "Stop Gateway",
+    "restart": "Restart Gateway",
+    "openDashboard": "Open Dashboard",
+    "errorCode": "Error code: "
+  },
+  "endpoint": {
+    "title": "Gateway Endpoint",
+    "port": "Port",
+    "address": "Address",
+    "lastStarted": "Last started"
+  },
+  "state": {
+    "running": "Running",
+    "stopped": "Stopped",
+    "starting": "Starting",
+    "stopping": "Stopping",
+    "error": "Error"
   }
 }

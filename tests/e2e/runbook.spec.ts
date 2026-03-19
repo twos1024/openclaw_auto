@@ -63,7 +63,7 @@ test.describe("Runbook workspace", () => {
                       { label: "Tauri Shell", value: "detected" },
                       { label: "Invoke Bridge", value: "detected" },
                       { label: "Bridge Source", value: "official API bridge" },
-                      { label: "App Version", value: "0.6.0" },
+                      { label: "App Version", value: "2.0.4" },
                       { label: "Platform", value: "windows" },
                       { label: "Dashboard", value: "Unavailable" },
                     ],
@@ -76,7 +76,7 @@ test.describe("Runbook workspace", () => {
               return {
                 success: true,
                 data: {
-                  appVersion: "0.6.0",
+                  appVersion: "2.0.4",
                   platform: "windows",
                   dashboardUrl: "Unavailable",
                   mode: "live",

@@ -17,6 +17,9 @@ interface DetectEnvPayload {
   architecture?: string;
   home_dir?: string | null;
   config_path?: string;
+  node_found?: boolean;
+  node_version?: string | null;
+  node_path?: string | null;
   npm_found?: boolean;
   npm_version?: string | null;
   openclaw_found?: boolean;
@@ -30,6 +33,9 @@ function normalizeEnvironment(raw: DetectEnvPayload): InstallEnvironment {
     architecture: raw.architecture ?? "unknown",
     homeDir: raw.home_dir ?? null,
     configPath: raw.config_path ?? "",
+    nodeFound: Boolean(raw.node_found),
+    nodeVersion: raw.node_version ?? null,
+    nodePath: raw.node_path ?? null,
     npmFound: Boolean(raw.npm_found),
     npmVersion: raw.npm_version ?? null,
     openclawFound: Boolean(raw.openclaw_found),
@@ -44,15 +50,15 @@ function createBasePhases(): InstallPhase[] {
       id: "prerequisite",
       title: "环境检查",
       status: "pending",
-      detail: "等待检查 npm 与本地安装条件。",
-      suggestion: "先刷新环境，确认 npm 和本地路径可用。",
+      detail: "等待检查 Node.js、npm 与本地安装条件。",
+      suggestion: "先刷新环境，确认 Node.js 和 npm 的可见性。",
     },
     {
       id: "install-cli",
       title: "安装 OpenClaw CLI",
       status: "pending",
       detail: "等待执行 OpenClaw CLI 安装。",
-      suggestion: "安装命令会通过 npm 全局安装 OpenClaw。",
+      suggestion: "安装命令会调用官方安装脚本，并在必要时自动补齐 Node.js。",
     },
     {
       id: "install-gateway",
@@ -120,7 +126,7 @@ function normalizeInstallIssue(raw: unknown, fallback?: Partial<InstallIssue>): 
   const step =
     typeof value.step === "string"
       ? value.step
-      : fallback?.step ?? "npm install -g openclaw@latest";
+      : fallback?.step ?? "official OpenClaw installer script";
   const exitCode =
     typeof value.exitCode === "number" ? value.exitCode : fallback?.exitCode ?? null;
   const sample =
@@ -156,7 +162,7 @@ function looksLikeMissingNpmSpawnError(error?: BackendError): boolean {
 function fallbackStep(stage: InstallPhaseId): string {
   if (stage === "install-gateway") return "openclaw gateway install --json";
   if (stage === "verify") return "resolve openclaw executable path";
-  return "npm install -g openclaw@latest";
+  return "official OpenClaw installer script";
 }
 
 function createFallbackIssue(stage: InstallPhaseId, error?: BackendError): InstallIssue | null {
@@ -303,7 +309,7 @@ function toSuccessResult(data: InstallOpenClawData): InstallActionResult {
   phases = updatePhase(phases, "prerequisite", {
     status: "success",
     detail: "环境检查通过，已开始执行安装。",
-    suggestion: "继续执行 CLI 安装。",
+    suggestion: "继续执行官方安装脚本。",
   });
   phases = updatePhase(phases, "install-cli", {
     status: "success",
@@ -328,7 +334,7 @@ function toSuccessResult(data: InstallOpenClawData): InstallActionResult {
       ? `已检测到可执行路径：${data.executablePath}`
       : "未返回可执行路径，请在 Logs 中确认安装结果。",
     suggestion: data.gatewayServiceInstalled
-      ? "继续前往 Config 与 Service 页面完成配置和启动。"
+      ? "继续前往 Config 与 Service 页面完成配置并启动 Gateway。"
       : "先检查 Gateway 服务安装，再继续启动。",
   });
 
@@ -368,40 +374,50 @@ export function buildInstallPhasesPreview(
   }
 
   phases = updatePhase(phases, "prerequisite", {
-    status: environment.npmFound ? "success" : "failure",
-    detail: environment.npmFound
-      ? `已检测到 npm${environment.npmVersion ? ` ${environment.npmVersion}` : ""}。`
-      : "未检测到 npm，当前无法开始安装。",
-    suggestion: environment.npmFound
-      ? "可以开始安装 OpenClaw CLI。"
-      : "先安装 Node.js / npm，再刷新环境检查。",
+    status: environment.nodeFound && environment.npmFound ? "success" : "warning",
+    detail: [
+      environment.nodeFound
+        ? `已检测到 Node.js${environment.nodeVersion ? ` ${environment.nodeVersion}` : ""}。`
+        : "未检测到 Node.js，但官方安装脚本可以自动补齐。",
+      environment.npmFound
+        ? `已检测到 npm${environment.npmVersion ? ` ${environment.npmVersion}` : ""}。`
+        : "未检测到 npm，但安装脚本会自动处理依赖。",
+    ].join(" "),
+    suggestion: "可以直接开始安装 OpenClaw，安装器会自动补齐缺失环境。",
   });
 
   if (environment.openclawFound) {
-    const downstreamStatus = environment.npmFound ? "success" : "warning";
+    const downstreamStatus = environment.nodeFound && environment.npmFound ? "success" : "warning";
     phases = updatePhase(phases, "install-cli", {
       status: downstreamStatus,
-      detail: environment.npmFound
+      detail: environment.nodeFound && environment.npmFound
         ? `已检测到 OpenClaw${environment.openclawVersion ? ` ${environment.openclawVersion}` : ""}。`
-        : `已检测到 OpenClaw${environment.openclawVersion ? ` ${environment.openclawVersion}` : ""}，但 npm 当前不可用。`,
+        : `已检测到 OpenClaw${environment.openclawVersion ? ` ${environment.openclawVersion}` : ""}，但环境仍需要自动补齐或修复。`,
       suggestion: environment.npmFound
         ? "如需重装，可重新执行安装流程。"
-        : "先恢复 npm 与 PATH，再继续安装、重装或修复 OpenClaw CLI。",
+        : "安装脚本仍可自动修复环境后重装或升级 OpenClaw CLI。",
     });
     phases = updatePhase(phases, "verify", {
       status: downstreamStatus,
-      detail: environment.npmFound
+      detail: environment.nodeFound && environment.npmFound
         ? environment.openclawPath
           ? `当前 CLI 路径：${environment.openclawPath}`
           : "当前已检测到 OpenClaw CLI。"
         : environment.openclawPath
-          ? `当前 CLI 路径仍可解析：${environment.openclawPath}，但环境前置检查未通过。`
-          : "当前已检测到 OpenClaw CLI，但环境前置检查未通过。",
+          ? `当前 CLI 路径仍可解析：${environment.openclawPath}，但环境仍需要自动补齐或修复。`
+          : "当前已检测到 OpenClaw CLI，但环境仍需要自动补齐或修复。",
       suggestion: environment.npmFound
         ? "继续前往 Config 与 Service 页面完成配置和启动。"
-        : "先修复 npm / PATH 环境，再继续后续安装和验证步骤。",
+        : "安装器可以继续自动补齐环境，再完成后续配置和启动。",
     });
+    return phases;
   }
+
+  phases = updatePhase(phases, "install-cli", {
+    status: "pending",
+    detail: "等待执行官方 OpenClaw 安装脚本。",
+    suggestion: "安装脚本会自动检测并补齐 Node.js / npm。",
+  });
 
   return phases;
 }

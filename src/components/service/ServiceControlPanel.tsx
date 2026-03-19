@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import type { GatewayStatus, ServiceActionResult } from "../../services/serviceService";
 
 export interface ServiceControlPanelProps {
@@ -13,6 +14,7 @@ export interface ServiceControlPanelProps {
 }
 
 function Badge({ status }: { status: GatewayStatus | null }): JSX.Element {
+  const { t } = useTranslation("service");
   const state = status?.state ?? "error";
   const styleMap = {
     running: { bg: "#dcfce7", color: "#166534" },
@@ -36,7 +38,7 @@ function Badge({ status }: { status: GatewayStatus | null }): JSX.Element {
         textTransform: "uppercase",
       }}
     >
-      {state}
+      {t(`state.${state}`)}
     </span>
   );
 }
@@ -89,6 +91,7 @@ export function ServiceControlPanel({
   onRestart,
   onOpenDashboard,
 }: ServiceControlPanelProps): JSX.Element {
+  const { t } = useTranslation("service");
   const busy = Object.values(loadingByAction).some(Boolean) || isRefreshing;
   const isRunning = Boolean(status?.running);
 
@@ -105,9 +108,9 @@ export function ServiceControlPanel({
     >
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
         <div>
-          <h3 style={{ marginTop: 0, marginBottom: 6 }}>Gateway Service Control</h3>
+          <h3 style={{ marginTop: 0, marginBottom: 6 }}>{t("controls.title")}</h3>
           <p style={{ margin: 0, color: "#64748b" }}>
-            {status?.statusDetail ?? "Waiting for gateway status..."}
+            {status?.statusDetail ?? t("controls.waiting")}
           </p>
         </div>
         <Badge status={status} />
@@ -115,35 +118,35 @@ export function ServiceControlPanel({
 
       <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
         <ActionButton
-          label="Refresh"
+          label={t("controls.refresh")}
           loading={isRefreshing}
           disabled={busy}
           onClick={onRefresh}
           variant="neutral"
         />
         <ActionButton
-          label="Start Gateway"
+          label={t("controls.start")}
           loading={loadingByAction.start}
           disabled={busy || isRunning}
           onClick={onStart}
           variant="primary"
         />
         <ActionButton
-          label="Stop Gateway"
+          label={t("controls.stop")}
           loading={loadingByAction.stop}
           disabled={busy || !isRunning}
           onClick={onStop}
           variant="danger"
         />
         <ActionButton
-          label="Restart Gateway"
+          label={t("controls.restart")}
           loading={loadingByAction.restart}
           disabled={busy || !isRunning}
           onClick={onRestart}
           variant="secondary"
         />
         <ActionButton
-          label="Open Dashboard"
+          label={t("controls.openDashboard")}
           loading={loadingByAction.openDashboard}
           disabled={busy || !isRunning}
           onClick={onOpenDashboard}
@@ -174,7 +177,8 @@ export function ServiceControlPanel({
           <p style={{ margin: "6px 0 0", color: "#475569" }}>{lastActionResult.suggestion}</p>
           {lastActionResult.code ? (
             <p style={{ margin: "6px 0 0", fontSize: 12, color: "#64748b" }}>
-              Error code: {lastActionResult.code}
+              {t("controls.errorCode")}
+              {lastActionResult.code}
             </p>
           ) : null}
         </div>
@@ -182,4 +186,3 @@ export function ServiceControlPanel({
     </section>
   );
 }
-

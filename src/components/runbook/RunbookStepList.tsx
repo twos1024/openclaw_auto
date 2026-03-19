@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { StatusBadge } from "../common/StatusBadge";
 import { SurfaceCard } from "../common/SurfaceCard";
 import type { RunbookModel } from "../../types/workspace";
@@ -8,10 +9,11 @@ export interface RunbookStepListProps {
 }
 
 export function RunbookStepList({ model }: RunbookStepListProps): JSX.Element {
+  const { t } = useTranslation("runbook");
   return (
     <SurfaceCard
-      title="Guided Workflow"
-      subtitle="Follow the ordered steps below. The active step reflects the current blocker chain."
+      title={t("stepList.title")}
+      subtitle={t("stepList.subtitle")}
     >
       <div style={{ display: "grid", gap: 12 }}>
         {model.steps.map((step, index) => (

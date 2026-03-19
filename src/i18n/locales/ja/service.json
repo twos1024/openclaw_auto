@@ -10,10 +10,8 @@
   "status": {
     "portConflict": {
       "title": "ポートが使用中です",
-      "prefix": "Gateway ",
-      "portLabel": "port",
-      "targetPort": "target port",
-      "suffix": "は別のプロセスで使用されています。",
+      "withPort": "Gateway ポート {{port}} は別のプロセスで使用されています。",
+      "withoutPort": "対象ポートは別のプロセスで使用されています。",
       "suggestion": "このポートを解放するか、空いているポートに変更してから Gateway を再起動してください。"
     }
   },
@@ -22,11 +20,34 @@
     "description": "まず Gateway を起動し、実行中であることを確認してから Dashboard を開いてください。"
   },
   "snapshot": {
-    "title": "Runtime Snapshot",
+    "title": "ランタイムスナップショット",
     "running": "Running:",
     "yes": "Yes",
     "no": "No",
     "pid": "PID:",
-    "lastStarted": "Last Started:"
+    "lastStarted": "Last started:"
+  },
+  "controls": {
+    "title": "Gateway サービス制御",
+    "waiting": "Gateway の状態を確認中...",
+    "refresh": "再読み込み",
+    "start": "Gateway を起動",
+    "stop": "Gateway を停止",
+    "restart": "Gateway を再起動",
+    "openDashboard": "Dashboard を開く",
+    "errorCode": "エラーコード: "
+  },
+  "endpoint": {
+    "title": "Gateway エンドポイント",
+    "port": "Port",
+    "address": "Address",
+    "lastStarted": "Last started"
+  },
+  "state": {
+    "running": "Running",
+    "stopped": "Stopped",
+    "starting": "Starting",
+    "stopping": "Stopping",
+    "error": "Error"
   }
 }
