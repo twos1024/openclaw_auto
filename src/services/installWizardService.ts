@@ -37,7 +37,7 @@ export function buildInstallWizardModel({
   configReady = false,
   serviceReady = false,
 }: BuildInstallWizardArgs): InstallWizardModel {
-  const npmReady = Boolean(environment?.npmFound);
+  const environmentReady = Boolean(environment);
   const openclawReady = Boolean(environment?.openclawFound || installSucceeded(installResult));
   const dashboardReady = serviceReady;
 
@@ -45,22 +45,29 @@ export function buildInstallWizardModel({
     createStep(
       "environment",
       "检查安装环境",
-      npmReady
-        ? `npm 已就绪${environment?.npmVersion ? ` (${environment.npmVersion})` : ""}。`
-        : "需要先确认 Node.js / npm 已安装，才能继续执行 OpenClaw 安装。",
+      environment
+        ? [
+            environment.nodeFound
+              ? `Node.js 已就绪${environment.nodeVersion ? ` (${environment.nodeVersion})` : ""}。`
+              : "未检测到 Node.js，但官方安装脚本可以自动补齐。",
+            environment.npmFound
+              ? `npm 已就绪${environment.npmVersion ? ` (${environment.npmVersion})` : ""}。`
+              : "未检测到 npm，但安装脚本会自动处理依赖。",
+          ].join(" ")
+        : "正在检测安装环境。",
       installWizardRoute,
       "留在安装页",
-      npmReady ? "complete" : "current",
+      environmentReady ? "complete" : "current",
     ),
     createStep(
       "install",
       "安装 OpenClaw",
       openclawReady
         ? "OpenClaw 已安装完成。"
-        : "执行 OpenClaw 安装，等待程序完成本机安装准备。",
+        : "执行官方安装脚本，自动补齐依赖并安装 OpenClaw。",
       installWizardRoute,
       "立即安装",
-      !npmReady ? "blocked" : openclawReady ? "complete" : "current",
+      environmentReady ? (openclawReady ? "complete" : "current") : "current",
     ),
     createStep(
       "config",
@@ -97,7 +104,7 @@ export function buildInstallWizardModel({
   const currentStep = steps.find((step) => step.status === "current") ?? steps[0];
 
   const headlineByStep: Record<InstallWizardStep["id"], string> = {
-    environment: "先检查这台电脑能不能直接安装",
+    environment: "先检查这台电脑的安装环境",
     install: "先把 OpenClaw 安装好",
     config: "下一步：填写 API Key",
     service: "下一步：启动 Gateway",
@@ -105,7 +112,7 @@ export function buildInstallWizardModel({
   };
 
   const summaryByStep: Record<InstallWizardStep["id"], string> = {
-    environment: "确认 npm 可用后，再执行安装。安装器会按顺序带你完成后续步骤。",
+    environment: "安装器会自动补齐缺失的 Node.js / npm，再继续执行安装。",
     install: "安装完成后，马上去填写 API Key 和模型，然后启动 Gateway。",
     config: "这一步只需要把 API Key、接口地址和模型填好并保存。",
     service: "Gateway 启动成功后，就可以直接进入 Dashboard。",
@@ -127,23 +134,23 @@ export function buildPlatformGuidance(currentPlatform: string | null | undefined
     {
       platform: "windows",
       title: "Windows",
-      installSource: "npm global install + NSIS/MSI desktop bundle",
+      installSource: "官方安装脚本 + Gateway 托管安装",
       pathHint: "%AppData%\\npm\\openclaw.cmd / %UserProfile%\\.openclaw\\openclaw.json",
-      troubleshooting: "优先检查 PATH、PowerShell 权限、防火墙和占用端口。",
+      troubleshooting: "优先检查 PowerShell 权限、防火墙、占用端口和安装脚本输出。",
       isCurrent: current === "windows",
     },
     {
       platform: "macos",
       title: "macOS",
-      installSource: "npm global install + DMG desktop bundle",
+      installSource: "官方安装脚本 + Gateway 托管安装",
       pathHint: "~/.npm-global/bin/openclaw 或 ~/.volta/bin/openclaw",
-      troubleshooting: "优先检查 GUI 进程 PATH、Gatekeeper、iframe 安全策略和本地 loopback 连通性。",
+      troubleshooting: "优先检查 GUI 进程 PATH、Gatekeeper、本地 loopback 连通性和安装脚本输出。",
       isCurrent: current === "macos",
     },
     {
       platform: "linux",
       title: "Linux",
-      installSource: "npm global install + DEB/AppImage desktop bundle",
+      installSource: "官方安装脚本 + Gateway 托管安装",
       pathHint: "~/.local/bin/openclaw / ~/.config/openclaw/openclaw.json",
       troubleshooting: "优先检查 XDG 路径、WebKit 依赖、AppImage 权限和本地端口监听。",
       isCurrent: current === "linux",

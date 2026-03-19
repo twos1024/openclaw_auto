@@ -5,6 +5,9 @@ export interface InstallEnvironment {
   architecture: string;
   homeDir: string | null;
   configPath: string;
+  nodeFound: boolean;
+  nodeVersion: string | null;
+  nodePath: string | null;
   npmFound: boolean;
   npmVersion: string | null;
   openclawFound: boolean;

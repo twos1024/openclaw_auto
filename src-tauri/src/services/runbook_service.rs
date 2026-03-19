@@ -527,7 +527,7 @@ mod tests {
         service_level: &str,
     ) -> OverviewStatusData {
         OverviewStatusData {
-            app_version: "0.6.0".to_string(),
+            app_version: "2.0.4".to_string(),
             platform: "windows".to_string(),
             dashboard_url: if service_level == HEALTHY {
                 "http://127.0.0.1:18789".to_string()

@@ -21,7 +21,7 @@ export interface UseInstallFlowResult {
   isLoading: boolean;
   isInstalling: boolean;
   refreshEnvironment: () => Promise<void>;
-  installOpenClaw: () => Promise<void>;
+  installOpenClaw: () => Promise<InstallActionResult | null>;
 }
 
 function buildUnexpectedInstallEnvError(error: unknown): BackendError {
@@ -95,8 +95,8 @@ export function useInstallFlow(): UseInstallFlowResult {
     }
   }, []);
 
-  const installOpenClaw = useCallback(async () => {
-    if (isInstalling) return;
+  const installOpenClaw = useCallback(async (): Promise<InstallActionResult | null> => {
+    if (isInstalling) return null;
 
     setInstallResult(null);
     setInstallStartedAt(Date.now());
@@ -104,11 +104,14 @@ export function useInstallFlow(): UseInstallFlowResult {
     setInstallTelemetry(null);
     setInstallTelemetryStageStartElapsedMs(0);
     setIsInstalling(true);
+
+    let result: InstallActionResult | null = null;
     try {
-      const result = await installService.installOpenClaw();
+      result = await installService.installOpenClaw();
       setInstallResult(result);
     } catch (error: unknown) {
-      setInstallResult(buildUnexpectedInstallResult(error, environment, envError));
+      result = buildUnexpectedInstallResult(error, environment, envError);
+      setInstallResult(result);
     } finally {
       setIsInstalling(false);
       setInstallStartedAt(null);
@@ -116,7 +119,9 @@ export function useInstallFlow(): UseInstallFlowResult {
       setInstallTelemetry(null);
       setInstallTelemetryStageStartElapsedMs(0);
     }
+
     await refreshEnvironment();
+    return result;
   }, [envError, environment, isInstalling, refreshEnvironment]);
 
   useEffect(() => {

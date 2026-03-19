@@ -32,6 +32,24 @@
     "actions": {
       "overview": "概要を開く",
       "installWizard": "インストールウィザードを開く"
+    },
+    "entry": {
+      "title": "初回起動ナビゲーション",
+      "description": "アプリはまず環境を確認し、その後インストール、設定、Gateway 起動の順で案内します。",
+      "meta": "最終確認：{{checkedAt}}",
+      "noticeTitle": "まず対応する項目：{{step}}",
+      "noticeDescription": "次の手順はすでに整理済みです。下のボタンで進めて、他のページは後で確認してください。",
+      "noticePrimaryHint": "{{step}} を終えたら、アプリが次の手順へ進めます。",
+      "continue": "現在の手順を続ける",
+      "openRunbook": "Runbook を開く",
+      "openAssistant": "セットアップアシスタントを開く",
+      "steps": {
+        "install": "OpenClaw をインストール",
+        "config": "API Key を設定",
+        "service": "Gateway を起動",
+        "dashboard": "Dashboard を開く",
+        "runbook": "Runbook を表示"
+      }
     }
   },
   "actionList": {

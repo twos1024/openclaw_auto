@@ -1,105 +1,115 @@
 {
   "page": {
-    "title": "セットアップウィザード",
-    "description": "実行環境の確認、提供元設定、ゲートウェイ起動を順に完了します。",
+    "title": "初期セットアップ",
+    "description": "マシンの環境を確認し、公式インストーラーで OpenClaw を導入し、OpenAI 互換 API Key を設定してから Gateway を起動します。",
     "badges": {
       "completed": "完了済み",
-      "fresh": "初回実行"
+      "fresh": "初回起動"
     },
     "stepIndex": "ステップ {{current}} / {{total}}"
   },
   "steps": {
-    "welcome": "案内",
-    "runtime": "実行環境",
-    "provider": "提供元",
+    "environment": "環境確認",
     "install": "インストール",
+    "config": "設定",
+    "gateway": "Gateway",
     "complete": "完了"
   },
-  "welcome": {
-    "body": "このウィザードでは、初回起動に必要な最小設定を案内します。",
-    "hint": "後続の連携トラブルを避けるため、順番どおりに進めることを推奨します。"
+  "stepStates": {
+    "done": "完了",
+    "current": "進行中",
+    "pending": "待機中"
   },
-  "runtime": {
-    "actions": {
-      "check": "環境を確認"
+  "environment": {
+    "title": "実行環境を確認",
+    "description": "Node.js / npm がなくても公式インストーラーが自動で補完するため、このステップは案内表示であり、後続のインストールを止めません。",
+    "pills": {
+      "nodeReady": "Node.js 準備済み",
+      "nodeMissing": "Node.js 不足",
+      "npmReady": "npm 準備済み",
+      "npmMissing": "npm 不足",
+      "openclawReady": "OpenClaw 準備済み",
+      "openclawMissing": "OpenClaw 未導入"
     },
-    "state": {
-      "passed": "準備完了",
-      "pending": "未確認"
-    },
-    "fields": {
-      "platform": "プラットフォーム: {{value}}",
-      "npm": "npm: {{value}}",
-      "openclaw": "OpenClaw: {{value}}"
+    "labels": {
+      "platform": "プラットフォーム",
+      "node": "Node.js",
+      "npm": "npm",
+      "openclaw": "OpenClaw",
+      "configPath": "設定パス"
     },
     "values": {
       "installed": "インストール済み",
-      "missing": "未インストール"
-    },
-    "requirement": "現在の環境は要件を満たしていません。先に不足している依存関係を追加してください。",
-    "idle": "「環境を確認」をクリックして開始します。",
-    "errors": {
-      "detectFailed": "環境の検出に失敗しました。もう一度お試しください。"
-    }
-  },
-  "provider": {
-    "modeLabel": "設定方法",
-    "defaults": {
-      "name": "メイン提供元"
-    },
-    "modes": {
-      "existing": "既存の提供元を使う",
-      "new": "新しい提供元を作成"
-    },
-    "placeholders": {
-      "selectExisting": "既存の提供元を選択",
-      "name": "提供元名",
-      "apiKey": "API キー",
-      "apiKeyOllama": "Ollama では API キーは不要です",
-      "baseUrl": "ベース URL（任意）"
+      "missing": "未インストール",
+      "waiting": "待機中"
     },
     "actions": {
-      "validate": "提供元を検証",
-      "createAndValidate": "作成して検証"
-    },
-    "state": {
-      "validated": "検証済み",
-      "pending": "未検証"
-    },
-    "errors": {
-      "selectExisting": "既存の提供元を選択してください。",
-      "validateFailed": "提供元の検証に失敗しました。設定を確認してください。",
-      "nameRequired": "提供元名を入力してください。",
-      "apiKeyRequired": "API キーを入力してください。",
-      "createFailed": "提供元の作成に失敗しました。もう一度お試しください。",
-      "missingRecord": "新しく作成された提供元レコードが見つかりません。"
+      "refresh": "再確認",
+      "next": "インストールへ進む",
+      "nextShortcut": "インストールへ"
     }
   },
   "install": {
-    "idle": "インストールと起動の準備ができました。",
-    "installing": "OpenClaw をインストール中...",
-    "skipExisting": "OpenClaw は既にインストールされています。インストールをスキップします。",
-    "startedWithAddress": "ゲートウェイを起動しました: {{value}}",
-    "started": "ゲートウェイを起動しました",
-    "actions": {
-      "install": "ゲートウェイをインストールして起動"
+    "title": "OpenClaw をインストール",
+    "description": "公式インストーラーを実行し、ローカル Gateway サービスを登録します。",
+    "notice": {
+      "title": "公式ブートストラップ",
+      "description": "必要に応じて Node.js / npm も自動で導入されるため、事前の手動準備は不要です。"
     },
-    "state": {
+    "actions": {
+      "install": "OpenClaw をインストール",
+      "skipToConfig": "設定へ進む"
+    }
+  },
+  "config": {
+    "title": "プロバイダー設定",
+    "description": "OpenAI 互換の Base URL、API Key、モデルを入力して、公式の OpenClaw 設定を保存します。",
+    "defaultValues": "設定ファイルが見つからないため、既定値を使用しています。",
+    "loadedPath": "読み込み済み設定：",
+    "actions": {
+      "test": "接続テスト",
+      "save": "保存して続行",
+      "next": "Gateway へ進む"
+    }
+  },
+  "gateway": {
+    "title": "Gateway を起動",
+    "description": "ローカル Gateway を起動し、loopback で待ち受けていることを確認します。",
+    "status": {
       "running": "実行中",
-      "pending": "未開始"
+      "pending": "待機中",
+      "idle": "Gateway はまだ起動していません。",
+      "helper": "Gateway が起動すると、Dashboard とコマンド操作が利用可能になります。"
+    },
+    "meta": {
+      "port": "ポート {{value}}"
     },
     "errors": {
-      "startFailed": "ゲートウェイの起動に失敗しました。もう一度お試しください。",
-      "statusFailed": "ゲートウェイの状態取得に失敗しました。"
+      "startFailed": "Gateway の起動に失敗しました。",
+      "statusFailed": "Gateway の状態取得に失敗しました。"
+    },
+    "actions": {
+      "start": "Gateway を起動",
+      "openDashboard": "Dashboard を開く",
+      "next": "続行"
     }
   },
   "complete": {
     "title": "セットアップ完了",
-    "description": "環境の準備が整いました。チャット画面へ進んでください。"
+    "description": "OpenClaw の導入、設定、Gateway 起動が完了しました。",
+    "summaryTitle": "現在利用可能な内容",
+    "summary": "Dashboard を開き、Provider やその他の機能を引き続き利用できます。",
+    "badges": {
+      "installReady": "インストール完了",
+      "configReady": "設定保存済み",
+      "gatewayReady": "Gateway 準備完了"
+    },
+    "actions": {
+      "openDashboard": "Dashboard を開く",
+      "enterApp": "アプリに入る"
+    }
   },
   "actions": {
-    "previous": "前へ",
-    "next": "次へ",
-    "finish": "アプリへ進む"
+    "previous": "戻る"
   }
 }

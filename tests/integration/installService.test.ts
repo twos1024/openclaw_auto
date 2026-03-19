@@ -57,6 +57,9 @@ describe("installService integration", () => {
           architecture: "x64",
           home_dir: "C:\\Users\\Tester",
           config_path: "C:\\Users\\Tester\\.openclaw\\openclaw.json",
+          node_found: true,
+          node_version: "v22.15.0",
+          node_path: "C:\\Program Files\\nodejs\\node.exe",
           npm_found: true,
           npm_version: "10.9.0",
           openclaw_found: false,
@@ -121,13 +124,13 @@ describe("installService integration", () => {
         success: false,
         error: {
           code: "E_PATH_NOT_FOUND",
-          message: "OpenClaw install prerequisites are missing.",
-          suggestion: "Install Node.js and npm first.",
+          message: "OpenClaw install prerequisites could not be prepared automatically.",
+          suggestion: "Refresh the environment and retry. The official installer script will bootstrap Node.js and npm when needed.",
           details: {
             stage: "prerequisite",
-            failureKind: "missing-npm",
-            step: "npm install -g openclaw@latest",
-            sample: "spawn npm ENOENT",
+            failureKind: "missing-installer-prerequisite",
+            step: "powershell install.ps1",
+            sample: "spawn powershell ENOENT",
           },
         },
       }),
@@ -138,9 +141,9 @@ describe("installService integration", () => {
     expect(result.status).toBe("failure");
     expect(result.stage).toBe("prerequisite");
     expect(result.issue).toMatchObject({
-      failureKind: "missing-npm",
-      step: "npm install -g openclaw@latest",
-      sample: "spawn npm ENOENT",
+      failureKind: "missing-installer-prerequisite",
+      step: "powershell install.ps1",
+      sample: "spawn powershell ENOENT",
     });
     expect(result.phases[0]).toMatchObject({
       id: "prerequisite",
@@ -155,12 +158,12 @@ describe("installService integration", () => {
         success: false,
         error: {
           code: "E_PERMISSION_DENIED",
-          message: "OpenClaw CLI installation could not write to the global npm directory.",
-          suggestion: "Run the install with elevated privileges or change the npm global directory.",
+          message: "OpenClaw installer could not write to the destination directory.",
+          suggestion: "Run the install with elevated privileges or change the install prefix to a writable location.",
           details: {
             stage: "install-cli",
             failureKind: "permission-denied",
-            step: "npm install -g openclaw@latest",
+            step: "powershell install.ps1",
             exitCode: 243,
             sample: "npm ERR! code EACCES",
           },
@@ -174,7 +177,7 @@ describe("installService integration", () => {
     expect(result.stage).toBe("install-cli");
     expect(result.issue).toMatchObject({
       failureKind: "permission-denied",
-      step: "npm install -g openclaw@latest",
+      step: "powershell install.ps1",
       exitCode: 243,
       sample: "npm ERR! code EACCES",
     });
@@ -190,14 +193,14 @@ describe("installService integration", () => {
         success: false,
         error: {
           code: "E_NETWORK_FAILED",
-          message: "OpenClaw CLI installation failed while downloading packages from npm.",
-          suggestion: "Check registry connectivity, proxy settings, and retry.",
+          message: "OpenClaw install failed while downloading required components.",
+          suggestion: "Check network connectivity, proxy/TLS settings, and retry the install.",
           details: {
             stage: "install-cli",
             failureKind: "network-failure",
-            step: "npm install -g openclaw@latest",
+            step: "bash install-cli.sh",
             exitCode: 1,
-            sample: "npm ERR! request to https://registry.npmjs.org/openclaw failed",
+            sample: "curl: (6) Could not resolve host: openclaw.ai",
           },
         },
       }),
@@ -218,13 +221,13 @@ describe("installService integration", () => {
         error: {
           code: "E_INSTALL_COMMAND_FAILED",
           message: "OpenClaw installation command returned a non-zero exit code.",
-          suggestion: "Check npm output and retry.",
+          suggestion: "Check installer output, network access, and permissions, then retry.",
           details: {
             stage: "install-cli",
             failureKind: "unknown",
-            step: "npm install -g openclaw@latest",
+            step: "powershell install.ps1",
             exitCode: 1,
-            sample: "npm ERR! unexpected internal failure",
+            sample: "unexpected internal failure",
           },
         },
       }),
@@ -343,6 +346,9 @@ describe("installService integration", () => {
       architecture: "x64",
       homeDir: "C:\\Users\\Tester",
       configPath: "C:\\Users\\Tester\\.openclaw\\openclaw.json",
+      nodeFound: false,
+      nodeVersion: null,
+      nodePath: null,
       npmFound: false,
       npmVersion: null,
       openclawFound: true,
@@ -351,7 +357,7 @@ describe("installService integration", () => {
     });
 
     expect(phases.find((item) => item.id === "prerequisite")).toMatchObject({
-      status: "failure",
+      status: "warning",
     });
     expect(phases.find((item) => item.id === "install-cli")).toMatchObject({
       status: "warning",

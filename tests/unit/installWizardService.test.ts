@@ -7,6 +7,9 @@ const baseEnvironment: InstallEnvironment = {
   architecture: "x64",
   homeDir: "C:\\Users\\Tester",
   configPath: "C:\\Users\\Tester\\.openclaw\\openclaw.json",
+  nodeFound: true,
+  nodeVersion: "v22.15.0",
+  nodePath: "C:\\Program Files\\nodejs\\node.exe",
   npmFound: true,
   npmVersion: "10.9.0",
   openclawFound: false,
@@ -15,14 +18,14 @@ const baseEnvironment: InstallEnvironment = {
 };
 
 describe("installWizardService", () => {
-  it("keeps the wizard on environment check when npm is missing", () => {
+  it("keeps the wizard on the install step when the environment is detected but OpenClaw is not yet installed", () => {
     const model = buildInstallWizardModel({
       environment: { ...baseEnvironment, npmFound: false, npmVersion: null },
       installResult: null,
     });
 
-    expect(model.steps[0]?.status).toBe("current");
-    expect(model.steps[1]?.status).toBe("blocked");
+    expect(model.steps[0]?.status).toBe("complete");
+    expect(model.steps[1]?.status).toBe("current");
     expect(model.primaryRoute).toBe("/install?wizard=1");
   });
 

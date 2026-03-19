@@ -43,7 +43,7 @@ describe("OverviewPage", () => {
         suggestion: "inspect logs",
       },
       data: {
-        appVersion: "0.6.0",
+        appVersion: "2.0.4",
         platform: "desktop-runtime",
         dashboardUrl: "Unavailable",
         mode: "live",

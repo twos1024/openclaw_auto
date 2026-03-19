@@ -33,7 +33,6 @@ export interface InstallEnvironmentPanelProps {
   environment: InstallEnvironment | null;
   isLoading: boolean;
   isInstalling: boolean;
-  installBlockedByEnv: boolean;
   runtimeBlockMode: "preview" | "runtime-unavailable" | null;
   onRefresh: () => void;
   onInstall: () => void;
@@ -43,14 +42,13 @@ export function InstallEnvironmentPanel({
   environment,
   isLoading,
   isInstalling,
-  installBlockedByEnv,
   runtimeBlockMode,
   onRefresh,
   onInstall,
 }: InstallEnvironmentPanelProps): JSX.Element {
   const { t } = useTranslation(["common", "install"]);
   const installBlockedByRuntime = runtimeBlockMode !== null;
-  const installBlocked = installBlockedByEnv || installBlockedByRuntime;
+  const installBlocked = installBlockedByRuntime;
 
   return (
     <section
@@ -69,6 +67,10 @@ export function InstallEnvironmentPanel({
       </div>
 
       <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+        <StatusPill
+          label={environment?.nodeFound ? t("install:environment.pills.nodeReady") : t("install:environment.pills.nodeMissing")}
+          ok={Boolean(environment?.nodeFound)}
+        />
         <StatusPill label={environment?.npmFound ? t("install:environment.pills.npmReady") : t("install:environment.pills.npmMissing")} ok={Boolean(environment?.npmFound)} />
         <StatusPill
           label={environment?.openclawFound ? t("install:environment.pills.openclawInstalled") : t("install:environment.pills.openclawMissing")}
@@ -80,6 +82,8 @@ export function InstallEnvironmentPanel({
         <EnvRow label={t("install:environment.labels.platform")} value={environment ? `${environment.platform} / ${environment.architecture}` : null} />
         <EnvRow label={t("install:environment.labels.homeDir")} value={environment?.homeDir} />
         <EnvRow label={t("install:environment.labels.configPath")} value={environment?.configPath} />
+        <EnvRow label={t("install:environment.labels.nodeVersion")} value={environment?.nodeVersion} />
+        <EnvRow label={t("install:environment.labels.nodePath")} value={environment?.nodePath} />
         <EnvRow label={t("install:environment.labels.npmVersion")} value={environment?.npmVersion} />
         <EnvRow label={t("install:environment.labels.openclawPath")} value={environment?.openclawPath} />
         <EnvRow label={t("install:environment.labels.openclawVersion")} value={environment?.openclawVersion} />
@@ -124,9 +128,7 @@ export function InstallEnvironmentPanel({
             : runtimeBlockMode === "preview"
               ? t("install:status.desktopRuntimeRequired")
               : installBlockedByRuntime
-              ? t("install:status.desktopBridgeRequired")
-              : installBlockedByEnv
-                ? t("install:status.npmRequired")
+                ? t("install:status.desktopBridgeRequired")
                 : t("install:actions.install")}
         </button>
 
@@ -156,13 +158,11 @@ export function InstallEnvironmentPanel({
         <p style={{ margin: 0, fontSize: 13, color: "#991b1b" }}>
           {t("install:status.runtimeUnavailable")}
         </p>
-      ) : installBlockedByEnv ? (
-        <p style={{ margin: 0, fontSize: 13, color: "#92400e" }}>
-          {t("install:status.npmMissing")}
-        </p>
       ) : (
         <p style={{ margin: 0, fontSize: 13, color: "#475569" }}>
-          {t("install:status.installHint")}
+          {environment?.nodeFound && environment?.npmFound
+            ? t("install:status.installHint")
+            : t("install:status.bootstrapHint")}
         </p>
       )}
     </section>

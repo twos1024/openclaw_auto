@@ -79,7 +79,7 @@ function createRunbookModel(overrides?: Partial<RunbookModel>): RunbookModel {
         { label: "Tauri Shell", value: "detected" },
         { label: "Invoke Bridge", value: "detected" },
         { label: "Bridge Source", value: "official API bridge" },
-        { label: "App Version", value: "0.6.0" },
+        { label: "App Version", value: "2.0.4" },
         { label: "Platform", value: "windows" },
         { label: "Dashboard", value: "Unavailable" },
       ],

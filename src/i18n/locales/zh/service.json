@@ -10,10 +10,8 @@
   "status": {
     "portConflict": {
       "title": "端口被占用",
-      "prefix": "Gateway ",
-      "portLabel": "port",
-      "targetPort": "target port",
-      "suffix": "已被其他进程占用。",
+      "withPort": "Gateway 端口 {{port}} 已被其他进程占用。",
+      "withoutPort": "目标端口已被其他进程占用。",
       "suggestion": "先释放这个端口，或者换一个空闲端口，再重新启动 Gateway。"
     }
   },
@@ -28,5 +26,28 @@
     "no": "否",
     "pid": "PID:",
     "lastStarted": "最近启动："
+  },
+  "controls": {
+    "title": "Gateway 服务控制",
+    "waiting": "正在等待 Gateway 状态...",
+    "refresh": "刷新",
+    "start": "启动 Gateway",
+    "stop": "停止 Gateway",
+    "restart": "重启 Gateway",
+    "openDashboard": "打开 Dashboard",
+    "errorCode": "错误代码："
+  },
+  "endpoint": {
+    "title": "Gateway 端点",
+    "port": "端口",
+    "address": "地址",
+    "lastStarted": "最近启动"
+  },
+  "state": {
+    "running": "运行中",
+    "stopped": "已停止",
+    "starting": "启动中",
+    "stopping": "停止中",
+    "error": "异常"
   }
 }

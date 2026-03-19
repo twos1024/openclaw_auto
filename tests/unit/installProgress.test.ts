@@ -8,6 +8,9 @@ const readyEnvironment: InstallEnvironment = {
   architecture: "x64",
   homeDir: "C:\\Users\\Tester",
   configPath: "C:\\Users\\Tester\\.openclaw\\openclaw.json",
+  nodeFound: true,
+  nodeVersion: "v22.15.0",
+  nodePath: "C:\\Program Files\\nodejs\\node.exe",
   npmFound: true,
   npmVersion: "10.9.0",
   openclawFound: false,
@@ -109,10 +112,13 @@ describe("installProgress", () => {
     expect(progress.percent).toBeLessThan(100);
   });
 
-  it("marks downstream phases as warning instead of success when npm is missing but OpenClaw is detectable", () => {
+  it("marks downstream phases as warning when runtime is missing but OpenClaw is detectable", () => {
     const phases = buildInstallingPhases({
       environment: {
         ...readyEnvironment,
+        nodeFound: false,
+        nodeVersion: null,
+        nodePath: null,
         npmFound: false,
         npmVersion: null,
         openclawFound: true,
@@ -123,7 +129,7 @@ describe("installProgress", () => {
       telemetry: null,
     });
 
-    expect(phases.find((phase) => phase.id === "prerequisite")?.status).toBe("failure");
+    expect(phases.find((phase) => phase.id === "prerequisite")?.status).toBe("warning");
     expect(phases.find((phase) => phase.id === "install-cli")?.status).toBe("warning");
     expect(phases.find((phase) => phase.id === "verify")?.status).toBe("warning");
   });

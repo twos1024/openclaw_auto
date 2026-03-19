@@ -32,6 +32,24 @@
     "actions": {
       "overview": "打开概览",
       "installWizard": "打开安装向导"
+    },
+    "entry": {
+      "title": "首次启动导航",
+      "description": "系统会先自动检查环境，再带你按顺序完成安装、配置和 Gateway 启动。",
+      "meta": "最近检查：{{checkedAt}}",
+      "noticeTitle": "当前先处理：{{step}}",
+      "noticeDescription": "我们已经帮你把下一步整理好了。先按下面的按钮继续，其他页面稍后再看。",
+      "noticePrimaryHint": "完成 {{step}} 之后，就能进入下一步。",
+      "continue": "继续当前步骤",
+      "openRunbook": "打开运行手册",
+      "openAssistant": "打开设置助手",
+      "steps": {
+        "install": "安装 OpenClaw",
+        "config": "配置 API Key",
+        "service": "启动 Gateway",
+        "dashboard": "打开 Dashboard",
+        "runbook": "查看运行手册"
+      }
     }
   },
   "actionList": {

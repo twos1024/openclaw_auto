@@ -15,19 +15,12 @@ function PortConflictBanner({ port }: { port: number | null }): JSX.Element {
         color: "#991b1b",
         padding: 12,
       }}
-      >
+    >
       <strong>{t("service:status.portConflict.title")}</strong>
       <p style={{ margin: "8px 0 0" }}>
-        {t("service:status.portConflict.prefix")}
-        {port ? (
-          <>
-            {" "}
-            {t("service:status.portConflict.portLabel")} <strong>{port}</strong>
-          </>
-        ) : (
-          t("service:status.portConflict.targetPort")
-        )}{" "}
-        {t("service:status.portConflict.suffix")}
+        {port
+          ? t("service:status.portConflict.withPort", { port })
+          : t("service:status.portConflict.withoutPort")}
       </p>
       <p style={{ margin: "8px 0 0", fontSize: 13 }}>
         {t("service:status.portConflict.suggestion")}

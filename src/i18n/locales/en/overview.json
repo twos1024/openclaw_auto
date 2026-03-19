@@ -32,6 +32,24 @@
     "actions": {
       "overview": "Open overview",
       "installWizard": "Open install wizard"
+    },
+    "entry": {
+      "title": "First-run navigation",
+      "description": "The app checks the environment first, then walks you through install, configuration, and Gateway startup in order.",
+      "meta": "Last checked: {{checkedAt}}",
+      "noticeTitle": "Focus first on: {{step}}",
+      "noticeDescription": "We have already lined up the next step. Continue with the buttons below, and review the other pages later.",
+      "noticePrimaryHint": "Once you finish {{step}}, the app will move you to the next step.",
+      "continue": "Continue current step",
+      "openRunbook": "Open Runbook",
+      "openAssistant": "Open setup assistant",
+      "steps": {
+        "install": "Install OpenClaw",
+        "config": "Configure API Key",
+        "service": "Start Gateway",
+        "dashboard": "Open Dashboard",
+        "runbook": "View Runbook"
+      }
     }
   },
   "actionList": {

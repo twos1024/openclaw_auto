@@ -53,7 +53,7 @@ describe("statusService integration", () => {
       get_overview_status: async () => ({
         success: true,
         data: {
-          appVersion: "0.6.0",
+          appVersion: "2.0.4",
           platform: "windows",
           dashboardUrl: "Unavailable",
           mode: "live",
@@ -191,7 +191,7 @@ describe("statusService integration", () => {
       get_overview_status: async () => ({
         success: true,
         data: {
-          appVersion: "0.6.0",
+          appVersion: "2.0.4",
           platform: "macos",
           dashboardUrl: "http://127.0.0.1:18789",
           mode: "live",

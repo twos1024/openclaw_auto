@@ -1,7 +1,7 @@
 {
   "page": {
     "title": "初始化向导",
-    "description": "按步骤完成运行环境检查、提供方配置和网关启动。",
+    "description": "先检查电脑环境，再通过官方安装器安装 OpenClaw，配置兼容 OpenAI API 格式的 API Key，最后启动 Gateway。",
     "badges": {
       "completed": "已完成",
       "fresh": "首次运行"
@@ -9,97 +9,107 @@
     "stepIndex": "步骤 {{current}} / {{total}}"
   },
   "steps": {
-    "welcome": "欢迎",
-    "runtime": "运行环境",
-    "provider": "提供方",
+    "environment": "环境检查",
     "install": "安装",
+    "config": "配置",
+    "gateway": "Gateway",
     "complete": "完成"
   },
-  "welcome": {
-    "body": "该向导会帮助你完成首次启动所需的最少配置。",
-    "hint": "建议按顺序完成所有步骤，以避免后续联调问题。"
+  "stepStates": {
+    "done": "已完成",
+    "current": "进行中",
+    "pending": "待处理"
   },
-  "runtime": {
-    "actions": {
-      "check": "检测环境"
+  "environment": {
+    "title": "检查运行环境",
+    "description": "如果 Node.js / npm 缺失，官方安装器也会自动补齐，所以这一步是信息展示，不会阻塞后续安装。",
+    "pills": {
+      "nodeReady": "Node.js 已就绪",
+      "nodeMissing": "缺少 Node.js",
+      "npmReady": "npm 已就绪",
+      "npmMissing": "缺少 npm",
+      "openclawReady": "OpenClaw 已就绪",
+      "openclawMissing": "OpenClaw 未安装"
     },
-    "state": {
-      "passed": "已满足",
-      "pending": "待检测"
-    },
-    "fields": {
-      "platform": "平台：{{value}}",
-      "npm": "npm：{{value}}",
-      "openclaw": "OpenClaw：{{value}}"
+    "labels": {
+      "platform": "平台",
+      "node": "Node.js",
+      "npm": "npm",
+      "openclaw": "OpenClaw",
+      "configPath": "配置路径"
     },
     "values": {
       "installed": "已安装",
-      "missing": "未安装"
-    },
-    "requirement": "当前环境不满足要求，请先补齐缺失依赖。",
-    "idle": "点击“检测环境”开始检查。",
-    "errors": {
-      "detectFailed": "环境检测失败，请重试。"
-    }
-  },
-  "provider": {
-    "modeLabel": "配置方式",
-    "defaults": {
-      "name": "主提供方"
-    },
-    "modes": {
-      "existing": "使用已有提供方",
-      "new": "新建提供方"
-    },
-    "placeholders": {
-      "selectExisting": "选择已有提供方",
-      "name": "提供方名称",
-      "apiKey": "API Key",
-      "apiKeyOllama": "Ollama 无需 API Key",
-      "baseUrl": "基础地址（可选）"
+      "missing": "未安装",
+      "waiting": "等待中"
     },
     "actions": {
-      "validate": "验证提供方",
-      "createAndValidate": "创建并验证"
-    },
-    "state": {
-      "validated": "已验证",
-      "pending": "待验证"
-    },
-    "errors": {
-      "selectExisting": "请选择一个已有提供方。",
-      "validateFailed": "提供方验证失败，请检查配置。",
-      "nameRequired": "请输入提供方名称。",
-      "apiKeyRequired": "请输入 API Key。",
-      "createFailed": "创建提供方失败，请重试。",
-      "missingRecord": "未找到新建的提供方记录。"
+      "refresh": "重新检测环境",
+      "next": "继续到安装",
+      "nextShortcut": "跳到安装"
     }
   },
   "install": {
-    "idle": "准备开始安装/启动。",
-    "installing": "正在安装 OpenClaw...",
-    "skipExisting": "检测到 OpenClaw 已安装，跳过安装。",
-    "startedWithAddress": "网关已启动：{{value}}",
-    "started": "网关已启动",
-    "actions": {
-      "install": "安装并启动网关"
+    "title": "安装 OpenClaw",
+    "description": "运行官方安装脚本，然后注册本地 Gateway 服务。",
+    "notice": {
+      "title": "官方安装与补齐",
+      "description": "安装器在需要时会自动安装 Node.js / npm，你不需要手工先准备运行环境。"
     },
-    "state": {
+    "actions": {
+      "install": "安装 OpenClaw",
+      "skipToConfig": "跳到配置"
+    }
+  },
+  "config": {
+    "title": "配置提供方",
+    "description": "输入兼容 OpenAI API 的基础地址、API Key 和模型，然后保存官方 OpenClaw 配置。",
+    "defaultValues": "当前配置文件不存在，正在使用默认值。",
+    "loadedPath": "已加载配置：",
+    "actions": {
+      "test": "测试连接",
+      "save": "保存并继续",
+      "next": "继续到 Gateway"
+    }
+  },
+  "gateway": {
+    "title": "启动 Gateway",
+    "description": "启动本地 Gateway 运行时，并确认它已在 loopback 上监听。",
+    "status": {
       "running": "运行中",
-      "pending": "待启动"
+      "pending": "待启动",
+      "idle": "Gateway 还未启动。",
+      "helper": "Gateway 启动后，Dashboard 和命令面板就可以使用。"
+    },
+    "meta": {
+      "port": "端口 {{value}}"
     },
     "errors": {
-      "startFailed": "启动网关失败，请重试。",
-      "statusFailed": "获取网关状态失败。"
+      "startFailed": "启动 Gateway 失败。",
+      "statusFailed": "获取 Gateway 状态失败。"
+    },
+    "actions": {
+      "start": "启动 Gateway",
+      "openDashboard": "打开 Dashboard",
+      "next": "继续"
     }
   },
   "complete": {
     "title": "初始化完成",
-    "description": "环境已就绪，可以进入聊天页面开始使用。"
+    "description": "OpenClaw 已安装、已配置，Gateway 也已准备就绪。",
+    "summaryTitle": "当前已就绪的内容",
+    "summary": "你现在可以打开 Dashboard、管理 Provider，并继续进入应用的其它功能。",
+    "badges": {
+      "installReady": "安装完成",
+      "configReady": "配置已保存",
+      "gatewayReady": "Gateway 已就绪"
+    },
+    "actions": {
+      "openDashboard": "打开 Dashboard",
+      "enterApp": "进入应用"
+    }
   },
   "actions": {
-    "previous": "上一步",
-    "next": "下一步",
-    "finish": "进入应用"
+    "previous": "上一步"
   }
 }

@@ -11,12 +11,21 @@ use crate::adapters::platform;
 use crate::adapters::shell::{run_command, ShellOutput};
 use crate::models::error::{AppError, ErrorCode};
 
+const NODE_VERSION_TIMEOUT_MS: u64 = 5_000;
+const NPM_VERSION_TIMEOUT_MS: u64 = 5_000;
+const OPENCLAW_VERSION_TIMEOUT_MS: u64 = 5_000;
+const LOCATOR_TIMEOUT_MS: u64 = 5_000;
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DetectEnvData {
     pub platform: String,
     pub architecture: String,
     pub home_dir: Option<String>,
     pub config_path: String,
+    pub node_found: bool,
+    pub node_version: Option<String>,
+    pub node_path: Option<String>,
+    pub node_output: Option<ShellOutput>,
     pub npm_found: bool,
     pub npm_version: Option<String>,
     pub npm_output: Option<ShellOutput>,
@@ -108,10 +117,40 @@ pub async fn detect_env() -> Result<DetectEnvData, AppError> {
 }
 
 async fn detect_env_uncached() -> Result<DetectEnvData, AppError> {
+    let node_args = vec!["--version".to_string()];
+    let node_output = run_command("node", &node_args, NODE_VERSION_TIMEOUT_MS).await.ok();
+    let node_version = node_output.as_ref().and_then(|out| {
+        if out.exit_code == Some(0) {
+            out.stdout
+                .lines()
+                .next()
+                .map(|line| line.trim().to_string())
+        } else {
+            None
+        }
+    });
+    let node_found = node_version.is_some();
+
+    let node_locator_output = {
+        let (locator_program, locator_args) = platform::locator_command("node");
+        run_command(&locator_program, &locator_args, LOCATOR_TIMEOUT_MS)
+            .await
+            .ok()
+    };
+    let node_path = node_locator_output
+        .as_ref()
+        .and_then(|output| path_from_locator_output(output))
+        .or_else(|| {
+            if node_found {
+                Some("node".to_string())
+            } else {
+                None
+            }
+        });
+
     let npm_args = vec!["--version".to_string()];
-    let npm_output = run_command(openclaw::npm_program(), &npm_args, 5_000)
-        .await
-        .ok();
+    let npm_output =
+        run_command(openclaw::npm_program(), &npm_args, NPM_VERSION_TIMEOUT_MS).await.ok();
     let npm_version = npm_output.as_ref().and_then(|out| {
         if out.exit_code == Some(0) {
             out.stdout
@@ -127,15 +166,16 @@ async fn detect_env_uncached() -> Result<DetectEnvData, AppError> {
     // Primary resolution: scan well-known directories for the binary.
     // This does not spawn any child process, so it never triggers a
     // `where.exe` crash or visible console window.
-    let mut openclaw_path =
-        openclaw::resolve_binary_path().map(|path| path.to_string_lossy().to_string());
+    let mut openclaw_path = openclaw::resolve_binary_path()
+        .or_else(|| resolve_openclaw_from_local_prefix())
+        .map(|path| path.to_string_lossy().to_string());
 
     // Secondary resolution: try the `where`/`which` locator command.
     // If the locator itself fails (e.g. `where.exe` crashes with
     // 0xc0000142), treat this as a soft failure — not a fatal error.
     let locator_output = {
         let (locator_program, locator_args) = platform::locator_command("openclaw");
-        run_command(&locator_program, &locator_args, 5_000)
+        run_command(&locator_program, &locator_args, LOCATOR_TIMEOUT_MS)
             .await
             .ok()
     };
@@ -152,7 +192,7 @@ async fn detect_env_uncached() -> Result<DetectEnvData, AppError> {
         let program = openclaw_path
             .clone()
             .unwrap_or_else(|| "openclaw".to_string());
-        run_command(&program, &args, 5_000).await.ok()
+        run_command(&program, &args, OPENCLAW_VERSION_TIMEOUT_MS).await.ok()
     } else {
         None
     };
@@ -180,6 +220,10 @@ async fn detect_env_uncached() -> Result<DetectEnvData, AppError> {
         config_path: platform::default_openclaw_config_path()
             .to_string_lossy()
             .to_string(),
+        node_found,
+        node_version,
+        node_path,
+        node_output,
         npm_found,
         npm_version,
         npm_output,
@@ -200,7 +244,7 @@ pub async fn ensure_openclaw_available() -> Result<String, AppError> {
     // Fallback: try `where`/`which`.  If the locator itself crashes,
     // return a clear error instead of propagating the spawn failure.
     let (locator_program, locator_args) = platform::locator_command("openclaw");
-    let locator_result = run_command(&locator_program, &locator_args, 5_000).await;
+    let locator_result = run_command(&locator_program, &locator_args, LOCATOR_TIMEOUT_MS).await;
     if let Ok(output) = &locator_result {
         if let Some(path) = path_from_locator_output(output) {
             return Ok(path);
@@ -225,7 +269,9 @@ pub async fn ensure_openclaw_available() -> Result<String, AppError> {
 }
 
 pub fn ensure_openclaw_available_sync() -> Option<String> {
-    openclaw::resolve_binary_path().map(|path| path.to_string_lossy().to_string())
+    openclaw::resolve_binary_path()
+        .or_else(|| resolve_openclaw_from_local_prefix())
+        .map(|path| path.to_string_lossy().to_string())
 }
 
 fn path_from_locator_output(output: &ShellOutput) -> Option<String> {
@@ -253,4 +299,40 @@ fn path_from_locator_output(output: &ShellOutput) -> Option<String> {
     }
 
     Some(lines[0].to_owned())
+}
+
+fn resolve_openclaw_from_local_prefix() -> Option<std::path::PathBuf> {
+    // The official "install-cli.sh" installs OpenClaw into a local prefix (default: ~/.openclaw)
+    // and places a wrapper at <prefix>/bin/openclaw.
+    let prefix = env::var("OPENCLAW_PREFIX")
+        .ok()
+        .map(|v| v.trim().to_string())
+        .filter(|v| !v.is_empty())
+        .map(std::path::PathBuf::from)
+        .unwrap_or_else(|| {
+            let home = env::var("HOME")
+                .ok()
+                .or_else(|| env::var("USERPROFILE").ok())
+                .unwrap_or_else(|| ".".to_string());
+            std::path::PathBuf::from(home).join(".openclaw")
+        });
+
+    let bin = prefix.join("bin");
+    if cfg!(windows) {
+        let cmd = bin.join("openclaw.cmd");
+        if cmd.exists() {
+            return Some(cmd);
+        }
+        let exe = bin.join("openclaw.exe");
+        if exe.exists() {
+            return Some(exe);
+        }
+    }
+
+    let unix = bin.join("openclaw");
+    if unix.exists() {
+        return Some(unix);
+    }
+
+    None
 }

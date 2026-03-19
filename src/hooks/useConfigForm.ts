@@ -27,7 +27,7 @@ export interface UseConfigFormResult {
   setProviderType: (providerType: ConfigFormValues["providerType"]) => void;
   applyCompatiblePreset: (presetId: OpenAiCompatiblePresetId) => void;
   testConnection: () => Promise<void>;
-  saveConfig: () => Promise<void>;
+  saveConfig: () => Promise<SaveConfigResult | null>;
   resetToDefault: () => void;
   reload: () => Promise<void>;
 }
@@ -147,17 +147,23 @@ export function useConfigForm(): UseConfigFormResult {
     }
   }, [form, validate]);
 
-  const saveConfig = useCallback(async () => {
+  const saveConfig = useCallback(async (): Promise<SaveConfigResult | null> => {
     setSaveResult(null);
-    if (!validate(form)) return;
+    if (!validate(form)) return null;
 
     setIsSaving(true);
     let shouldReload = false;
+    let nextResult: SaveConfigResult | null = null;
     try {
       const result = await configService.saveConfig(form);
+      nextResult = result;
       setSaveResult(result);
       shouldReload = result.status === "success";
     } catch (error: unknown) {
+      nextResult = buildUnexpectedActionResult(
+        error,
+        "Check app logs and filesystem permissions, then retry.",
+      ) as SaveConfigResult;
       setSaveResult(
         buildUnexpectedActionResult(
           error,
@@ -170,6 +176,7 @@ export function useConfigForm(): UseConfigFormResult {
     if (shouldReload) {
       await reload();
     }
+    return nextResult;
   }, [form, reload, validate]);
 
   const resetToDefault = useCallback(() => {

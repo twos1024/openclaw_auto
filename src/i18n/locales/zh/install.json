@@ -2,8 +2,8 @@
   "page": {
     "hero": {
       "title": "安装 OpenClaw",
-      "description": "先完成安装，再填 API Key，最后启动 Gateway。这个页面把新手需要做的事收成一条线。",
-      "meta": "Platform: {{platform}} / {{architecture}}",
+      "description": "先检查环境，再通过官方安装器安装 OpenClaw，接着配置 API Key，最后启动 Gateway。这个页面把新手需要做的事收成一条线。",
+      "meta": "平台：{{platform}} / {{architecture}}",
       "action": "打开安装向导"
     },
     "nextStep": {
@@ -28,8 +28,8 @@
         "actionLabel": "配置 API Key"
       },
       "env": {
-        "title": "先补齐 npm",
-        "description": "安装前先把 Node.js / npm 装好，然后回到这里刷新环境。",
+        "title": "刷新环境",
+        "description": "官方安装器在需要时会自动补齐 Node.js / npm，所以你可以随时重新检查。",
         "actionLabel": "刷新环境"
       },
       "start": {
@@ -45,7 +45,7 @@
       },
       "order": {
         "title": "安装顺序",
-        "description": "先安装 OpenClaw，再去 Config 填 API Key，保存后到 Service 启动 Gateway。"
+        "description": "先安装 OpenClaw，再去配置页填 API Key，保存后到服务页启动 Gateway。"
       }
     },
     "runbook": {
@@ -57,6 +57,8 @@
     "title": "安装准备",
     "description": "先确认本机环境和 OpenClaw 检测状态，再启动安装流程。",
     "pills": {
+      "nodeReady": "Node.js 已就绪",
+      "nodeMissing": "Node.js 缺失",
       "npmReady": "npm 已就绪",
       "npmMissing": "npm 缺失",
       "openclawInstalled": "OpenClaw 已安装",
@@ -66,17 +68,19 @@
       "platform": "平台",
       "homeDir": "Home 目录",
       "configPath": "配置路径",
+      "nodeVersion": "Node.js 版本",
+      "nodePath": "Node.js 路径",
       "npmVersion": "npm 版本",
       "openclawPath": "OpenClaw 路径",
       "openclawVersion": "OpenClaw 版本"
     }
   },
   "actions": {
-    "refreshing": "Refreshing...",
-    "refreshEnvironment": "Refresh Environment",
-    "installing": "Installing...",
-    "install": "Install OpenClaw",
-    "openLogs": "Open Logs"
+    "refreshing": "正在刷新...",
+    "refreshEnvironment": "刷新环境",
+    "installing": "正在安装...",
+    "install": "安装 OpenClaw",
+    "openLogs": "打开日志"
   },
   "status": {
     "desktopRuntimeRequired": "需要桌面运行时",
@@ -84,8 +88,9 @@
     "npmRequired": "需要 npm",
     "previewMode": "当前为浏览器预览模式，安装按钮已禁用。请使用 ClawDesk 桌面应用或 `npm run tauri:dev` 再执行本机安装。",
     "runtimeUnavailable": "当前桌面命令桥不可用，安装按钮已禁用。请先修复 Tauri 运行时集成，再继续执行本机安装。",
-    "npmMissing": "当前未检测到 npm，安装按钮已禁用。请先安装 Node.js / npm，然后刷新环境检查。",
-    "installHint": "点击\"开始安装\"后，安装会在后台自动进行，完成后将显示安装结果。"
+    "npmMissing": "当前未检测到 Node.js / npm，但官方安装器会自动补齐这些依赖。",
+    "bootstrapHint": "官方安装器会自动补齐缺失的 Node.js / npm，所以你可以继续安装。",
+    "installHint": "点击\"安装 OpenClaw\"后，安装会在后台自动进行，完成后将显示安装结果。"
   },
   "issue": {
     "title": "安装遇到问题",
@@ -135,7 +140,7 @@
     },
     "after": {
       "title": "装完以后怎么继续",
-      "description": "1. 保存 Provider 配置，填好 API Key。2. 启动 Gateway。3. 打开 Dashboard 开始使用。"
+      "description": "1. 保存配置并填写 API Key。2. 启动 Gateway。3. 打开 Dashboard 开始使用。"
     },
     "platform": {
       "title": "按你的系统看这一张",

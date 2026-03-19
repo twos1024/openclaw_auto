@@ -1,4 +1,12 @@
 {
+  "page": {
+    "title": "Runbook",
+    "description": "Runbook は、インストール、設定、サービス制御を 1 本の実行可能な流れにまとめます。現在の blocker、順番付きの手順、移動先をここで確認できます。",
+    "refresh": "再読み込み",
+    "refreshing": "更新中...",
+    "unavailable": "Runbook を表示できません",
+    "lastCheckedAt": "確認時刻：{{value}}"
+  },
   "context": {
     "empty": "現在明確な blocker はありません。今の作業に応じたページへそのまま進めます。"
   },
@@ -11,7 +19,11 @@
   },
   "launchChecks": {
     "title": "起動チェック",
-    "subtitle": "これらのチェックにより、Setup がインストールから Dashboard まで正常に進めるかを判断します。",
+    "subtitle": "これらのチェックにより、セットアップがインストールから Dashboard まで正常に進めるかを判断します。",
     "open": "開く"
+  },
+  "stepList": {
+    "title": "ガイド付きフロー",
+    "subtitle": "以下の順序に従って進めてください。現在のステップは、いまの blocker の連鎖を反映します。"
   }
 }

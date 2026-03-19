@@ -75,7 +75,7 @@ async function mockWorkspaceBackend(
                     { label: "Tauri Shell", value: "detected" },
                     { label: "Invoke Bridge", value: "detected" },
                     { label: "Bridge Source", value: "official API bridge" },
-                    { label: "App Version", value: "0.6.0" },
+                    { label: "App Version", value: "2.0.4" },
                     { label: "Platform", value: "windows" },
                     { label: "Dashboard", value: "http://127.0.0.1:18789" },
                   ],
@@ -135,7 +135,7 @@ async function mockWorkspaceBackend(
                     { label: "Tauri Shell", value: "detected" },
                     { label: "Invoke Bridge", value: "detected" },
                     { label: "Bridge Source", value: "official API bridge" },
-                    { label: "App Version", value: "0.6.0" },
+                    { label: "App Version", value: "2.0.4" },
                     { label: "Platform", value: "windows" },
                     { label: "Dashboard", value: "Unavailable" },
                   ],
@@ -153,7 +153,7 @@ async function mockWorkspaceBackend(
             return {
               success: true,
               data: {
-                appVersion: "0.6.0",
+                appVersion: "2.0.4",
                 platform: "windows",
                 dashboardUrl: running ? "http://127.0.0.1:18789" : "Unavailable",
                 mode: "live",
@@ -382,15 +382,15 @@ test.describe("Dashboard workspace", () => {
     await mockWorkspaceBackend(page, { running: false });
     await page.goto("/#/");
 
-    await expect(page.getByRole("dialog", { name: "OpenClaw 设置助手" })).toBeVisible();
-    await expect(page.getByRole("heading", { name: "OpenClaw 设置助手" })).toBeVisible();
-    await expect(page.getByText("当前先处理：OpenClaw 安装")).toBeVisible();
+    await expect(page.getByRole("dialog", { name: /OpenClaw setup assistant|OpenClaw 设置助手/ })).toBeVisible();
+    await expect(page.getByRole("heading", { name: /OpenClaw setup assistant|OpenClaw 设置助手/ })).toBeVisible();
+    await expect(page.getByText(/Focus on: OpenClaw 安装|当前先处理：OpenClaw 安装/)).toBeVisible();
     await expect(page.getByText("Launch Checks")).toBeVisible();
     await expect(page.getByRole("link", { name: "去安装" }).first()).toBeVisible();
 
     await page.getByRole("link", { name: "去安装" }).first().click();
     await expect(page).toHaveURL(/#\/install\?wizard=1$/);
-    await expect(page.getByRole("dialog", { name: "OpenClaw 安装向导" })).toBeVisible();
+    await expect(page.getByRole("dialog", { name: /OpenClaw installation wizard|OpenClaw 安装向导/ })).toBeVisible();
   });
 
   test("shows a timeout recovery state when the embedded dashboard never becomes ready", async ({ page }) => {

@@ -96,6 +96,6 @@ test.describe("Service gateway control", () => {
 
     await page.getByRole("button", { name: "Start Gateway", exact: true }).click();
 
-    await expect(page.getByText("端口被占用")).toBeVisible();
+    await expect(page.getByText("Port conflict")).toBeVisible();
   });
 });

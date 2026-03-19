@@ -2,408 +2,528 @@ import { useEffect, useMemo, useState } from "react";
 import { Check, CheckCircle2, ChevronLeft, ChevronRight, Loader2, Play, RefreshCw, ShieldCheck } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { installService } from "@/services/installService";
-import { serviceService } from "@/services/serviceService";
-import { useProviderStore } from "@/store/useProviderStore";
-import { useSettingsStore } from "@/store/useSettingsStore";
-import type { InstallEnvironment } from "@/types/install";
-import type { ProviderVendor } from "@/types/provider";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Select } from "@/components/ui/select";
+import { OpenAIConfigForm } from "@/components/config/OpenAIConfigForm";
+import { InstallIssueCard } from "@/components/install/InstallIssueCard";
+import { InstallPhaseTimeline } from "@/components/install/InstallPhaseTimeline";
+import { InstallProgressCard } from "@/components/install/InstallProgressCard";
+import { InstallResultCard } from "@/components/install/InstallResultCard";
+import { useConfigForm } from "@/hooks/useConfigForm";
+import { useInstallFlow } from "@/hooks/useInstallFlow";
+import { serviceService } from "@/services/serviceService";
+import { inferOpenAiCompatiblePresetId } from "@/services/configPresets";
+import { useSettingsStore } from "@/store/useSettingsStore";
+import type { GatewayStatus, ServiceActionResult } from "@/services/serviceService";
 
-const STEP_KEYS = ["welcome", "runtime", "provider", "install", "complete"] as const;
+type SetupStep = "environment" | "install" | "config" | "gateway" | "complete";
 
-interface ProviderDraft {
-  name: string;
-  vendor: ProviderVendor;
-  apiKey: string;
-  baseUrl: string;
+const STEP_KEYS: SetupStep[] = ["environment", "install", "config", "gateway", "complete"];
+
+function stepIndex(step: SetupStep): number {
+  return STEP_KEYS.indexOf(step);
 }
 
-const VENDOR_OPTIONS: ProviderVendor[] = ["openai", "anthropic", "deepseek", "ollama", "google", "qwen", "zhipu", "moonshot", "groq", "mistral", "custom"];
-
-const buildDefaultProvider = (defaultName: string): ProviderDraft => ({
-  name: defaultName,
-  vendor: "openai",
-  apiKey: "",
-  baseUrl: "",
-});
+function statusClassName(status: "done" | "current" | "pending"): string {
+  if (status === "done") return "border-primary/30 bg-primary/10 text-primary";
+  if (status === "current") return "border-foreground/30 bg-foreground/10 text-foreground";
+  return "border-border bg-muted/30 text-muted-foreground";
+}
 
 export function SetupPage(): JSX.Element {
-  const { t } = useTranslation("setup");
-  const { t: tp } = useTranslation("providers");
+  const { t } = useTranslation(["setup", "install", "common"]);
   const navigate = useNavigate();
 
   const setupComplete = useSettingsStore((state) => state.setupComplete);
   const setSetupComplete = useSettingsStore((state) => state.setSetupComplete);
 
-  const providers = useProviderStore((state) => state.providers);
-  const savingProvider = useProviderStore((state) => state.saving);
-  const validatingId = useProviderStore((state) => state.validatingId);
-  const fetchProviders = useProviderStore((state) => state.fetchProviders);
-  const createProvider = useProviderStore((state) => state.createProvider);
-  const validateProvider = useProviderStore((state) => state.validateProvider);
+  const {
+    environment,
+    envError,
+    installResult,
+    phases,
+    installProgress,
+    isLoading: envLoading,
+    isInstalling,
+    refreshEnvironment,
+    installOpenClaw,
+  } = useInstallFlow();
 
-  const [step, setStep] = useState(0);
-  const [envLoading, setEnvLoading] = useState(false);
-  const [envError, setEnvError] = useState<string | null>(null);
-  const [envData, setEnvData] = useState<InstallEnvironment | null>(null);
-  const [providerMode, setProviderMode] = useState<"existing" | "new">("existing");
-  const [selectedProviderId, setSelectedProviderId] = useState("");
-  const [providerDraft, setProviderDraft] = useState<ProviderDraft>(() => buildDefaultProvider(t("provider.defaults.name")));
-  const [providerStepError, setProviderStepError] = useState<string | null>(null);
-  const [providerValidated, setProviderValidated] = useState(false);
-  const [installing, setInstalling] = useState(false);
-  const [installError, setInstallError] = useState<string | null>(null);
-  const [installMessage, setInstallMessage] = useState(t("install.idle"));
-  const [gatewayReady, setGatewayReady] = useState(false);
+  const {
+    form,
+    errors,
+    isLoading: configLoading,
+    isTesting,
+    isSaving,
+    loadIssue,
+    loadedPath,
+    usedDefaultValues,
+    testResult,
+    saveResult,
+    setField,
+    setProviderType,
+    applyCompatiblePreset,
+    testConnection,
+    saveConfig,
+  } = useConfigForm();
+
+  const [step, setStep] = useState<SetupStep>("environment");
+  const [gatewayStatus, setGatewayStatus] = useState<GatewayStatus | null>(null);
+  const [gatewayActionResult, setGatewayActionResult] = useState<ServiceActionResult | null>(null);
+  const [gatewayLoading, setGatewayLoading] = useState(false);
+  const [gatewayError, setGatewayError] = useState<string | null>(null);
 
   useEffect(() => {
-    void fetchProviders();
-  }, [fetchProviders]);
-
-  useEffect(() => {
-    const ready = providers.find((provider) => provider.status === "ready");
-    if (!ready) return;
-    setProviderValidated(true);
-    if (!selectedProviderId) {
-      setSelectedProviderId(ready.id);
+    if (form.providerType !== "openai-compatible") {
+      setProviderType("openai-compatible");
     }
-  }, [providers, selectedProviderId]);
+  }, [form.providerType, setProviderType]);
 
-  const runtimePass = Boolean(envData?.npmFound && envData?.openclawFound);
+  const environmentChecked = Boolean(environment || envError);
+  const installSucceeded = Boolean(installResult && (installResult.status === "success" || installResult.status === "warning"));
+  const configSucceeded = saveResult?.status === "success";
+  const gatewaySucceeded = Boolean(gatewayStatus?.running);
 
-  const canNext = useMemo(() => {
-    if (step === 0) return true;
-    if (step === 1) return runtimePass;
-    if (step === 2) return providerValidated;
-    if (step === 3) return gatewayReady;
-    return true;
-  }, [gatewayReady, providerValidated, runtimePass, step]);
+  const currentStepIndex = stepIndex(step);
+  const stepStates = useMemo(() => {
+    return STEP_KEYS.map((key, index) => {
+      let status: "done" | "current" | "pending" = "pending";
+      if (index < currentStepIndex) {
+        status = "done";
+      } else if (index === currentStepIndex) {
+        status = "current";
+      }
 
-  const runRuntimeCheck = async () => {
-    setEnvLoading(true);
-    setEnvError(null);
-    const result = await installService.detectEnv();
-    if (result.ok && result.data) {
-      setEnvData(result.data);
-      setEnvLoading(false);
-      return;
-    }
-    setEnvLoading(false);
-    setEnvError(result.error?.message ?? t("runtime.errors.detectFailed"));
-  };
+      if (key === "environment" && environmentChecked) {
+        status = index <= currentStepIndex ? "done" : status;
+      }
+      if (key === "install" && installSucceeded) {
+        status = index <= currentStepIndex ? "done" : status;
+      }
+      if (key === "config" && configSucceeded) {
+        status = index <= currentStepIndex ? "done" : status;
+      }
+      if (key === "gateway" && gatewaySucceeded) {
+        status = index <= currentStepIndex ? "done" : status;
+      }
+      if (key === "complete" && setupComplete) {
+        status = "done";
+      }
 
-  const validateExistingProvider = async () => {
-    if (!selectedProviderId) {
-      setProviderStepError(t("provider.errors.selectExisting"));
-      return;
-    }
-    setProviderStepError(null);
-    const valid = await validateProvider(selectedProviderId);
-    if (!valid) {
-      const latest = useProviderStore.getState().error;
-      setProviderStepError(latest?.message ?? t("provider.errors.validateFailed"));
-      setProviderValidated(false);
-      return;
-    }
-    setProviderValidated(true);
-  };
-
-  const createAndValidateProvider = async () => {
-    if (!providerDraft.name.trim()) {
-      setProviderStepError(t("provider.errors.nameRequired"));
-      return;
-    }
-    if (!providerDraft.apiKey.trim() && providerDraft.vendor !== "ollama") {
-      setProviderStepError(t("provider.errors.apiKeyRequired"));
-      return;
-    }
-
-    setProviderStepError(null);
-    const created = await createProvider({
-      name: providerDraft.name.trim(),
-      vendor: providerDraft.vendor,
-      apiKey: providerDraft.apiKey.trim(),
-      baseUrl: providerDraft.baseUrl.trim() || undefined,
+      return { key, status };
     });
-    if (!created) {
-      const latest = useProviderStore.getState().error;
-      setProviderStepError(latest?.message ?? t("provider.errors.createFailed"));
-      return;
-    }
+  }, [configSucceeded, currentStepIndex, environmentChecked, gatewaySucceeded, installSucceeded, setupComplete]);
 
-    const latestProvider = useProviderStore.getState().providers[0];
-    if (!latestProvider) {
-      setProviderStepError(t("provider.errors.missingRecord"));
-      return;
-    }
-
-    setSelectedProviderId(latestProvider.id);
-    const valid = await validateProvider(latestProvider.id);
-    if (!valid) {
-      const latestError = useProviderStore.getState().error;
-      setProviderStepError(latestError?.message ?? t("provider.errors.validateFailed"));
-      setProviderValidated(false);
-      return;
-    }
-
-    setProviderValidated(true);
-    setProviderMode("existing");
+  const moveToNext = (nextStep: SetupStep): void => {
+    setStep(nextStep);
   };
 
-  const installAndStartGateway = async () => {
-    setInstalling(true);
-    setInstallError(null);
+  const handleEnvironmentRefresh = async (): Promise<void> => {
+    await refreshEnvironment();
+  };
 
-    const env = await installService.detectEnv();
-    let envSnapshot = envData;
-    if (env.ok && env.data) {
-      envSnapshot = env.data;
-      setEnvData(env.data);
+  const handleInstall = async (): Promise<void> => {
+    const result = await installOpenClaw();
+    if (result && result.status !== "failure" && result.status !== "error") {
+      setStep("config");
     }
+  };
 
-    if (!envSnapshot?.openclawFound) {
-      setInstallMessage(t("install.installing"));
-      const installResult = await installService.installOpenClaw();
-      if (installResult.status === "failure" || installResult.status === "error") {
-        setInstallError(installResult.detail);
-        setInstallMessage(installResult.suggestion);
-        setGatewayReady(false);
-        setInstalling(false);
+  const handleConfigSave = async (): Promise<void> => {
+    const result = await saveConfig();
+    if (result && result.status === "success") {
+      setStep("gateway");
+    }
+  };
+
+  const handleGatewayStart = async (): Promise<void> => {
+    setGatewayLoading(true);
+    setGatewayError(null);
+    setGatewayActionResult(null);
+    try {
+      const actionResult = await serviceService.startGateway();
+      setGatewayActionResult(actionResult);
+
+      if (actionResult.status !== "success") {
+        setGatewayError(actionResult.detail || t("gateway.errors.startFailed"));
         return;
       }
-      setInstallMessage(installResult.detail);
-    } else {
-      setInstallMessage(t("install.skipExisting"));
-    }
 
-    const startResult = await serviceService.startGateway();
-    if (startResult.status !== "success") {
-      setInstallError(startResult.detail || t("install.errors.startFailed"));
-      setGatewayReady(false);
-      setInstalling(false);
-      return;
+      const status = await serviceService.getGatewayStatus();
+      setGatewayStatus(status);
+      if (status.running) {
+        setStep("complete");
+      } else {
+        setGatewayError(status.statusDetail || t("gateway.errors.statusFailed"));
+      }
+    } catch (error: unknown) {
+      setGatewayError(error instanceof Error ? error.message : t("gateway.errors.startFailed"));
+    } finally {
+      setGatewayLoading(false);
     }
-
-    const statusResult = await serviceService.getGatewayStatus();
-    if (statusResult.running) {
-      setGatewayReady(true);
-      setInstallMessage(statusResult.address ? t("install.startedWithAddress", { value: statusResult.address }) : t("install.started"));
-    } else {
-      setGatewayReady(false);
-      setInstallError(statusResult.statusDetail || t("install.errors.statusFailed"));
-    }
-
-    setInstalling(false);
   };
 
-  const finishSetup = () => {
+  const handleOpenDashboard = async (): Promise<void> => {
+    try {
+      await serviceService.openDashboard();
+    } catch {
+      // Navigation still takes the user to the embedded dashboard page.
+    }
     setSetupComplete(true);
-    navigate("/chat");
+    navigate("/dashboard");
   };
+
+  const finishSetup = (): void => {
+    setSetupComplete(true);
+    navigate("/dashboard");
+  };
+
+  const openAiPresetId = inferOpenAiCompatiblePresetId(form.baseUrl);
+
+  const envRows = [
+    {
+      label: t("environment.labels.platform"),
+      value: environment ? `${environment.platform} / ${environment.architecture}` : t("environment.values.waiting"),
+    },
+    {
+      label: t("environment.labels.node"),
+      value: environment
+        ? environment.nodeFound
+          ? environment.nodeVersion || t("environment.values.installed")
+          : t("environment.values.missing")
+        : t("environment.values.waiting"),
+    },
+    {
+      label: t("environment.labels.npm"),
+      value: environment
+        ? environment.npmFound
+          ? environment.npmVersion || t("environment.values.installed")
+          : t("environment.values.missing")
+        : t("environment.values.waiting"),
+    },
+    {
+      label: t("environment.labels.openclaw"),
+      value: environment
+        ? environment.openclawFound
+          ? environment.openclawVersion || t("environment.values.installed")
+          : t("environment.values.missing")
+        : t("environment.values.waiting"),
+    },
+    {
+      label: t("environment.labels.configPath"),
+      value: environment?.configPath || t("environment.values.waiting"),
+    },
+  ];
+
+  const configBusy = configLoading || isTesting || isSaving;
 
   return (
     <div className="min-h-screen bg-background p-6 md:p-10">
-      <div className="mx-auto w-full max-w-4xl">
-        <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+      <div className="mx-auto flex w-full max-w-6xl flex-col gap-6">
+        <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <h1 className="page-heading">{t("page.title")}</h1>
-            <p className="mt-1 text-sm text-muted-foreground">{t("page.description")}</p>
+            <p className="mt-2 max-w-3xl text-sm text-muted-foreground">{t("page.description")}</p>
           </div>
-          {setupComplete ? <Badge variant="success">{t("page.badges.completed")}</Badge> : <Badge variant="secondary">{t("page.badges.fresh")}</Badge>}
+          {setupComplete ? (
+            <Badge variant="success">{t("page.badges.completed")}</Badge>
+          ) : (
+            <Badge variant="secondary">{t("page.badges.fresh")}</Badge>
+          )}
         </div>
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">
-              {t("page.stepIndex", { current: step + 1, total: STEP_KEYS.length })}
-            </CardTitle>
-            <CardDescription>{t(`steps.${STEP_KEYS[step]}`)}</CardDescription>
+            <CardTitle className="text-base">{t("page.stepIndex", { current: currentStepIndex + 1, total: STEP_KEYS.length })}</CardTitle>
+            <CardDescription>{t(`steps.${step}`)}</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-5">
-            <div className="grid grid-cols-5 gap-2">
-              {STEP_KEYS.map((key, index) => {
-                const done = index < step;
-                const current = index === step;
+          <CardContent className="grid gap-6 lg:grid-cols-[240px_minmax(0,1fr)]">
+            <aside className="grid gap-2">
+              {STEP_KEYS.map((key) => {
+                const current = key === step;
+                const status = stepStates.find((item) => item.key === key)?.status ?? "pending";
                 return (
-                  <div
+                  <button
                     key={key}
-                    className={
-                      done
-                        ? "rounded-lg border border-primary/30 bg-primary/10 px-2 py-1.5 text-center text-xs font-medium text-primary"
-                        : current
-                          ? "rounded-lg border border-foreground/30 bg-foreground/10 px-2 py-1.5 text-center text-xs font-medium text-foreground"
-                          : "rounded-lg border border-border bg-muted/30 px-2 py-1.5 text-center text-xs text-muted-foreground"
-                    }
+                    type="button"
+                    onClick={() => {
+                      if (status === "done" || current) {
+                        setStep(key);
+                      }
+                    }}
+                    className={`rounded-xl border px-4 py-3 text-left transition-colors ${statusClassName(status)}`}
                   >
-                    {done ? <Check className="mx-auto h-3.5 w-3.5" /> : index + 1}
-                  </div>
+                    <div className="flex items-center gap-2">
+                      <span className="inline-flex h-6 w-6 items-center justify-center rounded-full border border-current text-xs font-semibold">
+                        {status === "done" ? <Check className="h-4 w-4" /> : STEP_KEYS.indexOf(key) + 1}
+                      </span>
+                      <div>
+                        <p className="text-sm font-medium">{t(`steps.${key}`)}</p>
+                        <p className="text-xs opacity-80">
+                          {status === "done"
+                            ? t("stepStates.done")
+                            : status === "current"
+                              ? t("stepStates.current")
+                              : t("stepStates.pending")}
+                        </p>
+                      </div>
+                    </div>
+                  </button>
                 );
               })}
-            </div>
+            </aside>
 
-            {step === 0 ? (
-              <div className="space-y-3 rounded-xl border border-border bg-muted/20 p-4">
-                <p className="text-sm leading-relaxed text-foreground">{t("welcome.body")}</p>
-                <p className="text-sm text-muted-foreground">{t("welcome.hint")}</p>
-              </div>
-            ) : null}
+            <section className="grid gap-5">
+              {step === "environment" ? (
+                <Card className="border-border/80 bg-muted/10">
+                  <CardHeader>
+                    <CardTitle>{t("environment.title")}</CardTitle>
+                    <CardDescription>{t("environment.description")}</CardDescription>
+                  </CardHeader>
+                  <CardContent className="grid gap-5">
+                    <div className="flex flex-wrap gap-2">
+                      <Badge variant={environment?.nodeFound ? "success" : "secondary"}>
+                        {environment?.nodeFound ? t("environment.pills.nodeReady") : t("environment.pills.nodeMissing")}
+                      </Badge>
+                      <Badge variant={environment?.npmFound ? "success" : "secondary"}>
+                        {environment?.npmFound ? t("environment.pills.npmReady") : t("environment.pills.npmMissing")}
+                      </Badge>
+                      <Badge variant={environment?.openclawFound ? "success" : "secondary"}>
+                        {environment?.openclawFound ? t("environment.pills.openclawReady") : t("environment.pills.openclawMissing")}
+                      </Badge>
+                    </div>
 
-            {step === 1 ? (
-              <div className="space-y-4">
-                <div className="flex flex-wrap items-center gap-2">
-                  <Button variant="outline" onClick={() => void runRuntimeCheck()} disabled={envLoading}>
-                    {envLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <RefreshCw className="mr-2 h-4 w-4" />}
-                    {t("runtime.actions.check")}
-                  </Button>
-                  <Badge variant={runtimePass ? "success" : "secondary"}>{runtimePass ? t("runtime.state.passed") : t("runtime.state.pending")}</Badge>
-                </div>
+                    <div className="grid gap-2 rounded-xl border border-border bg-background p-4">
+                      {envRows.map((row) => (
+                        <div key={row.label} className="flex items-center justify-between gap-3 border-b border-border/50 py-2 last:border-0">
+                          <span className="text-sm text-muted-foreground">{row.label}</span>
+                          <span className="text-sm font-medium text-foreground">{row.value}</span>
+                        </div>
+                      ))}
+                    </div>
 
-                {envError ? (
-                  <p className="rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">{envError}</p>
-                ) : null}
+                    {envError ? (
+                      <div className="rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+                        <p className="font-medium">{envError.message}</p>
+                        <p className="mt-1">{envError.suggestion}</p>
+                      </div>
+                    ) : null}
 
-                {envData ? (
-                  <div className="grid gap-2 rounded-xl border border-border bg-muted/20 p-3 text-sm">
-                    <p>{t("runtime.fields.platform", { value: `${envData.platform} / ${envData.architecture}` })}</p>
-                    <p>{t("runtime.fields.npm", { value: envData.npmFound ? envData.npmVersion || t("runtime.values.installed") : t("runtime.values.missing") })}</p>
-                    <p>{t("runtime.fields.openclaw", { value: envData.openclawFound ? envData.openclawVersion || t("runtime.values.installed") : t("runtime.values.missing") })}</p>
-                    {!runtimePass ? <p className="text-destructive">{t("runtime.requirement")}</p> : null}
-                  </div>
-                ) : (
-                  <p className="text-sm text-muted-foreground">{t("runtime.idle")}</p>
-                )}
-              </div>
-            ) : null}
-
-            {step === 2 ? (
-              <div className="space-y-4">
-                <div className="grid gap-2 rounded-xl border border-border bg-muted/20 p-3">
-                  <div className="flex items-center justify-between gap-2">
-                    <p className="text-sm font-medium">{t("provider.modeLabel")}</p>
-                    <Select value={providerMode} onChange={(event) => setProviderMode(event.target.value as "existing" | "new")} className="w-48">
-                      <option value="existing">{t("provider.modes.existing")}</option>
-                      <option value="new">{t("provider.modes.new")}</option>
-                    </Select>
-                  </div>
-
-                  {providerMode === "existing" ? (
-                    <>
-                      <Select
-                        value={selectedProviderId}
-                        onChange={(event) => {
-                          setSelectedProviderId(event.target.value);
-                          setProviderValidated(false);
-                        }}
-                      >
-                        <option value="">{t("provider.placeholders.selectExisting")}</option>
-                        {providers.map((provider) => (
-                          <option key={provider.id} value={provider.id}>
-                            {provider.name} ({tp(`dialog.options.vendor.${provider.vendor}`)})
-                          </option>
-                        ))}
-                      </Select>
-                      <Button onClick={() => void validateExistingProvider()} disabled={Boolean(validatingId) || !selectedProviderId}>
-                        {validatingId ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <ShieldCheck className="mr-2 h-4 w-4" />}
-                        {t("provider.actions.validate")}
+                    <div className="flex flex-wrap gap-3">
+                      <Button variant="outline" onClick={() => void handleEnvironmentRefresh()} disabled={envLoading || isInstalling}>
+                        {envLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <RefreshCw className="mr-2 h-4 w-4" />}
+                        {t("environment.actions.refresh")}
                       </Button>
-                    </>
-                  ) : (
-                    <div className="grid gap-2">
-                      <Input
-                        value={providerDraft.name}
-                        onChange={(event) => setProviderDraft((current) => ({ ...current, name: event.target.value }))}
-                        placeholder={t("provider.placeholders.name")}
-                      />
-                      <Select
-                        value={providerDraft.vendor}
-                        onChange={(event) => setProviderDraft((current) => ({ ...current, vendor: event.target.value as ProviderVendor }))}
-                      >
-                        {VENDOR_OPTIONS.map((option) => (
-                          <option key={option} value={option}>
-                            {tp(`dialog.options.vendor.${option}`)}
-                          </option>
-                        ))}
-                      </Select>
-                      <Input
-                        type="password"
-                        value={providerDraft.apiKey}
-                        onChange={(event) => setProviderDraft((current) => ({ ...current, apiKey: event.target.value }))}
-                        placeholder={providerDraft.vendor === "ollama" ? t("provider.placeholders.apiKeyOllama") : t("provider.placeholders.apiKey")}
-                      />
-                      <Input
-                        value={providerDraft.baseUrl}
-                        onChange={(event) => setProviderDraft((current) => ({ ...current, baseUrl: event.target.value }))}
-                        placeholder={t("provider.placeholders.baseUrl")}
-                      />
-                      <Button onClick={() => void createAndValidateProvider()} disabled={savingProvider || Boolean(validatingId)}>
-                        {savingProvider || validatingId ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Play className="mr-2 h-4 w-4" />}
-                        {t("provider.actions.createAndValidate")}
+                      <Button onClick={() => moveToNext("install")} disabled={!environmentChecked || envLoading}>
+                        {t("environment.actions.next")}
+                        <ChevronRight className="ml-2 h-4 w-4" />
                       </Button>
                     </div>
-                  )}
+                  </CardContent>
+                </Card>
+              ) : null}
+
+              {step === "install" ? (
+                <div className="grid gap-5">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>{t("install.title")}</CardTitle>
+                      <CardDescription>{t("install.description")}</CardDescription>
+                    </CardHeader>
+                    <CardContent className="grid gap-4">
+                      <div className="rounded-xl border border-border bg-muted/20 p-4 text-sm text-muted-foreground">
+                        <p className="font-medium text-foreground">{t("install.notice.title")}</p>
+                        <p className="mt-1">{t("install.notice.description")}</p>
+                      </div>
+
+                      <div className="flex flex-wrap gap-3">
+                        <Button onClick={() => void handleInstall()} disabled={isInstalling}>
+                          {isInstalling ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Play className="mr-2 h-4 w-4" />}
+                          {t("install.actions.install")}
+                        </Button>
+                        <Button variant="outline" onClick={() => setStep("config")} disabled={!installSucceeded}>
+                          {t("install.actions.skipToConfig")}
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <InstallProgressCard progress={installProgress} />
+                  <InstallPhaseTimeline phases={phases} activePhaseId={installProgress.activePhaseId} />
+                  <InstallResultCard result={installResult} />
+                  {installResult?.issue ? <InstallIssueCard issue={installResult.issue} /> : null}
                 </div>
+              ) : null}
 
-                {providerStepError ? (
-                  <p className="rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
-                    {providerStepError}
-                  </p>
-                ) : null}
+              {step === "config" ? (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>{t("config.title")}</CardTitle>
+                    <CardDescription>{t("config.description")}</CardDescription>
+                  </CardHeader>
+                  <CardContent className="grid gap-5">
+                    {loadIssue ? (
+                      <div className="rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+                        <p className="font-medium">{loadIssue.message}</p>
+                        <p className="mt-1">{loadIssue.suggestion}</p>
+                        {usedDefaultValues ? <p className="mt-1 text-xs opacity-80">{t("config.defaultValues")}</p> : null}
+                      </div>
+                    ) : null}
 
-                <Badge variant={providerValidated ? "success" : "secondary"}>{providerValidated ? t("provider.state.validated") : t("provider.state.pending")}</Badge>
-              </div>
-            ) : null}
+                    {loadedPath ? (
+                      <p className="text-xs text-muted-foreground">
+                        {t("config.loadedPath")}
+                        <span className="ml-1 font-mono text-foreground">{loadedPath}</span>
+                      </p>
+                    ) : null}
 
-            {step === 3 ? (
-              <div className="space-y-4">
-                <Button onClick={() => void installAndStartGateway()} disabled={installing}>
-                  {installing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Play className="mr-2 h-4 w-4" />}
-                  {t("install.actions.install")}
-                </Button>
+                    <OpenAIConfigForm
+                      values={form}
+                      errors={errors}
+                      disabled={configBusy}
+                      presetId={openAiPresetId}
+                      onFieldChange={setField}
+                      onPresetChange={applyCompatiblePreset}
+                    />
 
-                <p className="rounded-lg border border-border bg-muted/20 px-3 py-2 text-sm text-muted-foreground">{installMessage}</p>
+                    <div className="flex flex-wrap gap-3">
+                      <Button variant="outline" onClick={() => void testConnection()} disabled={configBusy}>
+                        {isTesting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <ShieldCheck className="mr-2 h-4 w-4" />}
+                        {t("config.actions.test")}
+                      </Button>
+                      <Button onClick={() => void handleConfigSave()} disabled={configBusy}>
+                        {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CheckCircle2 className="mr-2 h-4 w-4" />}
+                        {t("config.actions.save")}
+                      </Button>
+                    </div>
 
-                {installError ? (
-                  <p className="rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
-                    {installError}
-                  </p>
-                ) : null}
+                    {testResult ? (
+                      <div className="rounded-xl border border-border bg-muted/20 p-4 text-sm">
+                        <p className="font-medium text-foreground">{testResult.detail}</p>
+                        <p className="mt-1 text-muted-foreground">{testResult.suggestion}</p>
+                      </div>
+                    ) : null}
 
-                <Badge variant={gatewayReady ? "success" : "secondary"}>{gatewayReady ? t("install.state.running") : t("install.state.pending")}</Badge>
-              </div>
-            ) : null}
+                    {saveResult ? (
+                      <div className="rounded-xl border border-border bg-muted/20 p-4 text-sm">
+                        <p className="font-medium text-foreground">{saveResult.detail}</p>
+                        <p className="mt-1 text-muted-foreground">{saveResult.suggestion}</p>
+                      </div>
+                    ) : null}
 
-            {step === 4 ? (
-              <div className="space-y-3 rounded-xl border border-green-500/20 bg-green-500/5 p-4">
-                <p className="flex items-center gap-2 text-sm font-medium text-green-700 dark:text-green-400">
-                  <CheckCircle2 className="h-4 w-4" />
-                  {t("complete.title")}
-                </p>
-                <p className="text-sm text-muted-foreground">{t("complete.description")}</p>
-              </div>
-            ) : null}
+                    <div className="flex items-center justify-between border-t border-border pt-4">
+                      <Button variant="outline" onClick={() => setStep("install")}>
+                        <ChevronLeft className="mr-2 h-4 w-4" />
+                        {t("actions.previous")}
+                      </Button>
+                      <Button onClick={() => setStep("gateway")} disabled={!configSucceeded}>
+                        {t("config.actions.next")}
+                        <ChevronRight className="ml-2 h-4 w-4" />
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ) : null}
 
-            <div className="flex items-center justify-between border-t border-border pt-4">
-              <Button variant="outline" onClick={() => setStep((current) => Math.max(0, current - 1))} disabled={step === 0}>
-                <ChevronLeft className="mr-1 h-4 w-4" />
-                {t("actions.previous")}
-              </Button>
+              {step === "gateway" ? (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>{t("gateway.title")}</CardTitle>
+                    <CardDescription>{t("gateway.description")}</CardDescription>
+                  </CardHeader>
+                  <CardContent className="grid gap-5">
+                    <div className="flex flex-wrap gap-2">
+                      <Badge variant={gatewayStatus?.running ? "success" : "secondary"}>
+                        {gatewayStatus?.running ? t("gateway.status.running") : t("gateway.status.pending")}
+                      </Badge>
+                      {gatewayStatus?.port ? <Badge variant="secondary">{t("gateway.meta.port", { value: gatewayStatus.port })}</Badge> : null}
+                      {gatewayStatus?.address ? <Badge variant="secondary">{gatewayStatus.address}</Badge> : null}
+                    </div>
 
-              {step < STEP_KEYS.length - 1 ? (
-                <Button onClick={() => setStep((current) => Math.min(STEP_KEYS.length - 1, current + 1))} disabled={!canNext}>
-                  {t("actions.next")}
-                  <ChevronRight className="ml-1 h-4 w-4" />
-                </Button>
-              ) : (
-                <Button onClick={finishSetup}>{t("actions.finish")}</Button>
-              )}
-            </div>
+                    <div className="rounded-xl border border-border bg-muted/20 p-4 text-sm text-muted-foreground">
+                      <p className="font-medium text-foreground">{gatewayStatus?.statusDetail ?? t("gateway.status.idle")}</p>
+                      <p className="mt-1">{gatewayStatus?.suggestion ?? t("gateway.status.helper")}</p>
+                    </div>
+
+                    {gatewayActionResult ? (
+                      <div className="rounded-xl border border-border bg-muted/20 p-4 text-sm">
+                        <p className="font-medium text-foreground">{gatewayActionResult.detail}</p>
+                        <p className="mt-1 text-muted-foreground">{gatewayActionResult.suggestion}</p>
+                      </div>
+                    ) : null}
+
+                    {gatewayError ? (
+                      <div className="rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+                        {gatewayError}
+                      </div>
+                    ) : null}
+
+                    <div className="flex flex-wrap gap-3">
+                      <Button onClick={() => void handleGatewayStart()} disabled={gatewayLoading || !configSucceeded}>
+                        {gatewayLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Play className="mr-2 h-4 w-4" />}
+                        {t("gateway.actions.start")}
+                      </Button>
+                      <Button variant="outline" onClick={() => void handleOpenDashboard()} disabled={!gatewaySucceeded}>
+                        {t("gateway.actions.openDashboard")}
+                      </Button>
+                    </div>
+
+                    <div className="flex items-center justify-between border-t border-border pt-4">
+                      <Button variant="outline" onClick={() => setStep("config")}>
+                        <ChevronLeft className="mr-2 h-4 w-4" />
+                        {t("actions.previous")}
+                      </Button>
+                      <Button onClick={() => setStep("complete")} disabled={!gatewaySucceeded}>
+                        {t("gateway.actions.next")}
+                        <ChevronRight className="ml-2 h-4 w-4" />
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ) : null}
+
+              {step === "complete" ? (
+                <Card className="border-green-500/20 bg-green-500/5">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2 text-green-700 dark:text-green-400">
+                      <CheckCircle2 className="h-5 w-5" />
+                      {t("complete.title")}
+                    </CardTitle>
+                    <CardDescription>{t("complete.description")}</CardDescription>
+                  </CardHeader>
+                  <CardContent className="grid gap-5">
+                    <div className="grid gap-2 rounded-xl border border-green-500/20 bg-background p-4 text-sm">
+                      <p className="font-medium text-foreground">{t("complete.summaryTitle")}</p>
+                      <p className="text-muted-foreground">{t("complete.summary")}</p>
+                      <div className="flex flex-wrap gap-2 pt-2">
+                        <Badge variant="success">{t("complete.badges.installReady")}</Badge>
+                        <Badge variant="success">{t("complete.badges.configReady")}</Badge>
+                        <Badge variant="success">{t("complete.badges.gatewayReady")}</Badge>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-wrap gap-3">
+                      <Button onClick={() => void handleOpenDashboard()} disabled={!gatewaySucceeded}>
+                        {t("complete.actions.openDashboard")}
+                      </Button>
+                      <Button variant="outline" onClick={finishSetup}>
+                        {t("complete.actions.enterApp")}
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ) : null}
+            </section>
           </CardContent>
         </Card>
+
+        {step === "environment" ? (
+          <Button variant="ghost" className="w-fit" onClick={() => setStep("install")} disabled={!environmentChecked}>
+            {t("environment.actions.nextShortcut")}
+            <ChevronRight className="ml-2 h-4 w-4" />
+          </Button>
+        ) : null}
       </div>
     </div>
   );

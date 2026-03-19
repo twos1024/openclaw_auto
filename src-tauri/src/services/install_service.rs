@@ -1,7 +1,6 @@
 use chrono::Utc;
 use serde::{Deserialize, Serialize};
 
-use crate::adapters::openclaw;
 use crate::adapters::platform;
 use crate::adapters::shell::{self, run_command, ShellOutput};
 use crate::models::error::AppError;
@@ -39,17 +38,11 @@ pub async fn install_openclaw() -> Result<InstallOpenClawData, AppError> {
     write_phase_event_to_install_log(
         "install-cli",
         "running",
-        "Installing OpenClaw CLI via npm global install.",
+        "Installing OpenClaw CLI via the official installer script.",
     );
 
-    let npm_program = openclaw::npm_program().to_string();
-    let install_args = vec![
-        "install".to_string(),
-        "-g".to_string(),
-        "openclaw@latest".to_string(),
-    ];
-    let install_step = "npm install -g openclaw@latest";
-    let install_output = match run_command(&npm_program, &install_args, INSTALL_TIMEOUT_MS).await {
+    let (install_program, install_args, install_step) = build_official_install_command();
+    let install_output = match run_command(&install_program, &install_args, INSTALL_TIMEOUT_MS).await {
         Ok(output) => output,
         Err(error) => {
             write_install_error_to_log(install_step, &error);
@@ -185,6 +178,115 @@ pub async fn install_openclaw() -> Result<InstallOpenClawData, AppError> {
     })
 }
 
+fn build_official_install_command() -> (String, Vec<String>, &'static str) {
+    // ClawDesk is a GUI app; the install path must be non-interactive. We skip OpenClaw
+    // onboarding here because ClawDesk configures the gateway separately.
+    let no_onboard = std::env::var("OPENCLAW_NO_ONBOARD")
+        .ok()
+        .map(|v| v.trim() != "0")
+        .unwrap_or(true);
+
+    let version = std::env::var("OPENCLAW_VERSION")
+        .ok()
+        .map(|v| v.trim().to_string())
+        .filter(|v| !v.is_empty())
+        .unwrap_or_else(|| "latest".to_string());
+
+    if cfg!(windows) {
+        let method = std::env::var("OPENCLAW_INSTALL_METHOD")
+            .ok()
+            .map(|v| v.trim().to_string())
+            .filter(|v| !v.is_empty())
+            .unwrap_or_else(|| "npm".to_string());
+        let mut flags = Vec::new();
+        flags.push(format!("-Tag {}", sanitize_ps_arg(&version)));
+        flags.push(format!("-InstallMethod {}", sanitize_ps_arg(&method)));
+        if no_onboard {
+            flags.push("-NoOnboard".to_string());
+        }
+        let command = format!(
+            "& ([scriptblock]::Create((iwr -useb https://openclaw.ai/install.ps1))) {}",
+            flags.join(" ")
+        );
+        return (
+            "powershell".to_string(),
+            vec![
+                "-NoProfile".to_string(),
+                "-ExecutionPolicy".to_string(),
+                "Bypass".to_string(),
+                "-Command".to_string(),
+                command,
+            ],
+            "powershell install.ps1",
+        );
+    }
+
+    // macOS/Linux/WSL: use the official local-prefix installer (no root required).
+    // This avoids relying on system Node/npm and produces a deterministic wrapper at <prefix>/bin/openclaw.
+    let mut args = vec![
+        "--version".to_string(),
+        version,
+        "--json".to_string(),
+    ];
+    if no_onboard {
+        args.insert(0, "--no-onboard".to_string());
+    } else {
+        args.push("--onboard".to_string());
+    }
+
+    let arg_str = args
+        .into_iter()
+        .map(|a| shell_quote_bash(&a))
+        .collect::<Vec<_>>()
+        .join(" ");
+    let command = format!(
+        "curl -fsSL --proto '=https' --tlsv1.2 https://openclaw.ai/install-cli.sh | bash -s -- {}",
+        arg_str
+    );
+
+    (
+        "bash".to_string(),
+        vec!["-lc".to_string(), command],
+        "bash install-cli.sh",
+    )
+}
+
+fn sanitize_ps_arg(value: &str) -> String {
+    // Only allow a conservative set to avoid accidental PowerShell injection.
+    // Expected values: latest/main/beta/semver, npm/git.
+    let trimmed = value.trim();
+    let mut out = String::new();
+    for ch in trimmed.chars() {
+        if ch.is_ascii_alphanumeric() || ch == '-' || ch == '_' || ch == '.' {
+            out.push(ch);
+        }
+    }
+    if out.is_empty() {
+        "latest".to_string()
+    } else {
+        out
+    }
+}
+
+fn shell_quote_bash(value: &str) -> String {
+    // Single-quote safe bash literal.
+    if value.is_empty() {
+        return "''".to_string();
+    }
+    if !value.contains('\'') {
+        return format!("'{}'", value);
+    }
+    let parts = value.split('\'').collect::<Vec<_>>();
+    let mut out = String::new();
+    for (idx, part) in parts.iter().enumerate() {
+        if idx > 0 {
+            out.push_str("'\\''");
+        }
+        out.push_str(&format!("'{}'", part));
+    }
+    out
+}
+
 fn write_shell_output_to_install_log(step: &str, output: &ShellOutput) {
     append_install_log_line(
         LogSource::Install,
@@ -240,8 +342,8 @@ pub struct TerminalInstallData {
     pub message: String,
 }
 
-/// Opens a new, persistent terminal window that runs
-/// `npm install -g openclaw@latest` with full live output visible to the user.
+/// Opens a new, persistent terminal window that runs the official OpenClaw
+/// installer script with full live output visible to the user.
 /// Returns immediately after the window is opened — the install itself runs
 /// asynchronously inside the terminal.
 ///
@@ -256,14 +358,8 @@ pub async fn install_openclaw_with_terminal() -> Result<TerminalInstallData, App
         ),
     );
 
-    let npm_program = openclaw::npm_program().to_string();
-    let install_args = vec![
-        "install".to_string(),
-        "-g".to_string(),
-        "openclaw@latest".to_string(),
-    ];
-
-    shell::run_in_visible_terminal(&npm_program, &install_args, "OpenClaw Installer").await?;
+    let (install_program, install_args, _install_step) = build_official_install_command();
+    shell::run_in_visible_terminal(&install_program, &install_args, "OpenClaw Installer").await?;
 
     append_install_log_line(
         LogSource::Install,

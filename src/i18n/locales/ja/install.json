@@ -2,8 +2,8 @@
   "page": {
     "hero": {
       "title": "OpenClaw をインストール",
-      "description": "まずインストールを完了し、次に API Key を入力して、最後に Gateway を起動します。新規導入に必要な流れを一画面にまとめています。",
-      "meta": "Platform: {{platform}} / {{architecture}}",
+      "description": "環境を確認し、公式インストーラーで OpenClaw を導入し、API Key を設定してから Gateway を起動します。新規導入に必要な流れを一画面にまとめています。",
+      "meta": "プラットフォーム: {{platform}} / {{architecture}}",
       "action": "インストーラーを開く"
     },
     "nextStep": {
@@ -28,8 +28,8 @@
         "actionLabel": "API Key を設定"
       },
       "env": {
-        "title": "npm を先に用意",
-        "description": "先に Node.js / npm をインストールしてから、ここに戻って環境を更新してください。",
+        "title": "環境を更新",
+        "description": "公式インストーラーは必要に応じて Node.js / npm を自動導入できるため、いつでも更新できます。",
         "actionLabel": "環境を更新"
       },
       "start": {
@@ -45,7 +45,7 @@
       },
       "order": {
         "title": "インストール順序",
-        "description": "まず OpenClaw をインストールし、Config で API Key を入力して保存し、Service で Gateway を起動します。"
+        "description": "まず OpenClaw をインストールし、設定ページで API Key を入力して保存し、サービスページで Gateway を起動します。"
       }
     },
     "runbook": {
@@ -57,18 +57,22 @@
     "title": "インストール準備",
     "description": "インストールを始める前に、ローカル環境と OpenClaw の検出状態を確認します。",
     "pills": {
-      "npmReady": "npm Ready",
-      "npmMissing": "npm Missing",
-      "openclawInstalled": "OpenClaw Installed",
-      "openclawMissing": "OpenClaw Missing"
+      "nodeReady": "Node.js 準備完了",
+      "nodeMissing": "Node.js 未検出",
+      "npmReady": "npm 準備完了",
+      "npmMissing": "npm 未検出",
+      "openclawInstalled": "OpenClaw インストール済み",
+      "openclawMissing": "OpenClaw 未インストール"
     },
     "labels": {
-      "platform": "Platform",
-      "homeDir": "Home Dir",
-      "configPath": "Config Path",
-      "npmVersion": "npm Version",
-      "openclawPath": "OpenClaw Path",
-      "openclawVersion": "OpenClaw Version"
+      "platform": "プラットフォーム",
+      "homeDir": "ホームディレクトリ",
+      "configPath": "設定パス",
+      "nodeVersion": "Node.js バージョン",
+      "nodePath": "Node.js パス",
+      "npmVersion": "npm バージョン",
+      "openclawPath": "OpenClaw パス",
+      "openclawVersion": "OpenClaw バージョン"
     }
   },
   "actions": {
@@ -84,8 +88,9 @@
     "npmRequired": "npm Required",
     "previewMode": "ブラウザのプレビュー モードではインストールが無効です。ClawDesk デスクトップアプリまたは `npm run tauri:dev` を使ってローカルインストールしてください。",
     "runtimeUnavailable": "デスクトップのコマンドブリッジが利用できないため、インストールは無効です。まず Tauri ランタイム統合を修正してください。",
-    "npmMissing": "npm が検出されないため、インストールは無効です。Node.js / npm を先に導入して、環境チェックを更新してください。",
-    "installHint": "\"インストールを開始\" をクリックすると、バックグラウンドでインストールが進みます。完了すると結果が表示されます。"
+    "npmMissing": "Node.js / npm が検出されていませんが、公式インストーラーが自動で補完します。",
+    "bootstrapHint": "公式インストーラーは Node.js / npm を自動で補完できるため、そのまま続行できます。",
+    "installHint": "\"OpenClaw をインストール\" をクリックすると、バックグラウンドでインストールが進みます。完了すると結果が表示されます。"
   },
   "issue": {
     "title": "インストールで問題が発生しました",
@@ -120,7 +125,7 @@
     "titleWarning": "インストールはほぼ完了しました",
     "titleFailure": "インストールで問題が発生しました",
     "hintSuccess": "OpenClaw は準備完了です。次に API Key を入力すればサービスを起動できます。",
-    "hintWarning": "コアコンポーネントは正常にインストールされました。まず API Key を入力し、その後は Service ページで残りの手順を進めてください。",
+    "hintWarning": "コアコンポーネントは正常にインストールされました。まず API Key を入力し、その後はサービスページで残りの手順を進めてください。",
     "hintFailure": "インストール中に問題が発生しました。ログを確認し、修正してから再度インストールしてください。"
   },
   "wizard": {
@@ -135,7 +140,7 @@
     },
     "after": {
       "title": "インストール後の進め方",
-      "description": "1. Provider 設定を保存して API Key を入力します。2. Gateway を起動します。3. Dashboard を開いて使い始めます。"
+      "description": "1. 設定を保存して API Key を入力します。2. Gateway を起動します。3. Dashboard を開いて使い始めます。"
     },
     "platform": {
       "title": "お使いのシステムに合わせて確認",
@@ -163,10 +168,10 @@
     }
   },
   "platform": {
-    "title": "Platform Guidance",
+    "title": "プラットフォームガイド",
     "description": "Windows、macOS、Linux では同じ製品フローですが、コマンドパス、権限モデル、トラブルシュートの重点が異なります。",
-    "current": "Current",
-    "install": "Install:",
-    "pathHint": "Path Hint:"
+    "current": "現在のシステム",
+    "install": "インストール方法：",
+    "pathHint": "パスのヒント："
   }
 }

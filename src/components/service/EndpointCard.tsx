@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import type { GatewayStatus } from "../../services/serviceService";
 
 export interface EndpointCardProps {
@@ -10,6 +11,7 @@ function valueOrDash(value: string | number | null): string {
 }
 
 export function EndpointCard({ status }: EndpointCardProps): JSX.Element {
+  const { t } = useTranslation("service");
   const port = status?.port ?? null;
   const address = status?.address ?? (port ? `http://127.0.0.1:${port}` : null);
   const lastStartedAt = status?.lastStartedAt
@@ -25,19 +27,18 @@ export function EndpointCard({ status }: EndpointCardProps): JSX.Element {
         padding: 16,
       }}
     >
-      <h3 style={{ marginTop: 0, marginBottom: 12 }}>Gateway Endpoint</h3>
+      <h3 style={{ marginTop: 0, marginBottom: 12 }}>{t("endpoint.title")}</h3>
       <div style={{ display: "grid", gap: 8 }}>
         <p style={{ margin: 0 }}>
-          <strong>Port:</strong> {valueOrDash(port)}
+          <strong>{t("endpoint.port")}:</strong> {valueOrDash(port)}
         </p>
         <p style={{ margin: 0 }}>
-          <strong>Address:</strong> {valueOrDash(address)}
+          <strong>{t("endpoint.address")}:</strong> {valueOrDash(address)}
         </p>
         <p style={{ margin: 0 }}>
-          <strong>Last Started:</strong> {valueOrDash(lastStartedAt)}
+          <strong>{t("endpoint.lastStarted")}:</strong> {valueOrDash(lastStartedAt)}
         </p>
       </div>
     </section>
   );
 }
-
