@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import type { OverviewAction } from "../../types/status";
 
 export interface OverviewActionListProps {
@@ -12,6 +13,7 @@ export function OverviewActionList({
   actionLoadingId,
   onAction,
 }: OverviewActionListProps): JSX.Element {
+  const { t } = useTranslation("overview");
   return (
     <section
       style={{
@@ -22,11 +24,11 @@ export function OverviewActionList({
         display: "grid",
         gap: 12,
       }}
-    >
+      >
       <div>
-        <h3 style={{ margin: 0, color: "#0f172a" }}>下一步</h3>
+        <h3 style={{ margin: 0, color: "#0f172a" }}>{t("actionList.title")}</h3>
         <p style={{ margin: "6px 0 0", color: "#64748b" }}>
-          按当前状态只做最前面的那一步，做完再继续下一项。
+          {t("actionList.description")}
         </p>
       </div>
 
@@ -68,7 +70,7 @@ export function OverviewActionList({
                     opacity: actionLoadingId === action.id ? 0.7 : 1,
                   }}
                   >
-                    {actionLoadingId === action.id ? "处理中..." : action.label}
+                    {actionLoadingId === action.id ? t("actionList.processing") : action.label}
                   </button>
                 ) : (
                   <Link
@@ -100,8 +102,8 @@ export function OverviewActionList({
                     fontWeight: 600,
                     background: "#ffffff",
                   }}
-                >
-                  Dashboard
+                  >
+                  {t("actionList.dashboard")}
                 </Link>
               ) : null}
             </div>

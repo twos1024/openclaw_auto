@@ -1,21 +1,21 @@
 export interface PlaceholderPageProps {
   title: string;
   description: string;
+  hint?: string;
 }
 
-export function PlaceholderPage({ title, description }: PlaceholderPageProps): JSX.Element {
+export function PlaceholderPage({ title, description, hint }: PlaceholderPageProps): JSX.Element {
   return (
-    <section
-      style={{
-        border: "1px solid #e2e8f0",
-        borderRadius: 12,
-        background: "#ffffff",
-        padding: 16,
-      }}
-    >
-      <h2 style={{ marginTop: 0 }}>{title}</h2>
-      <p style={{ color: "#475569", marginBottom: 0 }}>{description}</p>
+    <section className="rounded-3xl border border-border bg-card p-6 shadow-sm">
+      <div className="space-y-2">
+        <h2 className="text-xl font-semibold text-foreground">{title}</h2>
+        <p className="max-w-2xl text-sm leading-6 text-muted-foreground">{description}</p>
+        {hint ? (
+          <p className="rounded-2xl border border-dashed border-border bg-muted/30 px-4 py-3 text-sm text-muted-foreground">
+            {hint}
+          </p>
+        ) : null}
+      </div>
     </section>
   );
 }
-

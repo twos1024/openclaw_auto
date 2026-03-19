@@ -1,0 +1,81 @@
+{
+  "title": "设置",
+  "description": "Gateway 管理、运行环境和应用偏好配置",
+  "preferencesTitle": "界面偏好",
+  "preferencesDescription": "主题、语言和首次启动引导状态",
+  "themeDescription": "支持浅色、深色与跟随系统三档模式。",
+  "languageDescription": "切换界面显示语言，当前仅完成基础骨架。",
+  "themeLight": "浅色",
+  "themeDark": "深色",
+  "themeSystem": "跟随系统",
+  "languageZh": "简体中文",
+  "languageEn": "English",
+  "languageJa": "日本語",
+  "gateway": {
+    "title": "Gateway 服务",
+    "description": "管理 OpenClaw 网关进程的启停状态",
+    "status": {
+      "running": "运行中",
+      "stopped": "已停止",
+      "starting": "启动中...",
+      "stopping": "停止中...",
+      "error": "错误",
+      "unknown": "未知",
+      "checking": "查询中..."
+    },
+    "labels": {
+      "port": "端口",
+      "pid": "PID",
+      "address": "服务地址"
+    },
+    "actions": {
+      "start": "启动 Gateway",
+      "restart": "重启",
+      "stop": "停止"
+    }
+  },
+  "app": {
+    "title": "应用设置",
+    "description": "轮询间隔、日志、诊断目录等配置",
+    "fields": {
+      "gatewayPollMs": "Gateway 轮询间隔 (ms)",
+      "logLineLimit": "日志行数限制",
+      "diagnosticsDir": "诊断目录",
+      "diagnosticsDirHint": "留空使用默认目录"
+    },
+    "validation": {
+      "gatewayPollMsRange": "Gateway 轮询间隔须在 1000-60000 ms 之间",
+      "logLineLimitRange": "日志行数须在 50-5000 之间",
+      "saveFailed": "保存失败，请重试"
+    },
+    "actions": {
+      "saving": "保存中...",
+      "saved": "已保存",
+      "save": "保存设置"
+    }
+  },
+  "preferences": {
+    "setupBadge": {
+      "complete": "Setup 已完成",
+      "incomplete": "Setup 未完成"
+    },
+    "wizard": {
+      "title": "Setup Wizard 已完成",
+      "description": "这个开关会写入持久化状态，后续可直接给首次引导判断使用。"
+    }
+  },
+  "environment": {
+    "title": "运行环境",
+    "description": "Node.js、npm、OpenClaw CLI 检测结果",
+    "status": {
+      "checking": "检测环境中...",
+      "failed": "环境检测失败",
+      "notFound": "未找到"
+    },
+    "labels": {
+      "platform": "平台",
+      "npm": "npm",
+      "openclawCli": "OpenClaw CLI"
+    }
+  }
+}

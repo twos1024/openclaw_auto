@@ -1,0 +1,28 @@
+{
+  "page": {
+    "title": "Plugin Market",
+    "description": "{{count}} plugins · {{installed}} installed",
+    "descriptionEmpty": "Browse and install plugin extensions"
+  },
+  "toolbar": {
+    "searchPlaceholder": "Search plugins...",
+    "market": "ClawHub"
+  },
+  "status": {
+    "loading": "Loading..."
+  },
+  "empty": {
+    "titleSearch": "No matching plugins",
+    "titleDefault": "Plugin Market",
+    "descriptionSearch": "Try another keyword",
+    "descriptionDefault": "Available plugins will appear after Gateway starts"
+  },
+  "card": {
+    "installed": "Installed",
+    "downloads": "{{formatted}} downloads",
+    "actions": {
+      "install": "Install",
+      "uninstall": "Uninstall"
+    }
+  }
+}

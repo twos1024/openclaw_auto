@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { useSetupAssistant } from "../../hooks/useSetupAssistant";
 import { ModalDialog } from "../common/ModalDialog";
 import { RunbookLaunchChecks } from "../runbook/RunbookLaunchChecks";
@@ -9,6 +10,7 @@ export interface SetupAssistantDialogProps {
 }
 
 export function SetupAssistantDialog({ open, onClose }: SetupAssistantDialogProps): JSX.Element | null {
+  const { t } = useTranslation("runbook");
   const { model, isLoading, errorText, refresh } = useSetupAssistant(open);
   const footerAction = model?.currentBlocker
     ? { route: model.currentBlocker.route, label: model.currentBlocker.actionLabel }
@@ -18,7 +20,7 @@ export function SetupAssistantDialog({ open, onClose }: SetupAssistantDialogProp
 
   return (
     <ModalDialog
-      title="OpenClaw 设置助手"
+      title={t("assistant.title")}
       open={open}
       onClose={onClose}
       width={920}
@@ -37,7 +39,7 @@ export function SetupAssistantDialog({ open, onClose }: SetupAssistantDialogProp
               cursor: "pointer",
             }}
           >
-            重新检查
+            {t("assistant.refresh")}
           </button>
           {footerAction ? (
             <Link
@@ -58,7 +60,7 @@ export function SetupAssistantDialog({ open, onClose }: SetupAssistantDialogProp
         </>
       }
     >
-      {isLoading ? <p style={{ margin: 0, color: "#475569" }}>正在读取当前步骤...</p> : null}
+      {isLoading ? <p style={{ margin: 0, color: "#475569" }}>{t("assistant.loading")}</p> : null}
       {errorText ? (
         <section
           style={{
@@ -72,7 +74,7 @@ export function SetupAssistantDialog({ open, onClose }: SetupAssistantDialogProp
           {errorText}
         </section>
       ) : null}
-          {model ? (
+      {model ? (
         <>
           <section
             style={{
@@ -88,11 +90,12 @@ export function SetupAssistantDialog({ open, onClose }: SetupAssistantDialogProp
             <p style={{ margin: 0, color: "#475569" }}>{model.summary}</p>
             {model.currentBlocker ? (
               <p style={{ margin: 0, fontSize: 13, color: "#64748b" }}>
-                当前先处理：{model.currentBlocker.title}
+                {t("assistant.currentBlocker")}
+                {model.currentBlocker.title}
               </p>
             ) : null}
             <p style={{ margin: 0, fontSize: 12, color: "#64748b" }}>
-              检查时间：{new Date(model.lastCheckedAt).toLocaleString()}
+              {t("assistant.checkedAt")}{new Date(model.lastCheckedAt).toLocaleString()}
             </p>
           </section>
 

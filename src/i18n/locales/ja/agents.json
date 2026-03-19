@@ -1,0 +1,101 @@
+{
+  "page": {
+    "title": "エージェント管理",
+    "description": "エージェント、モデル、チャネル、実行状況を一元管理します。",
+    "stats": "合計 {{total}} 件、稼働中 {{running}} 件"
+  },
+  "actions": {
+    "searchPlaceholder": "エージェントを検索",
+    "create": "エージェント作成",
+    "loading": "エージェントを読み込み中...",
+    "start": "開始",
+    "stop": "停止",
+    "confirmDelete": "エージェント「{{name}}」を削除しますか？"
+  },
+  "state": {
+    "running": "稼働中",
+    "stopped": "停止中"
+  },
+  "empty": {
+    "title": "まだエージェントがありません",
+    "description": "まずエージェントを作成し、モデルとチャネルを割り当てます。",
+    "cta": "最初のエージェントを作成"
+  },
+  "card": {
+    "conversations": "会話 {{count}} 回",
+    "tokens": "トークン {{value}}"
+  },
+  "wizard": {
+    "title": "エージェントを作成",
+    "steps": {
+      "name": "名前",
+      "identity": "プロンプト",
+      "model": "モデル",
+      "channel": "チャネル"
+    },
+    "stepName": {
+      "description": "識別しやすい名前を付けてください。",
+      "placeholder": "例: サポートアシスタント"
+    },
+    "stepPrompt": {
+      "description": "テンプレートを選ぶか、システムプロンプトを直接編集します。",
+      "placeholder": "システムプロンプトを入力",
+      "templates": {
+        "general": "あなたはプロフェッショナルなアシスタントです。簡潔で正確に回答してください。",
+        "code": "あなたは熟練エンジニアです。実行可能なコードと手順を優先してください。",
+        "translation": "あなたは高品質な翻訳アシスタントです。意味を保ちつつ自然な表現にしてください。",
+        "support": "あなたはサポート担当です。まず問題を特定し、明確な解決策を示してください。"
+      }
+    },
+    "stepModel": {
+      "description": "モデルを選択するか、カスタムモデル情報を入力します。",
+      "customLabel": "カスタムモデル",
+      "customModelIdPlaceholder": "モデル ID 例: gpt-4.1",
+      "customModelNamePlaceholder": "モデル名 例: GPT-4.1",
+      "customModelNameDefault": "カスタムモデル",
+      "models": {
+        "gpt_4o": "GPT-4o",
+        "gpt_4o_mini": "GPT-4o mini",
+        "gpt_4_1": "GPT-4.1",
+        "claude_sonnet_4_5": "Claude Sonnet 4.5",
+        "claude_opus_4_1": "Claude Opus 4.1",
+        "deepseek_chat": "DeepSeek Chat",
+        "qwen_max_latest": "Qwen Max Latest"
+      },
+      "temperatureLabel": "温度: {{value}}",
+      "temperatureHint": "値が高いほど、出力は多様になります。"
+    },
+    "stepChannel": {
+      "description": "チャネル種別を選び、接続設定を入力します。",
+      "channels": {
+        "openclaw": {
+          "label": "OpenClaw",
+          "description": "既定構成のローカル OpenClaw ゲートウェイに接続します。"
+        },
+        "openai-compatible": {
+          "label": "OpenAI 互換",
+          "description": "OpenAI API 互換サービスに接続します。"
+        },
+        "custom": {
+          "label": "カスタム",
+          "description": "独自プロトコルやカスタム連携を使用します。"
+        }
+      },
+      "apiKeyLabel": "API キー",
+      "apiKeyPlaceholder": "キー参照または API キーを入力",
+      "endpointLabel": "エンドポイント",
+      "endpointPlaceholderOpenclaw": "空欄の場合は既定のゲートウェイアドレスを使用します",
+      "endpointPlaceholderOther": "サービス URL を入力してください。例: https://api.example.com"
+    },
+    "footer": {
+      "cancel": "キャンセル",
+      "previous": "前へ",
+      "next": "次へ",
+      "create": "エージェント作成",
+      "creating": "作成中..."
+    },
+    "errors": {
+      "createFailed": "エージェントの作成に失敗しました。もう一度お試しください。"
+    }
+  }
+}

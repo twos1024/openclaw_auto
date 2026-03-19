@@ -1,0 +1,66 @@
+{
+  "header": {
+    "loading": "Loading",
+    "error": "Overview unavailable",
+    "preview": "Browser preview",
+    "runtimeUnavailable": "Desktop runtime error",
+    "title": "OpenClaw Overview"
+  },
+  "description": {
+    "preview": "This is a browser preview. It shows structure only and does not reflect the real local state.",
+    "runtimeUnavailable": "You are already in the desktop window, but the frontend has not connected to the runtime bridge yet. Fix that before continuing with install and configuration.",
+    "default": "This page shows which step you should do next."
+  },
+  "actions": {
+    "refresh": "Reload"
+  },
+  "errors": {
+    "loadFailed": "Failed to load overview status."
+  },
+  "feedback": {
+    "dashboardOpened": "Dashboard opened."
+  },
+  "home": {
+    "loading": {
+      "title": "Preparing setup guidance",
+      "description": "Checking which step you should do first."
+    },
+    "error": {
+      "title": "Unable to enter setup guidance",
+      "description": "We could not determine the next step. You can open the overview or install page first."
+    },
+    "actions": {
+      "overview": "Open overview",
+      "installWizard": "Open install wizard"
+    }
+  },
+  "actionList": {
+    "title": "Next step",
+    "description": "Only do the first item that matches the current state, then continue to the next one.",
+    "processing": "Processing...",
+    "dashboard": "Dashboard"
+  },
+  "level": {
+    "healthy": "Healthy",
+    "degraded": "Degraded",
+    "offline": "Offline",
+    "unknown": "Unknown"
+  },
+  "summary": {
+    "title": "System Health",
+    "fields": {
+      "appVersion": "App Version",
+      "platform": "Platform",
+      "dashboard": "Dashboard"
+    }
+  },
+  "section": {
+    "updated": "Updated:"
+  },
+  "sidebar": {
+    "brand": "OpenClaw",
+    "confirmDelete": "Confirm",
+    "deleteSession": "Delete session",
+    "appDisplay": "OpenClaw Manager"
+  }
+}

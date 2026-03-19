@@ -9,7 +9,10 @@ export default [
       "dist/**",
       "node_modules/**",
       "src-tauri/target/**",
-      ".github/**"
+      ".github/**",
+      "tests/manual/**",
+      "output/**",
+      ".claude/**"
     ],
   },
   js.configs.recommended,
@@ -48,4 +51,3 @@ export default [
     },
   },
 ];
-

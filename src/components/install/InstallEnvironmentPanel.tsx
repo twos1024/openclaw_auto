@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import type { InstallEnvironment } from "../../types/install";
 
 function EnvRow(props: { label: string; value: string | null | undefined }): JSX.Element {
@@ -47,6 +48,7 @@ export function InstallEnvironmentPanel({
   onRefresh,
   onInstall,
 }: InstallEnvironmentPanelProps): JSX.Element {
+  const { t } = useTranslation(["common", "install"]);
   const installBlockedByRuntime = runtimeBlockMode !== null;
   const installBlocked = installBlockedByEnv || installBlockedByRuntime;
 
@@ -62,27 +64,25 @@ export function InstallEnvironmentPanel({
       }}
     >
       <div style={{ display: "grid", gap: 6 }}>
-        <h3 style={{ margin: 0 }}>安装准备</h3>
-        <p style={{ margin: 0, color: "#64748b" }}>
-          先确认本机环境和 OpenClaw 检测状态，再启动安装流程。
-        </p>
+        <h3 style={{ margin: 0 }}>{t("install:environment.title")}</h3>
+        <p style={{ margin: 0, color: "#64748b" }}>{t("install:environment.description")}</p>
       </div>
 
       <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-        <StatusPill label={environment?.npmFound ? "npm Ready" : "npm Missing"} ok={Boolean(environment?.npmFound)} />
+        <StatusPill label={environment?.npmFound ? t("install:environment.pills.npmReady") : t("install:environment.pills.npmMissing")} ok={Boolean(environment?.npmFound)} />
         <StatusPill
-          label={environment?.openclawFound ? "OpenClaw Installed" : "OpenClaw Missing"}
+          label={environment?.openclawFound ? t("install:environment.pills.openclawInstalled") : t("install:environment.pills.openclawMissing")}
           ok={Boolean(environment?.openclawFound)}
         />
       </div>
 
       <div style={{ display: "grid", gap: 8 }}>
-        <EnvRow label="Platform" value={environment ? `${environment.platform} / ${environment.architecture}` : null} />
-        <EnvRow label="Home Dir" value={environment?.homeDir} />
-        <EnvRow label="Config Path" value={environment?.configPath} />
-        <EnvRow label="npm Version" value={environment?.npmVersion} />
-        <EnvRow label="OpenClaw Path" value={environment?.openclawPath} />
-        <EnvRow label="OpenClaw Version" value={environment?.openclawVersion} />
+        <EnvRow label={t("install:environment.labels.platform")} value={environment ? `${environment.platform} / ${environment.architecture}` : null} />
+        <EnvRow label={t("install:environment.labels.homeDir")} value={environment?.homeDir} />
+        <EnvRow label={t("install:environment.labels.configPath")} value={environment?.configPath} />
+        <EnvRow label={t("install:environment.labels.npmVersion")} value={environment?.npmVersion} />
+        <EnvRow label={t("install:environment.labels.openclawPath")} value={environment?.openclawPath} />
+        <EnvRow label={t("install:environment.labels.openclawVersion")} value={environment?.openclawVersion} />
       </div>
 
       <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
@@ -101,7 +101,7 @@ export function InstallEnvironmentPanel({
             opacity: isLoading || isInstalling ? 0.6 : 1,
           }}
         >
-          {isLoading ? "Refreshing..." : "Refresh Environment"}
+          {isLoading ? t("install:actions.refreshing") : t("install:actions.refreshEnvironment")}
         </button>
 
         <button
@@ -120,14 +120,14 @@ export function InstallEnvironmentPanel({
           }}
         >
           {isInstalling
-            ? "Installing..."
+            ? t("install:actions.installing")
             : runtimeBlockMode === "preview"
-              ? "Desktop Runtime Required"
+              ? t("install:status.desktopRuntimeRequired")
               : installBlockedByRuntime
-              ? "Desktop Bridge Required"
+              ? t("install:status.desktopBridgeRequired")
               : installBlockedByEnv
-                ? "npm Required"
-                : "Install OpenClaw"}
+                ? t("install:status.npmRequired")
+                : t("install:actions.install")}
         </button>
 
         <Link
@@ -144,25 +144,25 @@ export function InstallEnvironmentPanel({
             background: "#ffffff",
           }}
         >
-          Open Logs
+          {t("install:actions.openLogs")}
         </Link>
       </div>
 
       {runtimeBlockMode === "preview" ? (
         <p style={{ margin: 0, fontSize: 13, color: "#92400e" }}>
-          当前为浏览器预览模式，安装按钮已禁用。请使用 ClawDesk 桌面应用或 `npm run tauri:dev` 再执行本机安装。
+          {t("install:status.previewMode")}
         </p>
       ) : installBlockedByRuntime ? (
         <p style={{ margin: 0, fontSize: 13, color: "#991b1b" }}>
-          当前桌面命令桥不可用，安装按钮已禁用。请先修复 Tauri 运行时集成，再继续执行本机安装。
+          {t("install:status.runtimeUnavailable")}
         </p>
       ) : installBlockedByEnv ? (
         <p style={{ margin: 0, fontSize: 13, color: "#92400e" }}>
-          当前未检测到 npm，安装按钮已禁用。请先安装 Node.js / npm，然后刷新环境检查。
+          {t("install:status.npmMissing")}
         </p>
       ) : (
         <p style={{ margin: 0, fontSize: 13, color: "#475569" }}>
-          点击"开始安装"后，安装会在后台自动进行，完成后将显示安装结果。
+          {t("install:status.installHint")}
         </p>
       )}
     </section>

@@ -29,7 +29,8 @@ pub fn check_admin_status() -> AdminStatusData {
             detail: if elevated {
                 "ClawDesk 正在以管理员权限运行。".to_string()
             } else {
-                "ClawDesk 未以管理员权限运行。部分功能（如安装 Gateway 系统服务）需要管理员权限。".to_string()
+                "ClawDesk 未以管理员权限运行。部分功能（如安装 Gateway 系统服务）需要管理员权限。"
+                    .to_string()
             },
             suggestion: if elevated {
                 "权限已满足，可以正常使用所有功能。".to_string()

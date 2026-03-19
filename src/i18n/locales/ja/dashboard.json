@@ -1,0 +1,67 @@
+{
+  "title": "Dashboard 診断",
+  "description": "現在の埋め込みフェーズ、エンドポイント情報、そしてこのプラットフォームでのトラブルシュート重点を確認します。",
+  "embedPhase": "埋め込みフェーズ: {{value}}",
+  "phase": {
+    "loading": "読み込み中",
+    "loaded": "読み込み済み",
+    "timeout": "タイムアウト",
+    "blocked": "ブロック済み",
+    "unavailable": "利用不可"
+  },
+  "tone": {
+    "healthy": "正常",
+    "warning": "警告",
+    "error": "エラー",
+    "neutral": "保留"
+  },
+  "recommendedAction": {
+    "title": "推奨される次の操作",
+    "next": "次へ"
+  },
+  "platform": {
+    "label": "プラットフォーム",
+    "unknown": "不明"
+  },
+  "diagnostics": {
+    "platformNoteFallback": "埋め込みページの読み込みに失敗した場合は、まず Gateway の状態、iframe のセキュリティポリシー、ローカルポートの接続を確認してください。",
+    "probing": "Dashboard エンドポイントを確認中..."
+  },
+  "toolbar": {
+    "statusWaiting": "Gateway の状態を待機中...",
+    "title": "埋め込み Dashboard",
+    "endpoint": "エンドポイント：",
+    "refreshStatus": "状態を更新",
+    "refreshing": "更新中...",
+    "reloadFrame": "フレームを再読み込み",
+    "restartGateway": "Gateway を再起動",
+    "restarting": "再起動中...",
+    "openExternal": "外部で開く",
+    "opening": "起動中..."
+  },
+  "frame": {
+    "title": "OpenClaw Dashboard",
+    "loadingAria": "Dashboard loading",
+    "actions": {
+      "reloadFrame": "フレームを再読み込み",
+      "openExternal": "外部で開く",
+      "restartGateway": "Gateway を再起動",
+      "openSetupAssistant": "セットアップアシスタントを開く"
+    }
+  },
+  "unavailable": {
+    "title": "Dashboard を利用できません",
+    "description": "Gateway がまだ利用可能な状態ではないため、埋め込み Dashboard を読み込めません。",
+    "actions": {
+      "starting": "起動中...",
+      "start": "Gateway を起動",
+      "setupAssistant": "セットアップアシスタントを開く"
+    }
+  },
+  "adminBanner": {
+    "title": "管理者権限で実行されていません",
+    "relaunching": "昇格して再起動中...",
+    "relaunch": "管理者として再起動",
+    "closeLabel": "通知を閉じる"
+  }
+}

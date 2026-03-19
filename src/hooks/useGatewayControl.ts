@@ -45,6 +45,7 @@ export function useGatewayControl(pollMs = 5000): UseGatewayControlResult {
   });
 
   const unmountedRef = useRef<boolean>(false);
+  const refreshInFlightRef = useRef<Promise<GatewayStatus | null> | null>(null);
   const actionLockRef = useRef<Record<"start" | "stop" | "restart" | "openDashboard", boolean>>({
     start: false,
     stop: false,
@@ -53,14 +54,25 @@ export function useGatewayControl(pollMs = 5000): UseGatewayControlResult {
   });
 
   const refreshStatus = useCallback(async () => {
-    setIsRefreshing(true);
-    const next = await safeRun(() => serviceService.getGatewayStatus());
-    if (!unmountedRef.current && next) {
-      setStatus(next);
-      setRefreshCycle((current) => current + 1);
+    if (refreshInFlightRef.current) {
+      await refreshInFlightRef.current;
+      return;
     }
-    if (!unmountedRef.current) {
-      setIsRefreshing(false);
+
+    setIsRefreshing(true);
+    const pending = safeRun(() => serviceService.getGatewayStatus());
+    refreshInFlightRef.current = pending;
+    try {
+      const next = await pending;
+      if (!unmountedRef.current && next) {
+        setStatus(next);
+        setRefreshCycle((current) => current + 1);
+      }
+    } finally {
+      refreshInFlightRef.current = null;
+      if (!unmountedRef.current) {
+        setIsRefreshing(false);
+      }
     }
   }, []);
 

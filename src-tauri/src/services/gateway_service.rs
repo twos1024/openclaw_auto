@@ -2,7 +2,9 @@ use chrono::{DateTime, Utc};
 use reqwest::Url;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
+use std::sync::{Arc, OnceLock};
 use std::time::{Duration, Instant};
+use tokio::sync::{Mutex, Notify};
 
 use crate::adapters::platform;
 use crate::adapters::shell::{run_command, ShellOutput};
@@ -11,6 +13,8 @@ use crate::services::env_service;
 use crate::services::log_service::{self, LogSource};
 
 const GATEWAY_TIMEOUT_MS: u64 = 30_000;
+const GATEWAY_STATUS_TIMEOUT_MS: u64 = 8_000;
+const GATEWAY_STATUS_CACHE_TTL_MS: u64 = 2_000;
 const DASHBOARD_PROBE_TIMEOUT_MS: u64 = 3_000;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -83,14 +87,99 @@ enum GatewayLogPolicy {
     FailuresOnly,
 }
 
+#[derive(Debug, Clone)]
+struct GatewayStatusCacheEntry {
+    result: Result<GatewayStatusData, AppError>,
+    cached_at: Instant,
+}
+
+#[derive(Debug)]
+struct GatewayStatusCacheState {
+    entry: Option<GatewayStatusCacheEntry>,
+    in_flight: bool,
+    notify: Arc<Notify>,
+}
+
+impl GatewayStatusCacheState {
+    fn new() -> Self {
+        Self {
+            entry: None,
+            in_flight: false,
+            notify: Arc::new(Notify::new()),
+        }
+    }
+}
+
+static GATEWAY_STATUS_CACHE: OnceLock<Mutex<GatewayStatusCacheState>> = OnceLock::new();
+
+fn gateway_status_cache() -> &'static Mutex<GatewayStatusCacheState> {
+    GATEWAY_STATUS_CACHE.get_or_init(|| Mutex::new(GatewayStatusCacheState::new()))
+}
+
+fn is_status_cache_valid(entry: &GatewayStatusCacheEntry) -> bool {
+    entry.cached_at.elapsed() < Duration::from_millis(GATEWAY_STATUS_CACHE_TTL_MS)
+}
+
+async fn set_gateway_status_cache(result: Result<GatewayStatusData, AppError>) {
+    let mut state = gateway_status_cache().lock().await;
+    state.entry = Some(GatewayStatusCacheEntry {
+        result,
+        cached_at: Instant::now(),
+    });
+}
+
+async fn invalidate_gateway_status_cache() {
+    let mut state = gateway_status_cache().lock().await;
+    state.entry = None;
+}
+
 pub async fn get_gateway_status() -> Result<GatewayStatusData, AppError> {
+    loop {
+        let wait_for = {
+            let mut state = gateway_status_cache().lock().await;
+
+            if let Some(entry) = &state.entry {
+                if is_status_cache_valid(entry) {
+                    return entry.result.clone();
+                }
+            }
+
+            if state.in_flight {
+                Some(state.notify.clone())
+            } else {
+                state.in_flight = true;
+                None
+            }
+        };
+
+        if let Some(notify) = wait_for {
+            notify.notified().await;
+            continue;
+        }
+
+        let result = query_gateway_status_uncached().await;
+        let notify = {
+            let mut state = gateway_status_cache().lock().await;
+            state.entry = Some(GatewayStatusCacheEntry {
+                result: result.clone(),
+                cached_at: Instant::now(),
+            });
+            state.in_flight = false;
+            state.notify.clone()
+        };
+        notify.notify_waiters();
+        return result;
+    }
+}
+
+async fn query_gateway_status_uncached() -> Result<GatewayStatusData, AppError> {
     let program = env_service::ensure_openclaw_available().await?;
     let args = vec![
         "gateway".to_string(),
         "status".to_string(),
         "--json".to_string(),
     ];
-    let output = run_command(&program, &args, GATEWAY_TIMEOUT_MS).await?;
+    let output = run_command(&program, &args, GATEWAY_STATUS_TIMEOUT_MS).await?;
     log_shell_output_best_effort(
         GatewayLogPolicy::FailuresOnly,
         LogSource::Startup,
@@ -113,6 +202,8 @@ pub async fn get_gateway_status() -> Result<GatewayStatusData, AppError> {
 }
 
 pub async fn start_gateway() -> Result<GatewayActionData, AppError> {
+    invalidate_gateway_status_cache().await;
+
     let program = env_service::ensure_openclaw_available().await?;
     let args = vec![
         "gateway".to_string(),
@@ -139,6 +230,7 @@ pub async fn start_gateway() -> Result<GatewayActionData, AppError> {
     }
 
     let status = parse_gateway_status_output(&output);
+    set_gateway_status_cache(Ok(status.clone())).await;
     Ok(GatewayActionData {
         detail: "Gateway start command completed.".to_string(),
         address: Some(status.address),
@@ -147,6 +239,8 @@ pub async fn start_gateway() -> Result<GatewayActionData, AppError> {
 }
 
 pub async fn stop_gateway() -> Result<GatewayActionData, AppError> {
+    invalidate_gateway_status_cache().await;
+
     let program = env_service::ensure_openclaw_available().await?;
     let args = vec![
         "gateway".to_string(),
@@ -179,6 +273,8 @@ pub async fn stop_gateway() -> Result<GatewayActionData, AppError> {
 }
 
 pub async fn restart_gateway() -> Result<GatewayActionData, AppError> {
+    invalidate_gateway_status_cache().await;
+
     let program = env_service::ensure_openclaw_available().await?;
     let args = vec![
         "gateway".to_string(),
@@ -205,6 +301,7 @@ pub async fn restart_gateway() -> Result<GatewayActionData, AppError> {
     }
 
     let status = parse_gateway_status_output(&output);
+    set_gateway_status_cache(Ok(status.clone())).await;
     Ok(GatewayActionData {
         detail: "Gateway restarted successfully.".to_string(),
         address: Some(status.address),

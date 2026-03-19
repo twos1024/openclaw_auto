@@ -1,0 +1,32 @@
+{
+  "page": {
+    "title": "Gateway サービス",
+    "description": "まず Gateway を起動し、その後 Dashboard を開きます。",
+    "polling": "ポーリング：{{state}}",
+    "pollingOn": "有効 ({{seconds}}s)",
+    "pollingOff": "無効",
+    "initializing": "| 初期化中..."
+  },
+  "status": {
+    "portConflict": {
+      "title": "ポートが使用中です",
+      "prefix": "Gateway ",
+      "portLabel": "port",
+      "targetPort": "target port",
+      "suffix": "は別のプロセスで使用されています。",
+      "suggestion": "このポートを解放するか、空いているポートに変更してから Gateway を再起動してください。"
+    }
+  },
+  "nextStep": {
+    "title": "次の手順",
+    "description": "まず Gateway を起動し、実行中であることを確認してから Dashboard を開いてください。"
+  },
+  "snapshot": {
+    "title": "Runtime Snapshot",
+    "running": "Running:",
+    "yes": "Yes",
+    "no": "No",
+    "pid": "PID:",
+    "lastStarted": "Last Started:"
+  }
+}

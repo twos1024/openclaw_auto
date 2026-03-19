@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import type { PlatformGuidanceCard } from "../../types/installWizard";
 
 export interface PlatformGuidancePanelProps {
@@ -5,6 +6,7 @@ export interface PlatformGuidancePanelProps {
 }
 
 export function PlatformGuidancePanel({ cards }: PlatformGuidancePanelProps): JSX.Element {
+  const { t } = useTranslation(["install"]);
   return (
     <section
       style={{
@@ -17,10 +19,8 @@ export function PlatformGuidancePanel({ cards }: PlatformGuidancePanelProps): JS
       }}
     >
       <div>
-        <h3 style={{ margin: 0 }}>Platform Guidance</h3>
-        <p style={{ margin: "6px 0 0", color: "#64748b" }}>
-          Windows、macOS 和 Linux 使用同一条产品链路，但命令路径、权限模型和排障重点不同。
-        </p>
+        <h3 style={{ margin: 0 }}>{t("install:platform.title")}</h3>
+        <p style={{ margin: "6px 0 0", color: "#64748b" }}>{t("install:platform.description")}</p>
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 12 }}>
@@ -50,15 +50,15 @@ export function PlatformGuidancePanel({ cards }: PlatformGuidancePanelProps): JS
                     color: "#1d4ed8",
                   }}
                 >
-                  Current
+                  {t("install:platform.current")}
                 </span>
               ) : null}
             </div>
             <p style={{ margin: 0, color: "#475569" }}>
-              <strong>Install:</strong> {card.installSource}
+              <strong>{t("install:platform.install")}</strong> {card.installSource}
             </p>
             <p style={{ margin: 0, color: "#475569" }}>
-              <strong>Path Hint:</strong> {card.pathHint}
+              <strong>{t("install:platform.pathHint")}</strong> {card.pathHint}
             </p>
             <p style={{ margin: 0, color: "#64748b", fontSize: 13 }}>{card.troubleshooting}</p>
           </article>

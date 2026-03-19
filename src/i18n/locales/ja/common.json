@@ -1,0 +1,10 @@
+{
+  "appName": "OpenClaw Manager",
+  "comingSoon": "このモジュールの土台は接続済みです。フォームとバックエンド連携は次の段階で実装します。",
+  "loading": "読み込み中...",
+  "save": "保存",
+  "cancel": "キャンセル",
+  "theme": "テーマ",
+  "language": "言語",
+  "poweredBy": "Powered by OpenClaw"
+}

@@ -1,0 +1,25 @@
+{
+  "page": {
+    "title": "反馈",
+    "description": "告诉我们你遇到的问题或改进建议",
+    "thanks": "感谢使用 OpenClaw Manager，你的反馈让产品更好。"
+  },
+  "form": {
+    "title": "提交反馈",
+    "description": "描述你遇到的问题、功能请求或任何建议",
+    "placeholder": "描述你的问题或建议...",
+    "emailPlaceholder": "联系邮箱（可选）",
+    "validation": "请填写反馈内容后再提交",
+    "submit": "提交反馈",
+    "submitting": "提交中...",
+    "successTitle": "感谢你的反馈！",
+    "successDescription": "我们会认真阅读每一条反馈并持续改进产品。",
+    "retry": "再次反馈"
+  },
+  "contact": {
+    "title": "联系方式",
+    "description": "其他联系渠道",
+    "githubLabel": "GitHub Issues",
+    "githubValue": "github.com/openclaw"
+  }
+}

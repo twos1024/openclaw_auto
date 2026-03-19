@@ -1,0 +1,28 @@
+{
+  "page": {
+    "title": "插件市场",
+    "description": "{{count}} 个插件 · {{installed}} 个已安装",
+    "descriptionEmpty": "浏览和安装扩展插件"
+  },
+  "toolbar": {
+    "searchPlaceholder": "搜索插件...",
+    "market": "ClawHub"
+  },
+  "status": {
+    "loading": "加载中..."
+  },
+  "empty": {
+    "titleSearch": "没有匹配的插件",
+    "titleDefault": "插件市场",
+    "descriptionSearch": "尝试其他关键词",
+    "descriptionDefault": "Gateway 运行后将展示可用插件"
+  },
+  "card": {
+    "installed": "已安装",
+    "downloads": "{{formatted}} 下载",
+    "actions": {
+      "install": "安装",
+      "uninstall": "卸载"
+    }
+  }
+}

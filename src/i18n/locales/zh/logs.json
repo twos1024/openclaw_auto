@@ -1,0 +1,37 @@
+{
+  "page": {
+    "title": "日志",
+    "description": "日志页面已纳入引导式恢复流程。修改配置或服务状态前，先确认安装、启动或 Gateway 失败是否已经留下可用诊断信息。",
+    "meta": "总日志 {{total}} 行，过滤后 {{visible}} 行",
+    "metaWithUpdatedAt": "总日志 {{total}} 行，过滤后 {{visible}} 行，最近更新：{{updatedAt}}",
+    "loadErrorTitle": "日志读取提示",
+    "runbook": {
+      "title": "恢复上下文",
+      "description": "日志通常是确认当前阻塞属于安装、配置还是服务问题的最快方式。定位到问题后，可用快捷入口返回。"
+    }
+  },
+  "summary": {
+    "title": "错误摘要",
+    "actions": {
+      "copying": "复制中...",
+      "copy": "复制诊断摘要",
+      "exporting": "导出中...",
+      "export": "导出诊断信息",
+      "bundling": "打包中...",
+      "bundle": "导出诊断包 ZIP"
+    },
+    "empty": "未检测到明确错误。若服务仍异常，请尝试更换关键字或检查完整日志上下文。",
+    "hitCount": "命中 {{count}} 次",
+    "suggestionPrefix": "建议："
+  },
+  "viewer": {
+    "filterPlaceholder": "输入关键字过滤日志，例如：EADDRINUSE / timeout",
+    "actions": {
+      "refreshing": "刷新中...",
+      "refresh": "手动刷新"
+    },
+    "title": "Log Viewer ({{count}} lines)",
+    "loading": "日志加载中...",
+    "empty": "暂无日志输出。"
+  }
+}

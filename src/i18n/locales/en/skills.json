@@ -1,0 +1,24 @@
+{
+  "page": {
+    "title": "Skills",
+    "description": "{{count}} skills · {{enabled}} enabled",
+    "descriptionIdle": "Start Gateway first to load the skills list"
+  },
+  "toolbar": {
+    "searchPlaceholder": "Search skills...",
+    "market": "ClawHub Market"
+  },
+  "status": {
+    "loading": "Loading skills...",
+    "gatewayNotRunning": "Gateway is not running",
+    "gatewayNotRunningDescription": "Start Gateway in Settings to view skills.",
+    "toggleFailed": "Action failed. Check Gateway status."
+  },
+  "empty": {
+    "noMatch": "No matching skills",
+    "noSkills": "No skills yet. Install a skill extension."
+  },
+  "card": {
+    "bundled": "Built-in"
+  }
+}

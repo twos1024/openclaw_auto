@@ -8,9 +8,27 @@ import { SetupAssistantDialog } from "../../src/components/dialogs/SetupAssistan
 import type { RunbookModel } from "../../src/types/workspace";
 
 const mockUseSetupAssistant = vi.hoisted(() => vi.fn());
+const translationMap = vi.hoisted(
+  (): Record<string, string> => ({
+    "assistant.title": "OpenClaw 设置助手",
+    "assistant.refresh": "重新检查",
+    "assistant.loading": "正在读取当前步骤...",
+    "assistant.currentBlocker": "当前先处理：",
+    "assistant.checkedAt": "检查时间：",
+    "launchChecks.title": "Launch Checks",
+    "launchChecks.subtitle": "These checks decide whether setup can continue cleanly from install to dashboard.",
+    "launchChecks.open": "Open",
+  }),
+);
 
 vi.mock("../../src/hooks/useSetupAssistant", () => ({
   useSetupAssistant: mockUseSetupAssistant,
+}));
+
+vi.mock("react-i18next", () => ({
+  useTranslation: () => ({
+    t: (key: string) => translationMap[key] ?? key,
+  }),
 }));
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;

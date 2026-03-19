@@ -5,7 +5,7 @@ export function AppShell(): JSX.Element {
   return (
     <div className="flex h-screen overflow-hidden bg-background">
       <Sidebar />
-      <main className="flex-1 overflow-auto p-6 bg-[hsl(210_20%_97%)] dark:bg-background">
+      <main className="flex-1 overflow-auto bg-[hsl(var(--content))] p-6 transition-colors">
         <Outlet />
       </main>
     </div>

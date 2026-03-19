@@ -84,7 +84,11 @@ pub struct DeleteInstanceData {
 
 pub async fn list_instances(search: Option<String>) -> Result<InstanceListData, AppError> {
     let program = env_service::ensure_openclaw_available().await?;
-    let mut args = vec!["instance".to_string(), "list".to_string(), "--json".to_string()];
+    let mut args = vec![
+        "instance".to_string(),
+        "list".to_string(),
+        "--json".to_string(),
+    ];
     if let Some(query) = &search {
         args.push("--search".to_string());
         args.push(query.clone());
@@ -163,7 +167,10 @@ pub async fn update_instance(payload: UpdateInstancePayload) -> Result<Instance,
                 model_id: payload.model_id.unwrap_or_default(),
                 model_name: payload.model_name.unwrap_or_default(),
                 model_params: default_model_params(),
-                channel_type: payload.channel_type.unwrap_or_else(|| "apimart".to_string()),
+                channel_type: payload
+                    .channel_type
+                    .map(|value| normalize_from_cli_channel(&value))
+                    .unwrap_or_else(default_channel_type),
                 api_key_ref: payload.api_key_ref.unwrap_or_default(),
                 base_url: payload.base_url.unwrap_or_default(),
                 status: "created".to_string(),
@@ -209,7 +216,7 @@ pub async fn start_instance(id: String) -> Result<Instance, AppError> {
                 model_id: String::new(),
                 model_name: String::new(),
                 model_params: default_model_params(),
-                channel_type: "apimart".to_string(),
+                channel_type: default_channel_type(),
                 api_key_ref: String::new(),
                 base_url: String::new(),
                 status: "active".to_string(),
@@ -228,7 +235,7 @@ pub async fn start_instance(id: String) -> Result<Instance, AppError> {
             model_id: String::new(),
             model_name: String::new(),
             model_params: default_model_params(),
-            channel_type: "apimart".to_string(),
+            channel_type: default_channel_type(),
             api_key_ref: String::new(),
             base_url: String::new(),
             status: "active".to_string(),
@@ -266,7 +273,7 @@ pub async fn stop_instance(id: String) -> Result<Instance, AppError> {
                 model_id: String::new(),
                 model_name: String::new(),
                 model_params: default_model_params(),
-                channel_type: "apimart".to_string(),
+                channel_type: default_channel_type(),
                 api_key_ref: String::new(),
                 base_url: String::new(),
                 status: "stopped".to_string(),
@@ -284,7 +291,7 @@ pub async fn stop_instance(id: String) -> Result<Instance, AppError> {
             model_id: String::new(),
             model_name: String::new(),
             model_params: default_model_params(),
-            channel_type: "apimart".to_string(),
+            channel_type: default_channel_type(),
             api_key_ref: String::new(),
             base_url: String::new(),
             status: "stopped".to_string(),
@@ -332,25 +339,37 @@ fn build_create_args(id: &str, payload: &CreateInstancePayload) -> Vec<String> {
         "--model".to_string(),
         payload.model_id.clone(),
         "--channel".to_string(),
-        payload.channel_type.clone(),
+        normalize_for_cli_channel(&payload.channel_type),
     ]
 }
 
 fn parse_instance_list(parsed: Option<&Value>) -> InstanceListData {
     let Some(value) = parsed else {
-        return InstanceListData { instances: vec![], total: 0, running: 0 };
+        return InstanceListData {
+            instances: vec![],
+            total: 0,
+            running: 0,
+        };
     };
 
     let items = value
         .get("instances")
         .or_else(|| value.get("data"))
         .and_then(|v| v.as_array())
-        .map(|arr| arr.iter().filter_map(parse_single_instance).collect::<Vec<_>>())
+        .map(|arr| {
+            arr.iter()
+                .filter_map(parse_single_instance)
+                .collect::<Vec<_>>()
+        })
         .unwrap_or_default();
 
     let running = items.iter().filter(|i| i.status == "active").count();
     let total = items.len();
-    InstanceListData { instances: items, total, running }
+    InstanceListData {
+        instances: items,
+        total,
+        running,
+    }
 }
 
 fn parse_single_instance(value: &Value) -> Option<Instance> {
@@ -394,8 +413,8 @@ fn parse_single_instance(value: &Value) -> Option<Instance> {
             .get("channelType")
             .or_else(|| value.get("channel"))
             .and_then(|v| v.as_str())
-            .unwrap_or("apimart")
-            .to_string(),
+            .map(normalize_from_cli_channel)
+            .unwrap_or_else(default_channel_type),
         api_key_ref: value
             .get("apiKeyRef")
             .and_then(|v| v.as_str())
@@ -444,7 +463,7 @@ fn synthesise_instance(id: String, payload: CreateInstancePayload, now: String) 
             max_tokens: payload.max_tokens.unwrap_or(4096),
             top_p: 1.0,
         },
-        channel_type: payload.channel_type,
+        channel_type: normalize_from_cli_channel(&payload.channel_type),
         api_key_ref: payload.api_key_ref,
         base_url: payload.base_url,
         status: "created".to_string(),
@@ -457,7 +476,11 @@ fn synthesise_instance(id: String, payload: CreateInstancePayload, now: String) 
 }
 
 fn default_model_params() -> InstanceModelParams {
-    InstanceModelParams { temperature: 0.7, max_tokens: 4096, top_p: 1.0 }
+    InstanceModelParams {
+        temperature: 0.7,
+        max_tokens: 4096,
+        top_p: 1.0,
+    }
 }
 
 fn generate_id() -> String {
@@ -469,5 +492,21 @@ fn generate_id() -> String {
     let lo = ts_ns as u32;
     // Knuth multiplicative hash for better bit distribution
     let mixed = hi.wrapping_mul(0x9e3779b9).wrapping_add(lo);
-    format!("inst-{ts_ms:x}-{mixed:08x}")
+    format!("agent-{ts_ms:x}-{mixed:08x}")
+}
+
+fn default_channel_type() -> String {
+    "openclaw".to_string()
+}
+
+fn normalize_for_cli_channel(channel_type: &str) -> String {
+    channel_type.to_string()
+}
+
+fn normalize_from_cli_channel(channel_type: &str) -> String {
+    if channel_type.trim().is_empty() {
+        default_channel_type()
+    } else {
+        channel_type.to_string()
+    }
 }

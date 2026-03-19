@@ -1,0 +1,74 @@
+{
+  "page": {
+    "title": "チャネル管理",
+    "description": "各接続チャネルと、紐づく提供元を管理します。",
+    "stats": "合計 {{total}} 件、接続中 {{connected}} 件"
+  },
+  "actions": {
+    "create": "チャネル作成",
+    "loading": "チャネルを読み込み中...",
+    "connect": "接続",
+    "disconnect": "切断",
+    "confirmDelete": "チャネル「{{name}}」を削除しますか？"
+  },
+  "empty": {
+    "title": "まだチャネルがありません",
+    "description": "まずチャネルを作成し、提供元とエージェントを紐づけます。",
+    "cta": "最初のチャネルを作成"
+  },
+  "status": {
+    "connected": "接続済み",
+    "error": "異常",
+    "idle": "待機中",
+    "disconnected": "未接続"
+  },
+  "card": {
+    "noProvider": "提供元なし",
+    "connectionType": "接続方式: {{value}}",
+    "provider": "提供元: {{value}}",
+    "boundAgents": "紐づくエージェント: {{count}} 件",
+    "updatedAt": "更新日時: {{value}}"
+  },
+  "dialog": {
+    "title": "チャネルを作成",
+    "description": "基本情報を入力し、紐づける提供元とエージェントを選択します。",
+    "fields": {
+      "name": "名前",
+      "type": "チャネル種別",
+      "connectionType": "接続方式",
+      "provider": "提供元",
+      "agents": "紐づくエージェント",
+      "description": "説明"
+    },
+    "placeholders": {
+      "name": "例: 企業サポートチャネル",
+      "description": "用途や補足説明を入力してください"
+    },
+    "options": {
+      "type": {
+        "openclaw": "OpenClaw",
+        "openai-compatible": "OpenAI 互換",
+        "custom": "カスタム",
+        "webhook": "Webhook"
+      },
+      "connection": {
+        "none": "なし",
+        "api-key": "API キー",
+        "oauth": "OAuth"
+      }
+    },
+    "noProvider": "提供元を紐づけない",
+    "hints": {
+      "noAgents": "まだ選択できるエージェントがありません。先に作成してください。"
+    },
+    "actions": {
+      "cancel": "キャンセル",
+      "create": "チャネル作成",
+      "creating": "作成中..."
+    },
+    "errors": {
+      "nameRequired": "チャネル名を入力してください。",
+      "createFailed": "チャネルの作成に失敗しました。もう一度お試しください。"
+    }
+  }
+}

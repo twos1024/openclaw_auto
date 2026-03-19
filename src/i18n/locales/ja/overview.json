@@ -1,0 +1,66 @@
+{
+  "header": {
+    "loading": "読み込み中",
+    "error": "概要を表示できません",
+    "preview": "ブラウザプレビュー",
+    "runtimeUnavailable": "デスクトップ実行時エラー",
+    "title": "OpenClaw 概要"
+  },
+  "description": {
+    "preview": "これはブラウザプレビューです。構造のみを表示し、実際のローカル状態は反映しません。",
+    "runtimeUnavailable": "すでにデスクトップウィンドウ内ですが、フロントエンドが実行時ブリッジに接続できていません。インストールと設定を続ける前に修復してください。",
+    "default": "ここでは今どの手順を行うべきかを案内します。"
+  },
+  "actions": {
+    "refresh": "再読み込み"
+  },
+  "errors": {
+    "loadFailed": "概要状態の読み込みに失敗しました。"
+  },
+  "feedback": {
+    "dashboardOpened": "Dashboard を開きました。"
+  },
+  "home": {
+    "loading": {
+      "title": "セットアップ案内を準備中",
+      "description": "最初に行うべき手順を確認しています。"
+    },
+    "error": {
+      "title": "セットアップ案内を開けません",
+      "description": "次の手順を判定できませんでした。概要ページまたはインストールページを先に開いてください。"
+    },
+    "actions": {
+      "overview": "概要を開く",
+      "installWizard": "インストールウィザードを開く"
+    }
+  },
+  "actionList": {
+    "title": "次の手順",
+    "description": "現在の状態に合う最初の項目だけを実行し、完了したら次へ進みます。",
+    "processing": "処理中...",
+    "dashboard": "Dashboard"
+  },
+  "level": {
+    "healthy": "正常",
+    "degraded": "低下",
+    "offline": "オフライン",
+    "unknown": "不明"
+  },
+  "summary": {
+    "title": "システム健全性",
+    "fields": {
+      "appVersion": "アプリバージョン",
+      "platform": "プラットフォーム",
+      "dashboard": "Dashboard"
+    }
+  },
+  "section": {
+    "updated": "更新時刻："
+  },
+  "sidebar": {
+    "brand": "OpenClaw",
+    "confirmDelete": "確認",
+    "deleteSession": "セッションを削除",
+    "appDisplay": "OpenClaw Manager"
+  }
+}

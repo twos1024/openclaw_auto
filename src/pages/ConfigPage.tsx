@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { OpenAIConfigForm } from "../components/config/OpenAIConfigForm";
 import { OllamaConfigForm } from "../components/config/OllamaConfigForm";
 import { useConfigForm } from "../hooks/useConfigForm";
@@ -13,6 +14,7 @@ function ResultBanner(props: {
     route: string;
   };
 }): JSX.Element {
+  const { t } = useTranslation(["config"]);
   const colorMap = {
     success: {
       border: "#86efac",
@@ -48,22 +50,22 @@ function ResultBanner(props: {
       <p style={{ margin: "8px 0 0", fontSize: 13 }}>{props.result.suggestion}</p>
       {props.result.code ? (
         <p style={{ margin: "8px 0 0", fontSize: 12, opacity: 0.9 }}>
-          错误码：{props.result.code}
+          {t("config:result.code")}{props.result.code}
         </p>
       ) : null}
       {"latencyMs" in props.result && props.result.latencyMs ? (
         <p style={{ margin: "8px 0 0", fontSize: 12, opacity: 0.9 }}>
-          耗时：{props.result.latencyMs}ms
+          {t("config:result.latency")}{props.result.latencyMs}ms
         </p>
       ) : null}
       {"backupPath" in props.result && props.result.backupPath ? (
         <p style={{ margin: "8px 0 0", fontSize: 12, opacity: 0.9 }}>
-          备份：{props.result.backupPath}
+          {t("config:result.backup")}{props.result.backupPath}
         </p>
       ) : null}
       {"savedPath" in props.result && props.result.savedPath ? (
         <p style={{ margin: "8px 0 0", fontSize: 12, opacity: 0.9 }}>
-          保存到：{props.result.savedPath}
+          {t("config:result.savedTo")}{props.result.savedPath}
         </p>
       ) : null}
       {props.nextAction ? (
@@ -89,6 +91,7 @@ function ResultBanner(props: {
 }
 
 export function ConfigPage(): JSX.Element {
+  const { t } = useTranslation(["config"]);
   const {
     form,
     errors,
@@ -114,10 +117,8 @@ export function ConfigPage(): JSX.Element {
   return (
     <div style={{ display: "grid", gap: 16 }}>
       <header>
-        <h2 style={{ marginBottom: 8 }}>API Key 配置</h2>
-        <p style={{ margin: 0, color: "#64748b" }}>
-          这里先填 API Key，再测试连接，最后保存配置。
-        </p>
+        <h2 style={{ marginBottom: 8 }}>{t("config:page.title")}</h2>
+        <p style={{ margin: 0, color: "#64748b" }}>{t("config:page.description")}</p>
       </header>
 
       {loadIssue ? (
@@ -130,15 +131,15 @@ export function ConfigPage(): JSX.Element {
             padding: 12,
           }}
         >
-          <strong>配置加载提示</strong>
+          <strong>{t("config:page.loadIssueTitle")}</strong>
           <p style={{ margin: "8px 0 0" }}>{loadIssue.message}</p>
-          <p style={{ margin: "8px 0 0", fontSize: 13 }}>建议：{loadIssue.suggestion}</p>
+          <p style={{ margin: "8px 0 0", fontSize: 13 }}>{t("config:page.suggestionPrefix")}{loadIssue.suggestion}</p>
           {loadIssue.code ? (
-            <p style={{ margin: "8px 0 0", fontSize: 12, opacity: 0.9 }}>错误码：{loadIssue.code}</p>
+            <p style={{ margin: "8px 0 0", fontSize: 12, opacity: 0.9 }}>{t("config:result.code")}{loadIssue.code}</p>
           ) : null}
           {usedDefaultValues ? (
             <p style={{ margin: "8px 0 0", fontSize: 12, opacity: 0.9 }}>
-              当前表单是默认值，不代表磁盘上的真实配置。
+              {t("config:page.defaultValues")}
             </p>
           ) : null}
         </section>
@@ -156,13 +157,13 @@ export function ConfigPage(): JSX.Element {
       >
         {loadedPath ? (
           <p style={{ margin: 0, fontSize: 13, color: "#64748b" }}>
-            配置路径：<strong>{loadedPath}</strong>
+            {t("config:page.loadedPath")}<strong>{loadedPath}</strong>
           </p>
         ) : null}
 
         <label style={{ display: "block", maxWidth: 320 }}>
           <span style={{ display: "block", marginBottom: 6, color: "#334155", fontWeight: 600 }}>
-            提供方
+            {t("config:form.provider.label")}
           </span>
           <select
             value={form.providerType}
@@ -179,8 +180,8 @@ export function ConfigPage(): JSX.Element {
               background: "#ffffff",
             }}
           >
-            <option value="openai-compatible">OpenAI 兼容</option>
-            <option value="ollama">Ollama</option>
+            <option value="openai-compatible">{t("config:form.provider.options.openaiCompatible")}</option>
+            <option value="ollama">{t("config:form.provider.options.ollama")}</option>
           </select>
         </label>
 
@@ -218,7 +219,7 @@ export function ConfigPage(): JSX.Element {
               opacity: isBusy ? 0.6 : 1,
             }}
           >
-            {isTesting ? "正在测试..." : "测试连接"}
+            {isTesting ? t("config:actions.testing") : t("config:actions.testConnection")}
           </button>
 
           <button
@@ -236,7 +237,7 @@ export function ConfigPage(): JSX.Element {
               opacity: isBusy ? 0.6 : 1,
             }}
           >
-            {isSaving ? "正在保存..." : "保存配置"}
+            {isSaving ? t("config:actions.saving") : t("config:actions.save")}
           </button>
 
           <button
@@ -254,20 +255,20 @@ export function ConfigPage(): JSX.Element {
               opacity: isBusy ? 0.6 : 1,
             }}
           >
-            重置
+            {t("config:actions.reset")}
           </button>
         </div>
       </section>
 
-      {testResult ? <ResultBanner title="测试结果" result={testResult} /> : null}
+      {testResult ? <ResultBanner title={t("config:result.testTitle")} result={testResult} /> : null}
       {saveResult ? (
         <ResultBanner
-          title="保存结果"
+          title={t("config:result.saveTitle")}
           result={saveResult}
           nextAction={
             saveResult.status === "success"
               ? {
-                  label: "启动 Gateway",
+                  label: t("config:actions.startGateway"),
                   route: "/service",
                 }
               : undefined

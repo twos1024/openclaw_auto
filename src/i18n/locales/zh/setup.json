@@ -1,0 +1,105 @@
+{
+  "page": {
+    "title": "初始化向导",
+    "description": "按步骤完成运行环境检查、提供方配置和网关启动。",
+    "badges": {
+      "completed": "已完成",
+      "fresh": "首次运行"
+    },
+    "stepIndex": "步骤 {{current}} / {{total}}"
+  },
+  "steps": {
+    "welcome": "欢迎",
+    "runtime": "运行环境",
+    "provider": "提供方",
+    "install": "安装",
+    "complete": "完成"
+  },
+  "welcome": {
+    "body": "该向导会帮助你完成首次启动所需的最少配置。",
+    "hint": "建议按顺序完成所有步骤，以避免后续联调问题。"
+  },
+  "runtime": {
+    "actions": {
+      "check": "检测环境"
+    },
+    "state": {
+      "passed": "已满足",
+      "pending": "待检测"
+    },
+    "fields": {
+      "platform": "平台：{{value}}",
+      "npm": "npm：{{value}}",
+      "openclaw": "OpenClaw：{{value}}"
+    },
+    "values": {
+      "installed": "已安装",
+      "missing": "未安装"
+    },
+    "requirement": "当前环境不满足要求，请先补齐缺失依赖。",
+    "idle": "点击“检测环境”开始检查。",
+    "errors": {
+      "detectFailed": "环境检测失败，请重试。"
+    }
+  },
+  "provider": {
+    "modeLabel": "配置方式",
+    "defaults": {
+      "name": "主提供方"
+    },
+    "modes": {
+      "existing": "使用已有提供方",
+      "new": "新建提供方"
+    },
+    "placeholders": {
+      "selectExisting": "选择已有提供方",
+      "name": "提供方名称",
+      "apiKey": "API Key",
+      "apiKeyOllama": "Ollama 无需 API Key",
+      "baseUrl": "基础地址（可选）"
+    },
+    "actions": {
+      "validate": "验证提供方",
+      "createAndValidate": "创建并验证"
+    },
+    "state": {
+      "validated": "已验证",
+      "pending": "待验证"
+    },
+    "errors": {
+      "selectExisting": "请选择一个已有提供方。",
+      "validateFailed": "提供方验证失败，请检查配置。",
+      "nameRequired": "请输入提供方名称。",
+      "apiKeyRequired": "请输入 API Key。",
+      "createFailed": "创建提供方失败，请重试。",
+      "missingRecord": "未找到新建的提供方记录。"
+    }
+  },
+  "install": {
+    "idle": "准备开始安装/启动。",
+    "installing": "正在安装 OpenClaw...",
+    "skipExisting": "检测到 OpenClaw 已安装，跳过安装。",
+    "startedWithAddress": "网关已启动：{{value}}",
+    "started": "网关已启动",
+    "actions": {
+      "install": "安装并启动网关"
+    },
+    "state": {
+      "running": "运行中",
+      "pending": "待启动"
+    },
+    "errors": {
+      "startFailed": "启动网关失败，请重试。",
+      "statusFailed": "获取网关状态失败。"
+    }
+  },
+  "complete": {
+    "title": "初始化完成",
+    "description": "环境已就绪，可以进入聊天页面开始使用。"
+  },
+  "actions": {
+    "previous": "上一步",
+    "next": "下一步",
+    "finish": "进入应用"
+  }
+}

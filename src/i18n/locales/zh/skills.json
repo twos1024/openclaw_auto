@@ -1,0 +1,24 @@
+{
+  "page": {
+    "title": "技能管理",
+    "description": "{{count}} 个技能 · {{enabled}} 个已启用",
+    "descriptionIdle": "请先启动 Gateway 以加载技能列表"
+  },
+  "toolbar": {
+    "searchPlaceholder": "搜索技能...",
+    "market": "ClawHub 市场"
+  },
+  "status": {
+    "loading": "加载技能列表...",
+    "gatewayNotRunning": "Gateway 未运行",
+    "gatewayNotRunningDescription": "请在设置页面启动 Gateway 后查看技能。",
+    "toggleFailed": "操作失败，请检查 Gateway 状态"
+  },
+  "empty": {
+    "noMatch": "没有匹配的技能",
+    "noSkills": "暂无技能，请安装技能扩展"
+  },
+  "card": {
+    "bundled": "内置"
+  }
+}

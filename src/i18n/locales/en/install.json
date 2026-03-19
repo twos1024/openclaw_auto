@@ -1,0 +1,172 @@
+{
+  "page": {
+    "hero": {
+      "title": "Install OpenClaw",
+      "description": "Finish installation first, then fill in the API Key, and finally start Gateway. This page turns the onboarding path into one clear flow.",
+      "meta": "Platform: {{platform}} / {{architecture}}",
+      "action": "Open installer"
+    },
+    "nextStep": {
+      "fixRuntime": {
+        "title": "Fix the runtime first",
+        "description": "This is not a desktop environment that can run the local installer. Switch to the desktop runtime first, then continue.",
+        "actionLabel": "Open settings"
+      },
+      "ready": {
+        "title": "You are ready to go",
+        "description": "OpenClaw is installed and running. Open the Dashboard now.",
+        "actionLabel": "Open Dashboard"
+      },
+      "service": {
+        "title": "Next step: start Gateway",
+        "description": "The API Key is saved. Start Gateway now and you can begin using the app.",
+        "actionLabel": "Start Gateway"
+      },
+      "config": {
+        "title": "Installation complete",
+        "description": "The next thing to do is set the API Key and save it.",
+        "actionLabel": "Configure API Key"
+      },
+      "env": {
+        "title": "Install npm first",
+        "description": "Install Node.js / npm first, then come back and refresh the environment.",
+        "actionLabel": "Refresh environment"
+      },
+      "start": {
+        "title": "Start installation",
+        "description": "Open the wizard and follow the prompts to finish the OpenClaw install.",
+        "actionLabel": "Open installer here"
+      }
+    },
+    "banners": {
+      "envError": {
+        "title": "Environment check failed",
+        "suggestionPrefix": "Suggestion: "
+      },
+      "order": {
+        "title": "Install order",
+        "description": "Install OpenClaw first, then fill in the API Key in Config, save it, and start Gateway in Service."
+      }
+    },
+    "runbook": {
+      "title": "Current step",
+      "description": "Focus on one step at a time. Do not try to handle install, config, and service together."
+    }
+  },
+  "environment": {
+    "title": "Installation prep",
+    "description": "Check the local environment and OpenClaw detection state before starting installation.",
+    "pills": {
+      "npmReady": "npm Ready",
+      "npmMissing": "npm Missing",
+      "openclawInstalled": "OpenClaw Installed",
+      "openclawMissing": "OpenClaw Missing"
+    },
+    "labels": {
+      "platform": "Platform",
+      "homeDir": "Home Dir",
+      "configPath": "Config Path",
+      "npmVersion": "npm Version",
+      "openclawPath": "OpenClaw Path",
+      "openclawVersion": "OpenClaw Version"
+    }
+  },
+  "actions": {
+    "refreshing": "Refreshing...",
+    "refreshEnvironment": "Refresh environment",
+    "installing": "Installing...",
+    "install": "Install OpenClaw",
+    "openLogs": "Open Logs"
+  },
+  "status": {
+    "desktopRuntimeRequired": "Desktop Runtime Required",
+    "desktopBridgeRequired": "Desktop Bridge Required",
+    "npmRequired": "npm Required",
+    "previewMode": "You are in browser preview mode, so installation is disabled. Use the ClawDesk desktop app or `npm run tauri:dev` to install locally.",
+    "runtimeUnavailable": "The desktop command bridge is unavailable, so installation is disabled. Fix the Tauri runtime integration first.",
+    "npmMissing": "npm is not detected, so installation is disabled. Install Node.js / npm first and refresh the environment check.",
+    "installHint": "Click \"Start installation\" and the install will run in the background. The result will appear when it finishes."
+  },
+  "issue": {
+    "title": "Installation issue",
+    "suggestionPrefix": "Suggestion: ",
+    "kinds": {
+      "missing-npm": "Missing Node.js / npm",
+      "permission-denied": "Permission denied",
+      "network-failure": "Network connection failed",
+      "command-timeout": "Installation timed out",
+      "binary-not-found": "OpenClaw binary not found",
+      "gateway-install-failed": "Gateway service registration not complete",
+      "unknown": "Installation issue"
+    }
+  },
+  "phase": {
+    "title": "Install steps",
+    "status": {
+      "success": "Done",
+      "warning": "Attention",
+      "failure": "Failed",
+      "pending": "Pending",
+      "running": "Running"
+    }
+  },
+  "progress": {
+    "ariaLabel": "Install progress"
+  },
+  "result": {
+    "nextConfig": "Next step: configure API Key",
+    "viewLogs": "View detailed logs",
+    "titleSuccess": "Installation complete",
+    "titleWarning": "Installation mostly complete",
+    "titleFailure": "Installation issue",
+    "hintSuccess": "OpenClaw is ready. Fill in the API Key next, then you can start the service.",
+    "hintWarning": "Core components were installed successfully. Fill in the API Key first, then continue the remaining steps on the Service page.",
+    "hintFailure": "Something went wrong during installation. Check the logs, fix the issue, and run the install again."
+  },
+  "wizard": {
+    "title": "OpenClaw installation wizard",
+    "currentStep": "Do this first: {{step}}",
+    "ready": "Ready to start installation",
+    "nowOnly": "Only this step needs to be completed now: {{step}}",
+    "nextStep": "After this step, the next one is: {{step}}",
+    "sequence": {
+      "title": "Follow this order",
+      "description": "This is not a diagnostics page. It only keeps the install path needed by new users."
+    },
+    "after": {
+      "title": "What to do after install",
+      "description": "1. Save the provider config and fill in the API Key. 2. Start Gateway. 3. Open the Dashboard to begin using the app."
+    },
+    "platform": {
+      "title": "Look at the right system card",
+      "description": "The three platforms share one install flow, but commands, permissions, and troubleshooting priorities differ.",
+      "current": "Current system",
+      "installMethod": "Install method",
+      "pathHint": "Path hint"
+    },
+    "steps": {
+      "environment": "Check environment",
+      "install": "Install OpenClaw",
+      "config": "Configure API Key",
+      "service": "Start Gateway",
+      "dashboard": "Open Dashboard"
+    },
+    "primary": {
+      "startInstall": "Start installation",
+      "goConfig": "Go configure API Key",
+      "startGateway": "Start Gateway",
+      "openDashboard": "Open Dashboard"
+    },
+    "tags": {
+      "done": "Done",
+      "current": "Now"
+    }
+  },
+  "platform": {
+    "title": "Platform Guidance",
+    "description": "Windows, macOS, and Linux share the same product flow, but command paths, permission models, and troubleshooting focus differ.",
+    "current": "Current",
+    "install": "Install:",
+    "pathHint": "Path Hint:"
+  }
+}

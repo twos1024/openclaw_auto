@@ -1,0 +1,172 @@
+{
+  "page": {
+    "hero": {
+      "title": "安装 OpenClaw",
+      "description": "先完成安装，再填 API Key，最后启动 Gateway。这个页面把新手需要做的事收成一条线。",
+      "meta": "Platform: {{platform}} / {{architecture}}",
+      "action": "打开安装向导"
+    },
+    "nextStep": {
+      "fixRuntime": {
+        "title": "先修复运行环境",
+        "description": "当前不是可执行本机安装的桌面环境。先切到桌面运行时，再继续。",
+        "actionLabel": "打开设置"
+      },
+      "ready": {
+        "title": "已经可以开始使用",
+        "description": "OpenClaw 已经安装并启动完成，现在直接打开 Dashboard 即可。",
+        "actionLabel": "打开 Dashboard"
+      },
+      "service": {
+        "title": "下一步：启动 Gateway",
+        "description": "API Key 已保存。现在去启动 Gateway，然后就可以开始使用。",
+        "actionLabel": "启动 Gateway"
+      },
+      "config": {
+        "title": "安装已完成",
+        "description": "下一步只做一件事：去配置 API Key，然后保存。",
+        "actionLabel": "配置 API Key"
+      },
+      "env": {
+        "title": "先补齐 npm",
+        "description": "安装前先把 Node.js / npm 装好，然后回到这里刷新环境。",
+        "actionLabel": "刷新环境"
+      },
+      "start": {
+        "title": "开始安装",
+        "description": "打开向导，按提示完成 OpenClaw 安装。",
+        "actionLabel": "在此打开安装向导"
+      }
+    },
+    "banners": {
+      "envError": {
+        "title": "环境探测失败",
+        "suggestionPrefix": "建议："
+      },
+      "order": {
+        "title": "安装顺序",
+        "description": "先安装 OpenClaw，再去 Config 填 API Key，保存后到 Service 启动 Gateway。"
+      }
+    },
+    "runbook": {
+      "title": "当前步骤",
+      "description": "只看当前一步，别同时处理安装、配置和服务。"
+    }
+  },
+  "environment": {
+    "title": "安装准备",
+    "description": "先确认本机环境和 OpenClaw 检测状态，再启动安装流程。",
+    "pills": {
+      "npmReady": "npm 已就绪",
+      "npmMissing": "npm 缺失",
+      "openclawInstalled": "OpenClaw 已安装",
+      "openclawMissing": "OpenClaw 未安装"
+    },
+    "labels": {
+      "platform": "平台",
+      "homeDir": "Home 目录",
+      "configPath": "配置路径",
+      "npmVersion": "npm 版本",
+      "openclawPath": "OpenClaw 路径",
+      "openclawVersion": "OpenClaw 版本"
+    }
+  },
+  "actions": {
+    "refreshing": "Refreshing...",
+    "refreshEnvironment": "Refresh Environment",
+    "installing": "Installing...",
+    "install": "Install OpenClaw",
+    "openLogs": "Open Logs"
+  },
+  "status": {
+    "desktopRuntimeRequired": "需要桌面运行时",
+    "desktopBridgeRequired": "需要桌面桥接",
+    "npmRequired": "需要 npm",
+    "previewMode": "当前为浏览器预览模式，安装按钮已禁用。请使用 ClawDesk 桌面应用或 `npm run tauri:dev` 再执行本机安装。",
+    "runtimeUnavailable": "当前桌面命令桥不可用，安装按钮已禁用。请先修复 Tauri 运行时集成，再继续执行本机安装。",
+    "npmMissing": "当前未检测到 npm，安装按钮已禁用。请先安装 Node.js / npm，然后刷新环境检查。",
+    "installHint": "点击\"开始安装\"后，安装会在后台自动进行，完成后将显示安装结果。"
+  },
+  "issue": {
+    "title": "安装遇到问题",
+    "suggestionPrefix": "建议：",
+    "kinds": {
+      "missing-npm": "缺少 Node.js / npm",
+      "permission-denied": "权限不足",
+      "network-failure": "网络连接失败",
+      "command-timeout": "安装超时",
+      "binary-not-found": "未找到 OpenClaw 程序",
+      "gateway-install-failed": "Gateway 服务注册未完成",
+      "unknown": "安装遇到问题"
+    }
+  },
+  "phase": {
+    "title": "安装步骤",
+    "status": {
+      "success": "已完成",
+      "warning": "需关注",
+      "failure": "失败",
+      "pending": "等待中",
+      "running": "进行中"
+    }
+  },
+  "progress": {
+    "ariaLabel": "安装进度"
+  },
+  "result": {
+    "nextConfig": "下一步：配置 API Key",
+    "viewLogs": "查看详细日志",
+    "titleSuccess": "安装完成",
+    "titleWarning": "安装基本完成",
+    "titleFailure": "安装遇到问题",
+    "hintSuccess": "OpenClaw 已就绪，下一步去填入 API Key，然后就可以启动服务了。",
+    "hintWarning": "核心组件已安装成功，先填写 API Key，后续可在服务页面继续处理剩余步骤。",
+    "hintFailure": "安装过程中出现了问题，可以查看日志了解详情，修复后重新安装。"
+  },
+  "wizard": {
+    "title": "OpenClaw 安装向导",
+    "currentStep": "现在先做：{{step}}",
+    "ready": "准备开始安装",
+    "nowOnly": "现在只需要完成这一件事：{{step}}",
+    "nextStep": "完成当前步骤后，下一步是：{{step}}",
+    "sequence": {
+      "title": "按这个顺序走就行",
+      "description": "这不是诊断页，只保留新手需要的安装路径。"
+    },
+    "after": {
+      "title": "装完以后怎么继续",
+      "description": "1. 保存 Provider 配置，填好 API Key。2. 启动 Gateway。3. 打开 Dashboard 开始使用。"
+    },
+    "platform": {
+      "title": "按你的系统看这一张",
+      "description": "三个平台共用同一条安装路径，但命令、权限和排障重点不同。",
+      "current": "当前系统",
+      "installMethod": "安装方式",
+      "pathHint": "路径提示"
+    },
+    "steps": {
+      "environment": "检查环境",
+      "install": "安装 OpenClaw",
+      "config": "配置 API Key",
+      "service": "启动 Gateway",
+      "dashboard": "打开 Dashboard"
+    },
+    "primary": {
+      "startInstall": "开始安装",
+      "goConfig": "去配置 API Key",
+      "startGateway": "启动 Gateway",
+      "openDashboard": "打开 Dashboard"
+    },
+    "tags": {
+      "done": "已完成",
+      "current": "现在做"
+    }
+  },
+  "platform": {
+    "title": "平台指引",
+    "description": "Windows、macOS 和 Linux 使用同一条产品链路，但命令路径、权限模型和排障重点不同。",
+    "current": "当前",
+    "install": "安装方式：",
+    "pathHint": "路径提示："
+  }
+}

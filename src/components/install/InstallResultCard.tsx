@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import type { InstallActionResult } from "../../types/install";
 
 export interface InstallResultCardProps {
@@ -6,6 +7,7 @@ export interface InstallResultCardProps {
 }
 
 export function InstallResultCard({ result }: InstallResultCardProps): JSX.Element | null {
+  const { t } = useTranslation(["install"]);
   if (!result) {
     return null;
   }
@@ -17,14 +19,14 @@ export function InstallResultCard({ result }: InstallResultCardProps): JSX.Eleme
   const border = isSuccess ? "#86efac" : isWarning ? "#fcd34d" : "#fca5a5";
   const background = isSuccess ? "#f0fdf4" : isWarning ? "#fffbeb" : "#fef2f2";
   const nextRoute = isOk ? "/config" : "/logs";
-  const nextLabel = isOk ? "下一步：配置 API Key" : "查看详细日志";
+  const nextLabel = isOk ? t("install:result.nextConfig") : t("install:result.viewLogs");
 
-  const title = isSuccess ? "安装完成" : isWarning ? "安装基本完成" : "安装遇到问题";
+  const title = isSuccess ? t("install:result.titleSuccess") : isWarning ? t("install:result.titleWarning") : t("install:result.titleFailure");
   const hint = isSuccess
-    ? "OpenClaw 已就绪，下一步去填入 API Key，然后就可以启动服务了。"
+    ? t("install:result.hintSuccess")
     : isWarning
-      ? "核心组件已安装成功，先填写 API Key，后续可在服务页面继续处理剩余步骤。"
-      : "安装过程中出现了问题，可以查看日志了解详情，修复后重新安装。";
+      ? t("install:result.hintWarning")
+      : t("install:result.hintFailure");
 
   return (
     <section

@@ -1,0 +1,37 @@
+{
+  "page": {
+    "title": "ログ",
+    "description": "ログページはガイド付き復旧フローの一部です。設定やサービス状態を変更する前に、インストール、起動、Gateway の失敗で役立つ診断情報がすでに残っているか確認してください。",
+    "meta": "総ログ数 {{total}} 行、フィルタ後 {{visible}} 行",
+    "metaWithUpdatedAt": "総ログ数 {{total}} 行、フィルタ後 {{visible}} 行、最終更新：{{updatedAt}}",
+    "loadErrorTitle": "ログ読み取りのヒント",
+    "runbook": {
+      "title": "復旧コンテキスト",
+      "description": "ログは、今詰まっている箇所が install、config、service のどれかを確認する最短ルートです。原因が見えたら、クイックリンクで戻ってください。"
+    }
+  },
+  "summary": {
+    "title": "エラー概要",
+    "actions": {
+      "copying": "コピー中...",
+      "copy": "診断概要をコピー",
+      "exporting": "エクスポート中...",
+      "export": "診断情報をエクスポート",
+      "bundling": "パッケージ作成中...",
+      "bundle": "診断 ZIP をエクスポート"
+    },
+    "empty": "明確なエラーは検出されませんでした。サービスがまだ異常な場合は、別のキーワードを試すか、完全なログ文脈を確認してください。",
+    "hitCount": "{{count}} 回ヒット",
+    "suggestionPrefix": "提案: "
+  },
+  "viewer": {
+    "filterPlaceholder": "キーワードでログを絞り込む。例: EADDRINUSE / timeout",
+    "actions": {
+      "refreshing": "更新中...",
+      "refresh": "手動更新"
+    },
+    "title": "Log Viewer ({{count}} lines)",
+    "loading": "ログを読み込み中...",
+    "empty": "ログ出力はありません。"
+  }
+}

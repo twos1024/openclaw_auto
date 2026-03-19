@@ -1,0 +1,17 @@
+{
+  "context": {
+    "empty": "現在明確な blocker はありません。今の作業に応じたページへそのまま進めます。"
+  },
+  "assistant": {
+    "title": "OpenClaw セットアップアシスタント",
+    "refresh": "再確認",
+    "loading": "現在の手順を読み込み中...",
+    "currentBlocker": "まず対応する項目：",
+    "checkedAt": "確認時刻："
+  },
+  "launchChecks": {
+    "title": "起動チェック",
+    "subtitle": "これらのチェックにより、Setup がインストールから Dashboard まで正常に進めるかを判断します。",
+    "open": "開く"
+  }
+}

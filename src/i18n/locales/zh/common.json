@@ -1,0 +1,10 @@
+{
+  "appName": "OpenClaw Manager",
+  "comingSoon": "该模块骨架已接入，下一阶段补齐表单与后端联调。",
+  "loading": "加载中...",
+  "save": "保存",
+  "cancel": "取消",
+  "theme": "主题",
+  "language": "语言",
+  "poweredBy": "Powered by OpenClaw"
+}

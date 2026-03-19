@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { OverviewActionList } from "../components/overview/OverviewActionList";
 import { OverviewSectionCard } from "../components/overview/OverviewSectionCard";
 import { OverviewSummaryCard } from "../components/overview/OverviewSummaryCard";
@@ -14,6 +15,7 @@ type LoadState = "idle" | "loading" | "loaded" | "error";
 type ActionTone = "info" | "error";
 
 export function OverviewPage({ autoRefreshMs }: OverviewPageProps): JSX.Element {
+  const { t } = useTranslation("overview");
   const [loadState, setLoadState] = useState<LoadState>("idle");
   const [status, setStatus] = useState<OverviewStatus | null>(null);
   const [errorText, setErrorText] = useState<string | null>(null);
@@ -21,20 +23,20 @@ export function OverviewPage({ autoRefreshMs }: OverviewPageProps): JSX.Element 
   const [actionTone, setActionTone] = useState<ActionTone>("info");
   const [actionLoadingId, setActionLoadingId] = useState<string | null>(null);
 
-  const refresh = async (): Promise<void> => {
+  const refresh = useCallback(async (): Promise<void> => {
     setLoadState("loading");
     setErrorText(null);
     const result = await statusService.getOverviewStatus();
     if (!result.data) {
       setLoadState("error");
-      setErrorText(result.error?.message ?? "Failed to load overview status.");
+      setErrorText(result.error?.message ?? t("errors.loadFailed"));
       return;
     }
 
     setStatus(result.data);
-    setErrorText(result.ok ? null : result.error?.message ?? "Failed to load overview status.");
+    setErrorText(result.ok ? null : result.error?.message ?? t("errors.loadFailed"));
     setLoadState("loaded");
-  };
+  }, [t]);
 
   const handleAction = async (action: OverviewAction): Promise<void> => {
     if (action.kind !== "open-dashboard") {
@@ -45,13 +47,13 @@ export function OverviewPage({ autoRefreshMs }: OverviewPageProps): JSX.Element 
     setActionFeedback(null);
     const result = await serviceService.openDashboard();
     setActionTone(result.status === "success" ? "info" : "error");
-    setActionFeedback(result.status === "success" ? "Dashboard 已打开。" : result.detail);
+    setActionFeedback(result.status === "success" ? t("feedback.dashboardOpened") : result.detail);
     setActionLoadingId(null);
   };
 
   useEffect(() => {
     void refresh();
-  }, []);
+  }, [refresh]);
 
   useEffect(() => {
     if (!autoRefreshMs || autoRefreshMs <= 0) return;
@@ -59,15 +61,15 @@ export function OverviewPage({ autoRefreshMs }: OverviewPageProps): JSX.Element 
       void refresh();
     }, autoRefreshMs);
     return () => window.clearInterval(timer);
-  }, [autoRefreshMs]);
+  }, [autoRefreshMs, refresh]);
 
   const headerText = useMemo(() => {
-    if (loadState === "loading" && !status) return "正在加载";
-    if (loadState === "error") return "概览不可用";
-    if (status?.mode === "preview") return "浏览器预览";
-    if (status?.mode === "runtime-unavailable") return "桌面运行时异常";
-    return "OpenClaw 概览";
-  }, [loadState, status]);
+    if (loadState === "loading" && !status) return t("header.loading");
+    if (loadState === "error") return t("header.error");
+    if (status?.mode === "preview") return t("header.preview");
+    if (status?.mode === "runtime-unavailable") return t("header.runtimeUnavailable");
+    return t("header.title");
+  }, [loadState, status, t]);
 
   const sections = status ? [status.install, status.config, status.service, status.runtime, status.settings] : [];
 
@@ -77,10 +79,10 @@ export function OverviewPage({ autoRefreshMs }: OverviewPageProps): JSX.Element 
         <h2 style={{ marginBottom: 8 }}>{headerText}</h2>
         <p style={{ margin: 0, color: "#64748b" }}>
           {status?.mode === "preview"
-            ? "当前是浏览器预览，只看结构，不代表本机真实状态。"
+            ? t("description.preview")
             : status?.mode === "runtime-unavailable"
-              ? "当前已进入桌面窗口，但前端没连上运行时桥接。先修复它，再继续安装和配置。"
-              : "这里会告诉你现在只该做哪一步。"}
+              ? t("description.runtimeUnavailable")
+              : t("description.default")}
         </p>
       </header>
 
@@ -100,7 +102,7 @@ export function OverviewPage({ autoRefreshMs }: OverviewPageProps): JSX.Element 
             opacity: loadState === "loading" ? 0.6 : 1,
           }}
         >
-          重新加载
+          {t("actions.refresh")}
         </button>
       </div>
 

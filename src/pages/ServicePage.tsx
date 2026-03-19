@@ -1,9 +1,11 @@
+import { useTranslation } from "react-i18next";
 import { EndpointCard } from "../components/service/EndpointCard";
 import { ServiceControlPanel } from "../components/service/ServiceControlPanel";
 import { useAppSettingsSnapshot } from "../hooks/useAppSettingsSnapshot";
 import { useGatewayControl } from "../hooks/useGatewayControl";
 
 function PortConflictBanner({ port }: { port: number | null }): JSX.Element {
+  const { t } = useTranslation(["service"]);
   return (
     <section
       style={{
@@ -14,27 +16,28 @@ function PortConflictBanner({ port }: { port: number | null }): JSX.Element {
         padding: 12,
       }}
       >
-      <strong>端口被占用</strong>
+      <strong>{t("service:status.portConflict.title")}</strong>
       <p style={{ margin: "8px 0 0" }}>
-        Gateway
+        {t("service:status.portConflict.prefix")}
         {port ? (
           <>
             {" "}
-            port <strong>{port}</strong>
+            {t("service:status.portConflict.portLabel")} <strong>{port}</strong>
           </>
         ) : (
-          " target port"
+          t("service:status.portConflict.targetPort")
         )}{" "}
-        已被其他进程占用。
+        {t("service:status.portConflict.suffix")}
       </p>
       <p style={{ margin: "8px 0 0", fontSize: 13 }}>
-        先释放这个端口，或者换一个空闲端口，再重新启动 Gateway。
+        {t("service:status.portConflict.suggestion")}
       </p>
     </section>
   );
 }
 
 function NextStepHint({ running, suggestion }: { running: boolean; suggestion: string }): JSX.Element | null {
+  const { t } = useTranslation(["service"]);
   if (running) return null;
   return (
     <section
@@ -46,16 +49,17 @@ function NextStepHint({ running, suggestion }: { running: boolean; suggestion: s
         padding: 12,
       }}
     >
-      <strong>下一步</strong>
+      <strong>{t("service:nextStep.title")}</strong>
       <p style={{ margin: "8px 0 0" }}>{suggestion}</p>
       <p style={{ margin: "8px 0 0", fontSize: 13 }}>
-        先启动 Gateway，确认运行后再打开 Dashboard。
+        {t("service:nextStep.description")}
       </p>
     </section>
   );
 }
 
 export function ServicePage(): JSX.Element {
+  const { t } = useTranslation(["service"]);
   const { settings } = useAppSettingsSnapshot();
   const {
     status,
@@ -77,13 +81,11 @@ export function ServicePage(): JSX.Element {
   return (
     <div style={{ display: "grid", gap: 16 }}>
       <header>
-        <h2 style={{ marginBottom: 8 }}>Gateway 服务</h2>
-        <p style={{ margin: 0, color: "#64748b" }}>
-          先启动 Gateway，再打开 Dashboard。
-        </p>
+        <h2 style={{ marginBottom: 8 }}>{t("service:page.title")}</h2>
+        <p style={{ margin: 0, color: "#64748b" }}>{t("service:page.description")}</p>
         <p style={{ margin: "6px 0 0", color: "#94a3b8", fontSize: 13 }}>
-          轮询：{isPolling ? `开启 (${Math.round(settings.gatewayPollMs / 1000)}s)` : "关闭"}{" "}
-          {isInitializing ? " | 正在初始化..." : ""}
+          {t("service:page.polling", { state: isPolling ? t("service:page.pollingOn", { seconds: Math.round(settings.gatewayPollMs / 1000) }) : t("service:page.pollingOff") })}
+          {isInitializing ? ` ${t("service:page.initializing")}` : ""}
         </p>
       </header>
 
@@ -112,16 +114,16 @@ export function ServicePage(): JSX.Element {
           padding: 16,
         }}
       >
-        <h3 style={{ marginTop: 0, marginBottom: 12 }}>Runtime Snapshot</h3>
+        <h3 style={{ marginTop: 0, marginBottom: 12 }}>{t("service:snapshot.title")}</h3>
         <div style={{ display: "grid", gap: 8 }}>
           <p style={{ margin: 0 }}>
-            <strong>Running:</strong> {status?.running ? "Yes" : "No"}
+            <strong>{t("service:snapshot.running")}</strong> {status?.running ? t("service:snapshot.yes") : t("service:snapshot.no")}
           </p>
           <p style={{ margin: 0 }}>
-            <strong>PID:</strong> {status?.pid ?? "-"}
+            <strong>{t("service:snapshot.pid")}</strong> {status?.pid ?? "-"}
           </p>
           <p style={{ margin: 0 }}>
-            <strong>Last Started:</strong>{" "}
+            <strong>{t("service:snapshot.lastStarted")}</strong>{" "}
             {status?.lastStartedAt ? new Date(status.lastStartedAt).toLocaleString() : "-"}
           </p>
         </div>

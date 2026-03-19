@@ -1,15 +1,16 @@
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import type { PlatformGuidanceCard } from "../../types/installWizard";
 import type { DashboardDiagnosticsModel, DashboardEmbedPhase } from "../../types/dashboard";
 
 type DashboardDiagnosticsPhase = DashboardEmbedPhase | "unavailable";
 
-const phaseLabels: Record<DashboardDiagnosticsPhase, string> = {
-  loading: "Loading",
-  loaded: "Loaded",
-  timeout: "Timeout",
-  blocked: "Blocked",
-  unavailable: "Unavailable",
+const phaseKeys: Record<DashboardDiagnosticsPhase, string> = {
+  loading: "phase.loading",
+  loaded: "phase.loaded",
+  timeout: "phase.timeout",
+  blocked: "phase.blocked",
+  unavailable: "phase.unavailable",
 };
 
 const phaseColors: Record<DashboardDiagnosticsPhase, { bg: string; text: string; border: string }> = {
@@ -20,11 +21,11 @@ const phaseColors: Record<DashboardDiagnosticsPhase, { bg: string; text: string;
   unavailable: { bg: "#f8fafc", text: "#475569", border: "#cbd5e1" },
 };
 
-const itemTones = {
-  healthy: { bg: "#f0fdf4", text: "#166534", border: "#86efac", label: "Healthy" },
-  warning: { bg: "#fff7ed", text: "#9a3412", border: "#fdba74", label: "Warning" },
-  error: { bg: "#fef2f2", text: "#991b1b", border: "#fca5a5", label: "Error" },
-  neutral: { bg: "#f8fafc", text: "#475569", border: "#cbd5e1", label: "Pending" },
+const itemToneKeys = {
+  healthy: { bg: "#f0fdf4", text: "#166534", border: "#86efac", label: "tone.healthy" },
+  warning: { bg: "#fff7ed", text: "#9a3412", border: "#fdba74", label: "tone.warning" },
+  error: { bg: "#fef2f2", text: "#991b1b", border: "#fca5a5", label: "tone.error" },
+  neutral: { bg: "#f8fafc", text: "#475569", border: "#cbd5e1", label: "tone.neutral" },
 } as const;
 
 export interface DashboardDiagnosticsPanelProps {
@@ -34,6 +35,7 @@ export interface DashboardDiagnosticsPanelProps {
 }
 
 export function DashboardDiagnosticsPanel({ phase, platformCard, model }: DashboardDiagnosticsPanelProps): JSX.Element {
+  const { t } = useTranslation("dashboard");
   const color = phaseColors[phase];
 
   return (
@@ -48,9 +50,9 @@ export function DashboardDiagnosticsPanel({ phase, platformCard, model }: Dashbo
       }}
     >
       <div>
-        <h3 style={{ margin: 0 }}>Dashboard Diagnostics</h3>
+        <h3 style={{ margin: 0 }}>{t("title")}</h3>
         <p style={{ margin: "6px 0 0", color: "#64748b" }}>
-          查看当前内嵌阶段、端点信息和当前平台上的排障重点。
+          {t("description")}
         </p>
       </div>
 
@@ -66,13 +68,13 @@ export function DashboardDiagnosticsPanel({ phase, platformCard, model }: Dashbo
             border: `1px solid ${color.border}`,
           }}
         >
-          Embed Phase: {phaseLabels[phase]}
+          {t("embedPhase", { value: t(phaseKeys[phase]) })}
         </span>
       </div>
 
       <div style={{ display: "grid", gap: 8 }}>
         {model.items.map((item) => {
-          const tone = itemTones[item.tone];
+          const tone = itemToneKeys[item.tone];
           return (
             <article
               key={item.id}
@@ -98,7 +100,7 @@ export function DashboardDiagnosticsPanel({ phase, platformCard, model }: Dashbo
                     border: `1px solid ${tone.border}`,
                   }}
                 >
-                  {tone.label}
+                  {t(tone.label)}
                 </span>
               </div>
               <p style={{ margin: 0, color: "#475569" }}>{item.detail}</p>
@@ -120,7 +122,7 @@ export function DashboardDiagnosticsPanel({ phase, platformCard, model }: Dashbo
             }}
           >
             <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "center" }}>
-              <strong style={{ color: "#0f172a" }}>Recommended Next Action</strong>
+              <strong style={{ color: "#0f172a" }}>{t("recommendedAction.title")}</strong>
               <span
                 style={{
                   borderRadius: 999,
@@ -132,7 +134,7 @@ export function DashboardDiagnosticsPanel({ phase, platformCard, model }: Dashbo
                   border: "1px solid #93c5fd",
                 }}
               >
-                Next
+                {t("recommendedAction.next")}
               </span>
             </div>
             <p style={{ margin: 0, color: "#475569" }}>{model.recommendedAction.detail}</p>
@@ -155,7 +157,7 @@ export function DashboardDiagnosticsPanel({ phase, platformCard, model }: Dashbo
           </article>
         ) : null}
         <p style={{ margin: 0, color: "#475569" }}>
-          <strong>Platform:</strong> {platformCard?.title ?? "Unknown"}
+          <strong>{t("platform.label")}:</strong> {platformCard?.title ?? t("platform.unknown")}
         </p>
         <p style={{ margin: 0, color: "#64748b", fontSize: 13 }}>
           {model.platformNote}

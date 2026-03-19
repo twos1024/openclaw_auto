@@ -1,0 +1,67 @@
+{
+  "title": "Dashboard diagnostics",
+  "description": "View the current embed phase, endpoint details, and the troubleshooting focus for this platform.",
+  "embedPhase": "Embed phase: {{value}}",
+  "phase": {
+    "loading": "Loading",
+    "loaded": "Loaded",
+    "timeout": "Timed out",
+    "blocked": "Blocked",
+    "unavailable": "Unavailable"
+  },
+  "tone": {
+    "healthy": "Healthy",
+    "warning": "Warning",
+    "error": "Error",
+    "neutral": "Pending"
+  },
+  "recommendedAction": {
+    "title": "Recommended next action",
+    "next": "Next"
+  },
+  "platform": {
+    "label": "Platform",
+    "unknown": "Unknown"
+  },
+  "diagnostics": {
+    "platformNoteFallback": "If the embedded page fails to load, check Gateway status, iframe security policies, and local port connectivity first.",
+    "probing": "Probing dashboard endpoint..."
+  },
+  "toolbar": {
+    "statusWaiting": "Waiting for Gateway status...",
+    "title": "Embedded Dashboard",
+    "endpoint": "Endpoint:",
+    "refreshStatus": "Refresh Status",
+    "refreshing": "Refreshing...",
+    "reloadFrame": "Reload Frame",
+    "restartGateway": "Restart Gateway",
+    "restarting": "Restarting...",
+    "openExternal": "Open External",
+    "opening": "Opening..."
+  },
+  "frame": {
+    "title": "OpenClaw Dashboard",
+    "loadingAria": "Dashboard loading",
+    "actions": {
+      "reloadFrame": "Reload Frame",
+      "openExternal": "Open External",
+      "restartGateway": "Restart Gateway",
+      "openSetupAssistant": "Open Setup Assistant"
+    }
+  },
+  "unavailable": {
+    "title": "Dashboard unavailable",
+    "description": "Gateway is not ready yet, so the embedded Dashboard cannot be loaded right now.",
+    "actions": {
+      "starting": "Starting...",
+      "start": "Start Gateway",
+      "setupAssistant": "Open setup assistant"
+    }
+  },
+  "adminBanner": {
+    "title": "Not running with admin privileges",
+    "relaunching": "Relaunching with elevated privileges...",
+    "relaunch": "Restart as administrator",
+    "closeLabel": "Close notice"
+  }
+}

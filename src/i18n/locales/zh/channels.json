@@ -1,0 +1,74 @@
+{
+  "page": {
+    "title": "通道管理",
+    "description": "管理各个接入通道与其绑定的模型提供方。",
+    "stats": "共 {{total}} 个，已连接 {{connected}} 个"
+  },
+  "actions": {
+    "create": "新建通道",
+    "loading": "正在加载通道...",
+    "connect": "连接",
+    "disconnect": "断开",
+    "confirmDelete": "确认删除通道“{{name}}”吗？"
+  },
+  "empty": {
+    "title": "还没有通道",
+    "description": "创建一个通道后，即可绑定提供方和智能体。",
+    "cta": "创建第一个通道"
+  },
+  "status": {
+    "connected": "已连接",
+    "error": "异常",
+    "idle": "空闲",
+    "disconnected": "未连接"
+  },
+  "card": {
+    "noProvider": "未绑定提供方",
+    "connectionType": "连接方式：{{value}}",
+    "provider": "提供方：{{value}}",
+    "boundAgents": "绑定智能体：{{count}} 个",
+    "updatedAt": "更新时间：{{value}}"
+  },
+  "dialog": {
+    "title": "创建通道",
+    "description": "填写通道基础信息，并选择可绑定的提供方与智能体。",
+    "fields": {
+      "name": "名称",
+      "type": "通道类型",
+      "connectionType": "连接方式",
+      "provider": "提供方",
+      "agents": "绑定智能体",
+      "description": "描述"
+    },
+    "placeholders": {
+      "name": "例如：企业客服通道",
+      "description": "补充该通道的使用场景或说明"
+    },
+    "options": {
+      "type": {
+        "openclaw": "OpenClaw",
+        "openai-compatible": "OpenAI 兼容",
+        "custom": "自定义",
+        "webhook": "Webhook"
+      },
+      "connection": {
+        "none": "无",
+        "api-key": "API Key",
+        "oauth": "OAuth"
+      }
+    },
+    "noProvider": "不绑定提供方",
+    "hints": {
+      "noAgents": "当前没有可绑定的智能体，请先创建智能体。"
+    },
+    "actions": {
+      "cancel": "取消",
+      "create": "创建通道",
+      "creating": "正在创建..."
+    },
+    "errors": {
+      "nameRequired": "请输入通道名称。",
+      "createFailed": "创建通道失败，请重试。"
+    }
+  }
+}

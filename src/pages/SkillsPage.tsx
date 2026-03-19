@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useState } from "react";
-import { Search, Zap, Package, RefreshCw, ToggleLeft, ToggleRight, ExternalLink } from "lucide-react";
+import { Search, Zap, Package, RefreshCw, ExternalLink } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { gatewayFetch } from "@/lib/gateway-client";
-import { invokeCommand } from "@/services/tauriClient";
+import { serviceService } from "@/services/serviceService";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -26,6 +27,7 @@ interface Skill {
 // ─── Skill card ───────────────────────────────────────────────────────────────
 
 function SkillCard({ skill, onToggle }: { skill: Skill; onToggle: (slug: string, enabled: boolean) => void }) {
+  const { t } = useTranslation("skills");
   const [toggling, setToggling] = useState(false);
   const [toggleError, setToggleError] = useState<string | null>(null);
 
@@ -39,7 +41,7 @@ function SkillCard({ skill, onToggle }: { skill: Skill; onToggle: (slug: string,
       });
       onToggle(skill.slug, !skill.enabled);
     } catch {
-      setToggleError("操作失败，请检查 Gateway 状态");
+      setToggleError(t("status.toggleFailed"));
     } finally {
       setToggling(false);
     }
@@ -74,10 +76,10 @@ function SkillCard({ skill, onToggle }: { skill: Skill; onToggle: (slug: string,
       )}
 
       <div className="flex items-center gap-2 flex-wrap">
-        {skill.isBundled && <Badge variant="secondary">内置</Badge>}
+        {skill.isBundled && <Badge variant="secondary">{t("card.bundled")}</Badge>}
         {skill.source && !skill.isBundled && <Badge variant="outline">{skill.source}</Badge>}
-        {skill.tags?.slice(0, 2).map((t) => (
-          <Badge key={t} variant="outline" className="text-[10px]">{t}</Badge>
+        {skill.tags?.slice(0, 2).map((tag) => (
+          <Badge key={tag} variant="outline" className="text-[10px]">{tag}</Badge>
         ))}
       </div>
     </div>
@@ -87,6 +89,7 @@ function SkillCard({ skill, onToggle }: { skill: Skill; onToggle: (slug: string,
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export function SkillsPage(): JSX.Element {
+  const { t } = useTranslation("skills");
   const [skills, setSkills] = useState<Skill[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -97,8 +100,8 @@ export function SkillsPage(): JSX.Element {
     if (!quiet) setLoading(true);
     else setRefreshing(true);
 
-    const statusResult = await invokeCommand<{ running: boolean }>("get_gateway_status");
-    if (statusResult.success && statusResult.data?.running) {
+    const status = await serviceService.getGatewayStatus();
+    if (status.running) {
       setGatewayRunning(true);
       try {
         const data = await gatewayFetch<Skill[]>("/api/skills");
@@ -133,12 +136,12 @@ export function SkillsPage(): JSX.Element {
         <h1
           className="page-heading"
         >
-          技能管理
+          {t("page.title")}
         </h1>
         <p className="text-muted-foreground text-sm mt-1">
           {gatewayRunning
-            ? `${skills.length} 个技能 · ${enabledCount} 个已启用`
-            : "请先启动 Gateway 以加载技能列表"}
+            ? t("page.description", { count: skills.length, enabled: enabledCount })
+            : t("page.descriptionIdle")}
         </p>
       </div>
 
@@ -146,21 +149,21 @@ export function SkillsPage(): JSX.Element {
       <div className="flex items-center gap-3">
         <div className="relative flex-1 max-w-xs">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-          <Input placeholder="搜索技能..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
+          <Input placeholder={t("toolbar.searchPlaceholder")} value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
         </div>
         <Button variant="outline" size="icon" onClick={() => void loadSkills(true)} disabled={refreshing} className="h-9 w-9">
           <RefreshCw className={cn("h-4 w-4", refreshing && "animate-spin")} />
         </Button>
         <Button variant="outline" onClick={() => window.open("https://clawhub.ai", "_blank")}>
           <ExternalLink className="h-4 w-4 mr-1.5" />
-          ClawHub 市场
+          {t("toolbar.market")}
         </Button>
       </div>
 
       {/* Content */}
       {loading ? (
         <div className="flex items-center justify-center py-20 text-muted-foreground text-sm">
-          <RefreshCw className="h-4 w-4 animate-spin mr-2" />加载技能列表...
+          <RefreshCw className="h-4 w-4 animate-spin mr-2" />{t("status.loading")}
         </div>
       ) : !gatewayRunning ? (
         <div className="flex flex-col items-center justify-center rounded-3xl border border-dashed border-border min-h-[360px] gap-4 bg-black/[0.015]">
@@ -168,14 +171,14 @@ export function SkillsPage(): JSX.Element {
             <Package className="h-8 w-8 text-muted-foreground/40" />
           </div>
           <div className="text-center">
-            <p className="font-semibold text-foreground">Gateway 未运行</p>
-            <p className="text-sm text-muted-foreground mt-1">请在设置页面启动 Gateway 后查看技能。</p>
+            <p className="font-semibold text-foreground">{t("status.gatewayNotRunning")}</p>
+            <p className="text-sm text-muted-foreground mt-1">{t("status.gatewayNotRunningDescription")}</p>
           </div>
         </div>
       ) : filtered.length === 0 ? (
         <div className="flex flex-col items-center justify-center rounded-3xl border border-dashed border-border min-h-[360px] gap-4 bg-black/[0.015]">
           <Zap className="h-12 w-12 text-muted-foreground/30" />
-          <p className="text-sm text-muted-foreground">{search ? "没有匹配的技能" : "暂无技能，请安装技能扩展"}</p>
+          <p className="text-sm text-muted-foreground">{search ? t("empty.noMatch") : t("empty.noSkills")}</p>
         </div>
       ) : (
         <div className="grid gap-4" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))" }}>

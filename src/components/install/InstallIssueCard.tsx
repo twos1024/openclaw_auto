@@ -1,21 +1,13 @@
+import { useTranslation } from "react-i18next";
 import type { InstallIssue } from "../../types/install";
-
-const kindTitleMap: Record<string, string> = {
-  "missing-npm": "缺少 Node.js / npm",
-  "permission-denied": "权限不足",
-  "network-failure": "网络连接失败",
-  "command-timeout": "安装超时",
-  "binary-not-found": "未找到 OpenClaw 程序",
-  "gateway-install-failed": "Gateway 服务注册未完成",
-  unknown: "安装遇到问题",
-};
 
 export interface InstallIssueCardProps {
   issue: InstallIssue;
 }
 
 export function InstallIssueCard({ issue }: InstallIssueCardProps): JSX.Element {
-  const title = kindTitleMap[issue.failureKind] ?? "安装遇到问题";
+  const { t } = useTranslation(["install"]);
+  const title = t(`install:issue.kinds.${issue.failureKind}` as const, { defaultValue: t("install:issue.title") });
   const isGatewayWarning = issue.failureKind === "gateway-install-failed";
 
   return (
@@ -31,7 +23,7 @@ export function InstallIssueCard({ issue }: InstallIssueCardProps): JSX.Element 
     >
       <strong>{title}</strong>
       <p style={{ margin: 0, color: "#334155" }}>{issue.message}</p>
-      <p style={{ margin: 0, fontSize: 13, color: "#475569" }}>建议：{issue.suggestion}</p>
+      <p style={{ margin: 0, fontSize: 13, color: "#475569" }}>{t("install:issue.suggestionPrefix")}{issue.suggestion}</p>
     </section>
   );
 }

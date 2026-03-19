@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { DashboardDiagnosticsPanel } from "../components/dashboard/DashboardDiagnosticsPanel";
 import { DashboardFrame } from "../components/dashboard/DashboardFrame";
 import { DashboardToolbar } from "../components/dashboard/DashboardToolbar";
@@ -12,6 +13,7 @@ import { serviceService, type ServiceActionResult } from "../services/serviceSer
 import type { DashboardEmbedPhase, DashboardProbeResult } from "../types/dashboard";
 
 export function DashboardPage(): JSX.Element {
+  const { t } = useTranslation("dashboard");
   const { settings } = useAppSettingsSnapshot();
   const { environment } = useEnvironmentSnapshot();
   const { openSetupAssistant } = useShellActions();
@@ -35,7 +37,7 @@ export function DashboardPage(): JSX.Element {
   const platformCard = currentPlatformCard(environment?.platform);
   const platformNote =
     platformCard?.troubleshooting ??
-    "若内嵌页面加载异常，优先检查 Gateway 状态、iframe 安全策略和本地端口连通性。";
+    t("diagnostics.platformNoteFallback");
 
   useEffect(() => {
     let cancelled = false;
@@ -51,7 +53,7 @@ export function DashboardPage(): JSX.Element {
       result: "probing",
       httpStatus: null,
       responseTimeMs: null,
-      detail: "Probing dashboard endpoint...",
+      detail: t("diagnostics.probing"),
     });
 
     void serviceService.probeDashboardEndpoint(address).then((result) => {
@@ -63,7 +65,7 @@ export function DashboardPage(): JSX.Element {
     return () => {
       cancelled = true;
     };
-  }, [address, frameKey, isRunning, refreshCycle, status?.lastStartedAt, status?.state]);
+  }, [address, frameKey, isRunning, refreshCycle, status?.lastStartedAt, status?.state, t]);
 
   useEffect(() => {
     setLastExternalOpenResult(null);
@@ -76,7 +78,7 @@ export function DashboardPage(): JSX.Element {
         gatewayState: status?.state ?? null,
         gatewayRunning: Boolean(status?.running),
         address,
-        statusDetail: status?.statusDetail ?? "Waiting for Gateway status...",
+        statusDetail: status?.statusDetail ?? t("toolbar.statusWaiting"),
         platformNote,
         probe,
         externalOpenResult: lastExternalOpenResult,
@@ -88,6 +90,7 @@ export function DashboardPage(): JSX.Element {
       lastExternalOpenResult,
       platformNote,
       probe,
+      t,
       status?.running,
       status?.state,
       status?.statusDetail,
@@ -105,7 +108,7 @@ export function DashboardPage(): JSX.Element {
     <div style={{ display: "grid", gap: 16 }}>
       <DashboardToolbar
         address={address}
-        statusDetail={status?.statusDetail ?? "Waiting for Gateway status..."}
+        statusDetail={status?.statusDetail ?? t("toolbar.statusWaiting")}
         isRunning={isRunning}
         isRefreshing={isRefreshing}
         isRestarting={loadingByAction.restart}
@@ -143,10 +146,10 @@ export function DashboardPage(): JSX.Element {
             gap: 14,
           }}
         >
-          <h3 style={{ margin: 0 }}>Dashboard Unavailable</h3>
+          <h3 style={{ margin: 0 }}>{t("unavailable.title")}</h3>
           <p style={{ margin: 0, color: "#475569" }}>
             {status?.suggestion ??
-              "Gateway 还没有进入可用状态，因此当前不能加载内嵌 Dashboard。"}
+              t("unavailable.description")}
           </p>
           <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
             <button
@@ -164,7 +167,7 @@ export function DashboardPage(): JSX.Element {
                 opacity: loadingByAction.start ? 0.7 : 1,
               }}
             >
-              {loadingByAction.start ? "Starting..." : "Start Gateway"}
+              {loadingByAction.start ? t("unavailable.actions.starting") : t("unavailable.actions.start")}
             </button>
             <button
               type="button"
@@ -179,7 +182,7 @@ export function DashboardPage(): JSX.Element {
                 cursor: "pointer",
               }}
             >
-              Open Setup Assistant
+              {t("unavailable.actions.setupAssistant")}
             </button>
           </div>
         </section>

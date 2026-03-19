@@ -1,0 +1,32 @@
+{
+  "page": {
+    "title": "Gateway service",
+    "description": "Start Gateway first, then open the Dashboard.",
+    "polling": "Polling: {{state}}",
+    "pollingOn": "On ({{seconds}}s)",
+    "pollingOff": "Off",
+    "initializing": "| Initializing..."
+  },
+  "status": {
+    "portConflict": {
+      "title": "Port conflict",
+      "prefix": "Gateway ",
+      "portLabel": "port",
+      "targetPort": "target port",
+      "suffix": "is already in use by another process.",
+      "suggestion": "Free the port or choose an unused one, then start Gateway again."
+    }
+  },
+  "nextStep": {
+    "title": "Next step",
+    "description": "Start Gateway first, confirm it is running, and then open the Dashboard."
+  },
+  "snapshot": {
+    "title": "Runtime snapshot",
+    "running": "Running:",
+    "yes": "Yes",
+    "no": "No",
+    "pid": "PID:",
+    "lastStarted": "Last started:"
+  }
+}

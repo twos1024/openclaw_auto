@@ -1,0 +1,78 @@
+{
+  "page": {
+    "title": "定期実行",
+    "description": "定期ジョブ、実行履歴、実行状態を管理します。",
+    "stats": "合計 {{total}} 件、有効 {{enabled}} 件"
+  },
+  "actions": {
+    "create": "ジョブ作成",
+    "loading": "定期ジョブを読み込み中...",
+    "trigger": "今すぐ実行",
+    "viewHistory": "履歴を表示",
+    "hideHistory": "履歴を隠す",
+    "confirmDelete": "ジョブ「{{name}}」を削除しますか？"
+  },
+  "empty": {
+    "title": "まだ定期ジョブがありません",
+    "description": "ジョブを作成すると、スケジュールに従ってエージェントを自動実行できます。",
+    "cta": "最初のジョブを作成"
+  },
+  "status": {
+    "success": "成功",
+    "failed": "失敗",
+    "running": "実行中",
+    "disabled": "無効",
+    "idle": "待機"
+  },
+  "card": {
+    "agent": "エージェント: {{value}}",
+    "channel": "チャネル: {{value}}",
+    "nextRun": "次回実行: {{value}}",
+    "lastRun": "前回実行: {{value}}",
+    "notCalculated": "未計算",
+    "none": "なし",
+    "noTemplate": "テンプレートがありません",
+    "enabled": "有効",
+    "noHistory": "まだ実行履歴はありません。",
+    "duration": "所要時間: {{value}}",
+    "notAvailable": "利用不可",
+    "noSummary": "要約なし"
+  },
+  "dialog": {
+    "title": "定期ジョブを作成",
+    "description": "ジョブ情報を入力し、エージェントとチャネルを紐づけてスケジュール実行します。",
+    "defaults": {
+      "schedule": "0 9 * * 1-5"
+    },
+    "fields": {
+      "name": "名前",
+      "schedule": "スケジュール",
+      "agent": "エージェント",
+      "channel": "チャネル",
+      "template": "テンプレート",
+      "enabled": "ジョブを有効化"
+    },
+    "placeholders": {
+      "name": "例: 平日朝会",
+      "schedule": "例: 0 9 * * 1-5",
+      "agent": "エージェントを選択",
+      "channel": "チャネルを選択",
+      "template": "テンプレート内容を入力"
+    },
+    "hints": {
+      "enabled": "オフにすると自動実行されません。"
+    },
+    "actions": {
+      "cancel": "キャンセル",
+      "create": "ジョブ作成",
+      "creating": "作成中..."
+    },
+    "errors": {
+      "nameRequired": "ジョブ名を入力してください。",
+      "scheduleRequired": "スケジュールを入力してください。",
+      "agentRequired": "エージェントを選択してください。",
+      "channelRequired": "チャネルを選択してください。",
+      "createFailed": "ジョブの作成に失敗しました。もう一度お試しください。"
+    }
+  }
+}

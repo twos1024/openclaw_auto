@@ -26,6 +26,18 @@ export interface ServiceActionResult {
   pid?: number | null;
 }
 
+const STATUS_CACHE_TTL_MS = 2_000;
+let statusCache: { value: GatewayStatus; cachedAt: number } | null = null;
+let statusInFlight: Promise<GatewayStatus> | null = null;
+
+function cloneGatewayStatus(value: GatewayStatus): GatewayStatus {
+  return { ...value };
+}
+
+function invalidateGatewayStatusCache(): void {
+  statusCache = null;
+}
+
 function normalizeProbeData(raw: unknown, fallbackAddress: string): DashboardProbeResult {
   if (!raw || typeof raw !== "object") {
     return {
@@ -267,6 +279,10 @@ async function invokeAction(command: string): Promise<ServiceActionResult> {
     return normalizeActionError(result.error);
   }
 
+  if (command === "start_gateway" || command === "stop_gateway" || command === "restart_gateway") {
+    invalidateGatewayStatusCache();
+  }
+
   return normalizeActionSuccess(command, result.data);
 }
 
@@ -280,12 +296,29 @@ export const serviceService = {
       return buildUnavailableRuntimeStatus();
     }
 
-    const result = await invokeCommand<Record<string, unknown>>("get_gateway_status");
-    if (!result.success || !result.data) {
-      return buildLiveErrorStatus(result.error);
+    const now = Date.now();
+    if (statusCache && now - statusCache.cachedAt < STATUS_CACHE_TTL_MS) {
+      return cloneGatewayStatus(statusCache.value);
     }
 
-    return normalizeStatusData(result.data);
+    if (statusInFlight) {
+      const shared = await statusInFlight;
+      return cloneGatewayStatus(shared);
+    }
+
+    statusInFlight = (async () => {
+      const result = await invokeCommand<Record<string, unknown>>("get_gateway_status");
+      const next = !result.success || !result.data ? buildLiveErrorStatus(result.error) : normalizeStatusData(result.data);
+      statusCache = { value: next, cachedAt: Date.now() };
+      return next;
+    })();
+
+    try {
+      const next = await statusInFlight;
+      return cloneGatewayStatus(next);
+    } finally {
+      statusInFlight = null;
+    }
   },
 
   async startGateway(): Promise<ServiceActionResult> {

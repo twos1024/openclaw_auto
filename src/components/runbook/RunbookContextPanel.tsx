@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { StatusBadge } from "../common/StatusBadge";
 import { SurfaceCard } from "../common/SurfaceCard";
 import type { RunbookModel } from "../../types/workspace";
@@ -14,6 +15,7 @@ export function RunbookContextPanel({
   description,
   model,
 }: RunbookContextPanelProps): JSX.Element | null {
+  const { t } = useTranslation("runbook");
   if (!model) return null;
 
   return (
@@ -61,7 +63,7 @@ export function RunbookContextPanel({
             color: "#166534",
           }}
         >
-          当前没有明确 blocker，可以按当前任务直接进入相关页面继续操作。
+          {t("context.empty")}
         </div>
       )}
 

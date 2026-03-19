@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import type { ErrorSummaryItem } from "../../types/logs";
 
 export interface ErrorSummaryPanelProps {
@@ -50,6 +51,7 @@ export function ErrorSummaryPanel({
   onExport,
   onExportBundle,
 }: ErrorSummaryPanelProps): JSX.Element {
+  const { t } = useTranslation(["logs"]);
   return (
     <section
       style={{
@@ -62,7 +64,7 @@ export function ErrorSummaryPanel({
       }}
     >
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10 }}>
-        <h3 style={{ margin: 0 }}>错误摘要</h3>
+        <h3 style={{ margin: 0 }}>{t("logs:summary.title")}</h3>
         <div style={{ display: "flex", gap: 8 }}>
           <button
             type="button"
@@ -79,7 +81,7 @@ export function ErrorSummaryPanel({
               opacity: isCopying ? 0.7 : 1,
             }}
           >
-            {isCopying ? "复制中..." : "复制诊断摘要"}
+            {isCopying ? t("logs:summary.actions.copying") : t("logs:summary.actions.copy")}
           </button>
 
           <button
@@ -97,7 +99,7 @@ export function ErrorSummaryPanel({
               opacity: isExporting ? 0.7 : 1,
             }}
           >
-            {isExporting ? "导出中..." : "导出诊断信息"}
+            {isExporting ? t("logs:summary.actions.exporting") : t("logs:summary.actions.export")}
           </button>
 
           <button
@@ -115,7 +117,7 @@ export function ErrorSummaryPanel({
               opacity: isExportingBundle ? 0.7 : 1,
             }}
           >
-            {isExportingBundle ? "打包中..." : "导出诊断包 ZIP"}
+            {isExportingBundle ? t("logs:summary.actions.bundling") : t("logs:summary.actions.bundle")}
           </button>
         </div>
       </div>
@@ -139,7 +141,7 @@ export function ErrorSummaryPanel({
             color: "#475569",
           }}
         >
-          未检测到明确错误。若服务仍异常，请尝试更换关键字或检查完整日志上下文。
+          {t("logs:summary.empty")}
         </div>
       ) : (
         <div style={{ display: "grid", gap: 10 }}>
@@ -160,10 +162,10 @@ export function ErrorSummaryPanel({
                 {item.code ? (
                   <span style={{ fontSize: 12, color: "#64748b" }}>{item.code}</span>
                 ) : null}
-                <span style={{ fontSize: 12, color: "#64748b" }}>命中 {item.count} 次</span>
+                <span style={{ fontSize: 12, color: "#64748b" }}>{t("logs:summary.hitCount", { count: item.count })}</span>
               </div>
               <p style={{ margin: 0, color: "#334155" }}>{item.message}</p>
-              <p style={{ margin: 0, color: "#475569" }}>建议：{item.suggestion}</p>
+              <p style={{ margin: 0, color: "#475569" }}>{t("logs:summary.suggestionPrefix")}{item.suggestion}</p>
               {item.samples.length > 0 ? (
                 <div
                   style={{

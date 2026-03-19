@@ -1,0 +1,26 @@
+{
+  "page": {
+    "title": "AI chat",
+    "titleWithAgent": "Chat with {{agentName}}",
+    "subtitle": "Hi, how can I help you?",
+    "subtitleWithAgent": "Current agent: {{agentModel}}",
+    "description": "Create and start an AI Agent in Agent Management to begin chatting.",
+    "hints": {
+      "python": "Write a Python script",
+      "translate": "Help me translate",
+      "explain": "Explain this concept",
+      "brainstorm": "Brainstorm ideas"
+    }
+  },
+  "actions": {
+    "copy": "Copy",
+    "copied": "Copied",
+    "close": "Close",
+    "stop": "Stop"
+  },
+  "form": {
+    "attachments": "Attachments (coming soon)",
+    "placeholder": "Send a message (Enter to send, Shift+Enter for a new line)",
+    "placeholderDisabled": "Start Gateway first..."
+  }
+}

@@ -1,0 +1,75 @@
+{
+  "page": {
+    "title": "提供元管理",
+    "description": "モデル提供元、認証情報、利用可能状態を管理します。",
+    "stats": "合計 {{total}} 件、準備完了 {{ready}} 件"
+  },
+  "actions": {
+    "create": "提供元を作成",
+    "loading": "提供元を読み込み中...",
+    "validate": "検証",
+    "enable": "有効化",
+    "disable": "無効化",
+    "confirmDelete": "提供元「{{name}}」を削除しますか？"
+  },
+  "empty": {
+    "title": "まだ提供元がありません",
+    "description": "まず提供元を作成し、チャネルとエージェントで利用できるようにします。",
+    "cta": "最初の提供元を作成"
+  },
+  "status": {
+    "ready": "準備完了",
+    "checking": "確認中",
+    "error": "異常",
+    "disabled": "無効"
+  },
+  "card": {
+    "apiKey": "API キー: {{value}}",
+    "hidden": "非表示",
+    "baseUrl": "ベース URL: {{value}}",
+    "default": "既定",
+    "modelCount": "モデル数: {{value}}",
+    "updatedAt": "更新日時: {{value}}"
+  },
+  "dialog": {
+    "title": "提供元を作成",
+    "description": "提供元の情報を入力し、チャネルやエージェントで利用できるようにします。",
+    "fields": {
+      "name": "名前",
+      "vendor": "ベンダー",
+      "apiKey": "API キー",
+      "baseUrl": "ベース URL"
+    },
+    "placeholders": {
+      "name": "例: 既定の OpenAI 提供元",
+      "apiKey": "API キーを入力",
+      "apiKeyOllama": "Ollama では API キーは不要です",
+      "baseUrl": "任意、例: https://api.openai.com/v1"
+    },
+    "options": {
+      "vendor": {
+        "openai": "OpenAI",
+        "anthropic": "Anthropic",
+        "deepseek": "DeepSeek",
+        "ollama": "Ollama",
+        "google": "Google",
+        "qwen": "Qwen",
+        "zhipu": "Zhipu",
+        "moonshot": "Moonshot",
+        "groq": "Groq",
+        "mistral": "Mistral",
+        "custom": "カスタム"
+      }
+    },
+    "actions": {
+      "cancel": "キャンセル",
+      "create": "提供元を作成",
+      "creating": "作成中..."
+    },
+    "errors": {
+      "nameRequired": "提供元名を入力してください。",
+      "apiKeyRequired": "API キーを入力してください。",
+      "createFailed": "提供元の作成に失敗しました。もう一度お試しください。"
+    }
+  }
+}

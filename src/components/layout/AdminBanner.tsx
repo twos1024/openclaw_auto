@@ -1,10 +1,14 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { invokeCommand } from "../../services/tauriClient";
-import { useAppStore } from "../../store/useAppStore";
-import type { AdminStatus } from "../../store/useAppStore";
+import { useGatewayStore } from "../../store/useGatewayStore";
+import type { AdminStatus } from "../../store/useGatewayStore";
 
 export function AdminBanner(): JSX.Element | null {
-  const { adminStatus, adminChecked, setAdminStatus } = useAppStore();
+  const { t } = useTranslation("dashboard");
+  const adminStatus = useGatewayStore((state) => state.adminStatus);
+  const adminChecked = useGatewayStore((state) => state.adminChecked);
+  const setAdminStatus = useGatewayStore((state) => state.setAdminStatus);
   const [isRelaunching, setIsRelaunching] = useState(false);
   const [dismissed, setDismissed] = useState(false);
 
@@ -43,7 +47,7 @@ export function AdminBanner(): JSX.Element | null {
     }}>
       <span style={{ fontSize: 16 }}>⚠️</span>
       <div style={{ flex: 1, color: "var(--color-amber-700)" }}>
-        <strong>未以管理员权限运行</strong>
+        <strong>{t("adminBanner.title")}</strong>
         <span style={{ marginLeft: 8, fontWeight: 400 }}>
           {adminStatus.suggestion}
         </span>
@@ -65,7 +69,7 @@ export function AdminBanner(): JSX.Element | null {
           whiteSpace: "nowrap",
         }}
       >
-        {isRelaunching ? "正在提权..." : "以管理员身份重启"}
+        {isRelaunching ? t("adminBanner.relaunching") : t("adminBanner.relaunch")}
       </button>
       <button
         type="button"
@@ -79,7 +83,7 @@ export function AdminBanner(): JSX.Element | null {
           lineHeight: 1,
           padding: "2px 4px",
         }}
-        aria-label="关闭提示"
+        aria-label={t("adminBanner.closeLabel")}
       >
         ×
       </button>

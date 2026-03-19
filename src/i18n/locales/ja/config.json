@@ -1,0 +1,35 @@
+{
+  "page": {
+    "title": "API Key の設定",
+    "description": "まず API Key を入力し、接続をテストしてから設定を保存します。",
+    "loadIssueTitle": "設定読み込みのヒント",
+    "suggestionPrefix": "提案: ",
+    "defaultValues": "現在のフォームは既定値であり、実際のディスク上の設定とは一致しません。",
+    "loadedPath": "設定パス: "
+  },
+  "form": {
+    "provider": {
+      "label": "提供元",
+      "options": {
+        "openaiCompatible": "OpenAI 互換",
+        "ollama": "Ollama"
+      }
+    }
+  },
+  "actions": {
+    "testing": "テスト中...",
+    "testConnection": "接続をテスト",
+    "saving": "保存中...",
+    "save": "設定を保存",
+    "reset": "リセット",
+    "startGateway": "Gateway を起動"
+  },
+  "result": {
+    "testTitle": "テスト結果",
+    "saveTitle": "保存結果",
+    "code": "エラーコード: ",
+    "latency": "所要時間: ",
+    "backup": "バックアップ: ",
+    "savedTo": "保存先: "
+  }
+}

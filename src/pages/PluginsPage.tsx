@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useState } from "react";
 import { Search, Package, RefreshCw, Download, Trash2, ExternalLink } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { gatewayFetch } from "@/lib/gateway-client";
-import { invokeCommand } from "@/services/tauriClient";
+import { serviceService } from "@/services/serviceService";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -27,6 +28,7 @@ function PluginCard({
   onInstall: (id: string) => void;
   onUninstall: (id: string) => void;
 }) {
+  const { t } = useTranslation("plugins");
   const [loading, setLoading] = useState(false);
 
   const handleAction = async () => {
@@ -60,7 +62,7 @@ function PluginCard({
             <p className="text-[11px] text-muted-foreground">v{plugin.version}{plugin.author ? ` · ${plugin.author}` : ""}</p>
           </div>
         </div>
-        {plugin.installed && <Badge variant="success">已安装</Badge>}
+        {plugin.installed && <Badge variant="success">{t("card.installed")}</Badge>}
       </div>
 
       <p className="text-xs text-muted-foreground leading-relaxed line-clamp-2">{plugin.description}</p>
@@ -88,10 +90,10 @@ function PluginCard({
           ) : (
             <Download className="h-3 w-3 mr-1.5" />
           )}
-          {plugin.installed ? "卸载" : "安装"}
+          {plugin.installed ? t("card.actions.uninstall") : t("card.actions.install")}
         </Button>
         {plugin.downloads !== undefined && (
-          <span className="text-[11px] text-muted-foreground">{plugin.downloads.toLocaleString()} 下载</span>
+          <span className="text-[11px] text-muted-foreground">{t("card.downloads", { count: plugin.downloads, formatted: plugin.downloads.toLocaleString() })}</span>
         )}
       </div>
     </div>
@@ -99,6 +101,7 @@ function PluginCard({
 }
 
 export function PluginsPage(): JSX.Element {
+  const { t } = useTranslation("plugins");
   const [plugins, setPlugins] = useState<Plugin[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -108,8 +111,8 @@ export function PluginsPage(): JSX.Element {
     if (!quiet) setLoading(true);
     else setRefreshing(true);
 
-    const statusResult = await invokeCommand<{ running: boolean }>("get_gateway_status");
-    if (statusResult.success && statusResult.data?.running) {
+    const status = await serviceService.getGatewayStatus();
+    if (status.running) {
       try {
         const data = await gatewayFetch<Plugin[]>("/api/plugins");
         setPlugins(Array.isArray(data) ? data : []);
@@ -143,40 +146,42 @@ export function PluginsPage(): JSX.Element {
         <h1
           className="page-heading"
         >
-          插件市场
+          {t("page.title")}
         </h1>
         <p className="text-muted-foreground text-sm mt-1">
-          {plugins.length > 0 ? `${plugins.length} 个插件 · ${plugins.filter((p) => p.installed).length} 个已安装` : "浏览和安装扩展插件"}
+          {plugins.length > 0
+            ? t("page.description", { count: plugins.length, installed: plugins.filter((p) => p.installed).length })
+            : t("page.descriptionEmpty")}
         </p>
       </div>
 
       <div className="flex items-center gap-3">
         <div className="relative flex-1 max-w-xs">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-          <Input placeholder="搜索插件..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
+          <Input placeholder={t("toolbar.searchPlaceholder")} value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
         </div>
         <Button variant="outline" size="icon" onClick={() => void loadPlugins(true)} disabled={refreshing} className="h-9 w-9">
           <RefreshCw className={cn("h-4 w-4", refreshing && "animate-spin")} />
         </Button>
         <Button variant="outline" onClick={() => window.open("https://clawhub.ai", "_blank")}>
           <ExternalLink className="h-4 w-4 mr-1.5" />
-          ClawHub
+          {t("toolbar.market")}
         </Button>
       </div>
 
       {loading ? (
         <div className="flex items-center justify-center py-20 text-muted-foreground text-sm">
-          <RefreshCw className="h-4 w-4 animate-spin mr-2" />加载中...
+          <RefreshCw className="h-4 w-4 animate-spin mr-2" />{t("status.loading")}
         </div>
       ) : filtered.length === 0 ? (
         <div className="flex flex-col items-center justify-center rounded-3xl border border-dashed border-border min-h-[400px] gap-4 bg-black/[0.015]">
           <Package className="h-12 w-12 text-muted-foreground/30" />
           <div className="text-center">
             <p className="font-semibold text-foreground">
-              {search ? "没有匹配的插件" : "插件市场"}
+              {search ? t("empty.titleSearch") : t("empty.titleDefault")}
             </p>
             <p className="text-sm text-muted-foreground mt-1">
-              {search ? "尝试其他关键词" : "Gateway 运行后将展示可用插件"}
+              {search ? t("empty.descriptionSearch") : t("empty.descriptionDefault")}
             </p>
           </div>
         </div>

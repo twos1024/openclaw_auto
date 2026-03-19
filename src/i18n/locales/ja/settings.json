@@ -1,0 +1,81 @@
+{
+  "title": "設定",
+  "description": "Gateway 管理、実行環境、アプリ設定をまとめて管理します。",
+  "preferencesTitle": "表示設定",
+  "preferencesDescription": "テーマ、言語、初回セットアップ状態を管理します。",
+  "themeDescription": "ライト、ダーク、システム追従を切り替えます。",
+  "languageDescription": "UI の表示言語を切り替えます。現時点では基礎部分のみ対応済みです。",
+  "themeLight": "ライト",
+  "themeDark": "ダーク",
+  "themeSystem": "システム",
+  "languageZh": "简体中文",
+  "languageEn": "English",
+  "languageJa": "日本語",
+  "gateway": {
+    "title": "Gateway サービス",
+    "description": "OpenClaw Gateway プロセスの起動・停止を管理します。",
+    "status": {
+      "running": "実行中",
+      "stopped": "停止済み",
+      "starting": "起動中...",
+      "stopping": "停止中...",
+      "error": "エラー",
+      "unknown": "不明",
+      "checking": "確認中..."
+    },
+    "labels": {
+      "port": "ポート",
+      "pid": "PID",
+      "address": "サービスアドレス"
+    },
+    "actions": {
+      "start": "Gateway を起動",
+      "restart": "再起動",
+      "stop": "停止"
+    }
+  },
+  "app": {
+    "title": "アプリ設定",
+    "description": "ポーリング間隔、ログ、診断ディレクトリなどを設定します。",
+    "fields": {
+      "gatewayPollMs": "Gateway ポーリング間隔 (ms)",
+      "logLineLimit": "ログ行数上限",
+      "diagnosticsDir": "診断ディレクトリ",
+      "diagnosticsDirHint": "空欄の場合は既定のディレクトリを使用します"
+    },
+    "validation": {
+      "gatewayPollMsRange": "Gateway ポーリング間隔は 1000〜60000 ms の範囲で指定してください。",
+      "logLineLimitRange": "ログ行数は 50〜5000 の範囲で指定してください。",
+      "saveFailed": "保存に失敗しました。もう一度お試しください。"
+    },
+    "actions": {
+      "saving": "保存中...",
+      "saved": "保存しました",
+      "save": "設定を保存"
+    }
+  },
+  "preferences": {
+    "setupBadge": {
+      "complete": "Setup 完了",
+      "incomplete": "Setup 未完了"
+    },
+    "wizard": {
+      "title": "Setup Wizard 完了",
+      "description": "このスイッチは永続化状態に保存され、初回セットアップの判定に利用できます。"
+    }
+  },
+  "environment": {
+    "title": "実行環境",
+    "description": "Node.js、npm、OpenClaw CLI の検出結果です。",
+    "status": {
+      "checking": "環境を確認中...",
+      "failed": "環境検出に失敗しました",
+      "notFound": "見つかりません"
+    },
+    "labels": {
+      "platform": "プラットフォーム",
+      "npm": "npm",
+      "openclawCli": "OpenClaw CLI"
+    }
+  }
+}

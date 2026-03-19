@@ -1,0 +1,35 @@
+{
+  "page": {
+    "title": "API Key configuration",
+    "description": "Fill in the API Key first, then test the connection, and finally save the configuration.",
+    "loadIssueTitle": "Configuration load hint",
+    "suggestionPrefix": "Suggestion: ",
+    "defaultValues": "The current form uses default values and does not reflect the real file on disk.",
+    "loadedPath": "Config path: "
+  },
+  "form": {
+    "provider": {
+      "label": "Provider",
+      "options": {
+        "openaiCompatible": "OpenAI compatible",
+        "ollama": "Ollama"
+      }
+    }
+  },
+  "actions": {
+    "testing": "Testing...",
+    "testConnection": "Test connection",
+    "saving": "Saving...",
+    "save": "Save config",
+    "reset": "Reset",
+    "startGateway": "Start Gateway"
+  },
+  "result": {
+    "testTitle": "Test result",
+    "saveTitle": "Save result",
+    "code": "Error code: ",
+    "latency": "Latency: ",
+    "backup": "Backup: ",
+    "savedTo": "Saved to: "
+  }
+}

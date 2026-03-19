@@ -1,0 +1,101 @@
+{
+  "page": {
+    "title": "智能体管理",
+    "description": "集中管理智能体、模型、通道与运行状态。",
+    "stats": "共 {{total}} 个，运行中 {{running}} 个"
+  },
+  "actions": {
+    "searchPlaceholder": "搜索智能体名称",
+    "create": "新建智能体",
+    "loading": "正在加载智能体...",
+    "start": "启动",
+    "stop": "停止",
+    "confirmDelete": "确认删除智能体“{{name}}”？"
+  },
+  "state": {
+    "running": "运行中",
+    "stopped": "已停止"
+  },
+  "empty": {
+    "title": "还没有智能体",
+    "description": "先创建一个智能体，再为它分配模型和通道。",
+    "cta": "创建第一个智能体"
+  },
+  "card": {
+    "conversations": "{{count}} 次对话",
+    "tokens": "{{value}} tokens"
+  },
+  "wizard": {
+    "title": "创建智能体",
+    "steps": {
+      "name": "命名",
+      "identity": "提示词",
+      "model": "模型",
+      "channel": "通道"
+    },
+    "stepName": {
+      "description": "给这个智能体起一个便于识别的名称。",
+      "placeholder": "例如：客服助手"
+    },
+    "stepPrompt": {
+      "description": "选择一个模板，或直接编辑系统提示词。",
+      "placeholder": "输入系统提示词",
+      "templates": {
+        "general": "你是一名专业的助手，回答时保持简洁、准确。",
+        "code": "你是一名资深工程师，优先给出可执行的代码与步骤。",
+        "translation": "你是一名高质量翻译助手，保留原意并自然表达。",
+        "support": "你是一名客服助手，优先识别问题、给出明确解决方案。"
+      }
+    },
+    "stepModel": {
+      "description": "选择模型，或填写自定义模型信息。",
+      "customLabel": "自定义模型",
+      "customModelIdPlaceholder": "模型 ID，例如：gpt-4.1",
+      "customModelNamePlaceholder": "模型名称，例如：GPT-4.1",
+      "customModelNameDefault": "自定义模型",
+      "models": {
+        "gpt_4o": "GPT-4o",
+        "gpt_4o_mini": "GPT-4o mini",
+        "gpt_4_1": "GPT-4.1",
+        "claude_sonnet_4_5": "Claude Sonnet 4.5",
+        "claude_opus_4_1": "Claude Opus 4.1",
+        "deepseek_chat": "DeepSeek Chat",
+        "qwen_max_latest": "Qwen Max Latest"
+      },
+      "temperatureLabel": "温度：{{value}}",
+      "temperatureHint": "数值越高，回答越发散。"
+    },
+    "stepChannel": {
+      "description": "选择智能体接入的通道类型，并填写连接参数。",
+      "channels": {
+        "openclaw": {
+          "label": "OpenClaw",
+          "description": "连接到本地 OpenClaw 网关，适合默认部署。"
+        },
+        "openai-compatible": {
+          "label": "OpenAI 兼容",
+          "description": "连接任意兼容 OpenAI API 的服务。"
+        },
+        "custom": {
+          "label": "自定义",
+          "description": "适配私有协议或定制化通道。"
+        }
+      },
+      "apiKeyLabel": "API Key",
+      "apiKeyPlaceholder": "输入密钥引用或明文密钥",
+      "endpointLabel": "接口地址",
+      "endpointPlaceholderOpenclaw": "留空将使用默认网关地址",
+      "endpointPlaceholderOther": "请输入服务地址，例如：https://api.example.com"
+    },
+    "footer": {
+      "cancel": "取消",
+      "previous": "上一步",
+      "next": "下一步",
+      "create": "创建智能体",
+      "creating": "正在创建..."
+    },
+    "errors": {
+      "createFailed": "创建智能体失败，请重试。"
+    }
+  }
+}

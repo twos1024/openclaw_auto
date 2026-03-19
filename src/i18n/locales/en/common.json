@@ -1,0 +1,10 @@
+{
+  "appName": "OpenClaw Manager",
+  "comingSoon": "This module scaffold is wired in. Forms and backend integration come next.",
+  "loading": "Loading...",
+  "save": "Save",
+  "cancel": "Cancel",
+  "theme": "Theme",
+  "language": "Language",
+  "poweredBy": "Powered by OpenClaw"
+}

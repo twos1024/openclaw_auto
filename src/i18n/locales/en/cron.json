@@ -1,0 +1,78 @@
+{
+  "page": {
+    "title": "Cron Jobs",
+    "description": "Manage scheduled jobs, execution history, and run status.",
+    "stats": "{{total}} total, {{enabled}} enabled"
+  },
+  "actions": {
+    "create": "New Job",
+    "loading": "Loading cron jobs...",
+    "trigger": "Run Now",
+    "viewHistory": "View History",
+    "hideHistory": "Hide History",
+    "confirmDelete": "Delete job “{{name}}”?"
+  },
+  "empty": {
+    "title": "No cron jobs yet",
+    "description": "Create a cron job to run an agent automatically on a schedule.",
+    "cta": "Create your first job"
+  },
+  "status": {
+    "success": "Success",
+    "failed": "Failed",
+    "running": "Running",
+    "disabled": "Disabled",
+    "idle": "Idle"
+  },
+  "card": {
+    "agent": "Agent: {{value}}",
+    "channel": "Channel: {{value}}",
+    "nextRun": "Next run: {{value}}",
+    "lastRun": "Last run: {{value}}",
+    "notCalculated": "Not calculated",
+    "none": "None",
+    "noTemplate": "No template content",
+    "enabled": "Enabled",
+    "noHistory": "No execution history yet.",
+    "duration": "Duration: {{value}}",
+    "notAvailable": "Not available",
+    "noSummary": "No summary"
+  },
+  "dialog": {
+    "title": "Create Cron Job",
+    "description": "Fill in the job details, then bind an agent and channel to run on schedule.",
+    "defaults": {
+      "schedule": "0 9 * * 1-5"
+    },
+    "fields": {
+      "name": "Name",
+      "schedule": "Schedule",
+      "agent": "Agent",
+      "channel": "Channel",
+      "template": "Template",
+      "enabled": "Enable Job"
+    },
+    "placeholders": {
+      "name": "e.g. Weekday Morning Briefing",
+      "schedule": "e.g. 0 9 * * 1-5",
+      "agent": "Select an agent",
+      "channel": "Select a channel",
+      "template": "Enter template content"
+    },
+    "hints": {
+      "enabled": "Turn this off to prevent automatic runs."
+    },
+    "actions": {
+      "cancel": "Cancel",
+      "create": "Create Job",
+      "creating": "Creating..."
+    },
+    "errors": {
+      "nameRequired": "Please enter a job name.",
+      "scheduleRequired": "Please enter a schedule.",
+      "agentRequired": "Please select an agent.",
+      "channelRequired": "Please select a channel.",
+      "createFailed": "Failed to create the job. Please try again."
+    }
+  }
+}

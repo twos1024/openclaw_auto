@@ -1,0 +1,43 @@
+{
+  "page": {
+    "title": "模型用量",
+    "descriptionRunning": "Gateway 运行中 · 正在读取最近模型用量",
+    "descriptionIdle": "Gateway 未运行 · 启动后可查看模型用量"
+  },
+  "toolbar": {
+    "timeRange": {
+      "7d": "最近 7 天",
+      "30d": "最近 30 天",
+      "all": "全部"
+    }
+  },
+  "stats": {
+    "totalTokens": "总 Token 消耗",
+    "estimatedCost": "预估费用",
+    "modelCount": "使用模型数",
+    "averageCost": "平均每次费用",
+    "records": "{{count}} 条记录",
+    "range": {
+      "7d": "近 7 天",
+      "30d": "近 30 天",
+      "all": "全部时间"
+    },
+    "perRecord": "按记录平均"
+  },
+  "table": {
+    "title": "模型用量明细",
+    "description": "按请求记录展示 token 消耗和费用趋势。",
+    "headers": {
+      "date": "日期",
+      "model": "模型",
+      "input": "输入",
+      "output": "输出",
+      "total": "总计",
+      "cost": "费用"
+    }
+  },
+  "status": {
+    "loading": "加载中...",
+    "empty": "暂无模型用量数据。完成一次对话后会显示统计。"
+  }
+}

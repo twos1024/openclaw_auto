@@ -1,0 +1,66 @@
+{
+  "header": {
+    "loading": "正在加载",
+    "error": "概览不可用",
+    "preview": "浏览器预览",
+    "runtimeUnavailable": "桌面运行时异常",
+    "title": "OpenClaw 概览"
+  },
+  "description": {
+    "preview": "当前是浏览器预览，只看结构，不代表本机真实状态。",
+    "runtimeUnavailable": "当前已进入桌面窗口，但前端没连上运行时桥接。先修复它，再继续安装和配置。",
+    "default": "这里会告诉你现在只该做哪一步。"
+  },
+  "actions": {
+    "refresh": "重新加载"
+  },
+  "errors": {
+    "loadFailed": "加载概览状态失败。"
+  },
+  "feedback": {
+    "dashboardOpened": "Dashboard 已打开。"
+  },
+  "home": {
+    "loading": {
+      "title": "正在准备新手引导",
+      "description": "正在判断你现在应该先做哪一步。"
+    },
+    "error": {
+      "title": "无法进入新手引导",
+      "description": "当前无法判断下一步。你可以先打开概览页或安装页继续。"
+    },
+    "actions": {
+      "overview": "打开概览",
+      "installWizard": "打开安装向导"
+    }
+  },
+  "actionList": {
+    "title": "下一步",
+    "description": "按当前状态只做最前面的那一步，做完再继续下一项。",
+    "processing": "处理中...",
+    "dashboard": "Dashboard"
+  },
+  "level": {
+    "healthy": "正常",
+    "degraded": "降级",
+    "offline": "离线",
+    "unknown": "未知"
+  },
+  "summary": {
+    "title": "系统健康度",
+    "fields": {
+      "appVersion": "应用版本",
+      "platform": "平台",
+      "dashboard": "Dashboard"
+    }
+  },
+  "section": {
+    "updated": "更新时间："
+  },
+  "sidebar": {
+    "brand": "OpenClaw",
+    "confirmDelete": "确认",
+    "deleteSession": "删除会话",
+    "appDisplay": "OpenClaw Manager"
+  }
+}

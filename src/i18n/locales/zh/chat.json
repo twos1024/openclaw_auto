@@ -1,0 +1,26 @@
+{
+  "page": {
+    "title": "AI 对话",
+    "titleWithAgent": "与 {{agentName}} 对话",
+    "subtitle": "你好，有什么可以帮你的吗？",
+    "subtitleWithAgent": "当前 Agent：{{agentModel}}",
+    "description": "在【Agent 管理】中创建并启动一个 AI Agent 开始对话。",
+    "hints": {
+      "python": "写一段 Python 代码",
+      "translate": "帮我翻译",
+      "explain": "解释这个概念",
+      "brainstorm": "头脑风暴"
+    }
+  },
+  "actions": {
+    "copy": "复制",
+    "copied": "已复制",
+    "close": "关闭",
+    "stop": "停止"
+  },
+  "form": {
+    "attachments": "附件（即将支持）",
+    "placeholder": "发送消息（Enter 发送，Shift+Enter 换行）",
+    "placeholderDisabled": "请先启动 Gateway..."
+  }
+}

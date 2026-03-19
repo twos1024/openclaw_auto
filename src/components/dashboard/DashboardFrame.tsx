@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { buildDashboardEmbedPresentation, inferDashboardEmbedPhase } from "../../services/dashboardEmbedState";
 import type { DashboardEmbedPhase } from "../../types/dashboard";
 
@@ -47,6 +48,7 @@ export function DashboardFrame({
   onPhaseChange,
   timeoutMs = 3000,
 }: DashboardFrameProps): JSX.Element {
+  const { t } = useTranslation("dashboard");
   const iframeRef = useRef<HTMLIFrameElement | null>(null);
   const [phase, setPhase] = useState<DashboardEmbedPhase>("loading");
 
@@ -94,7 +96,7 @@ export function DashboardFrame({
       <iframe
         ref={iframeRef}
         key={frameKey}
-        title="OpenClaw Dashboard"
+        title={t("frame.title")}
         src={src}
         onLoad={handleLoad}
         style={{
@@ -134,7 +136,7 @@ export function DashboardFrame({
             <p style={{ margin: 0, fontSize: 13, color: "#64748b" }}>{presentation.suggestion}</p>
             {phase === "loading" ? (
               <div
-                aria-label="Dashboard loading"
+                aria-label={t("frame.loadingAria")}
                 style={{
                   height: 10,
                   borderRadius: 999,
@@ -153,12 +155,12 @@ export function DashboardFrame({
               </div>
             ) : (
               <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-                <ActionButton label="Reload Frame" onClick={onReloadFrame} variant="primary" />
-                <ActionButton label="Open External" onClick={onOpenExternal} />
+                <ActionButton label={t("frame.actions.reloadFrame")} onClick={onReloadFrame} variant="primary" />
+                <ActionButton label={t("frame.actions.openExternal")} onClick={onOpenExternal} />
                 {phase === "blocked" ? (
-                  <ActionButton label="Restart Gateway" onClick={onRestartGateway} />
+                  <ActionButton label={t("frame.actions.restartGateway")} onClick={onRestartGateway} />
                 ) : null}
-                <ActionButton label="Open Setup Assistant" onClick={onOpenSetupAssistant} />
+                <ActionButton label={t("frame.actions.openSetupAssistant")} onClick={onOpenSetupAssistant} />
               </div>
             )}
           </section>

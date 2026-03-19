@@ -1,0 +1,101 @@
+{
+  "page": {
+    "title": "Agent Management",
+    "description": "Manage agents, models, channels, and runtime status in one place.",
+    "stats": "{{total}} total, {{running}} running"
+  },
+  "actions": {
+    "searchPlaceholder": "Search agents",
+    "create": "New Agent",
+    "loading": "Loading agents...",
+    "start": "Start",
+    "stop": "Stop",
+    "confirmDelete": "Delete agent “{{name}}”?"
+  },
+  "state": {
+    "running": "Running",
+    "stopped": "Stopped"
+  },
+  "empty": {
+    "title": "No agents yet",
+    "description": "Create an agent first, then assign a model and channel.",
+    "cta": "Create your first agent"
+  },
+  "card": {
+    "conversations": "{{count}} conversations",
+    "tokens": "{{value}} tokens"
+  },
+  "wizard": {
+    "title": "Create Agent",
+    "steps": {
+      "name": "Name",
+      "identity": "Prompt",
+      "model": "Model",
+      "channel": "Channel"
+    },
+    "stepName": {
+      "description": "Give this agent a clear, recognizable name.",
+      "placeholder": "e.g. Support Assistant"
+    },
+    "stepPrompt": {
+      "description": "Pick a template or edit the system prompt directly.",
+      "placeholder": "Enter system prompt",
+      "templates": {
+        "general": "You are a professional assistant. Keep answers concise and accurate.",
+        "code": "You are a senior engineer. Prefer actionable code and steps.",
+        "translation": "You are a high-quality translation assistant. Preserve meaning and sound natural.",
+        "support": "You are a support assistant. Identify the issue first and provide a clear solution."
+      }
+    },
+    "stepModel": {
+      "description": "Choose a model or enter custom model details.",
+      "customLabel": "Custom Model",
+      "customModelIdPlaceholder": "Model ID, e.g. gpt-4.1",
+      "customModelNamePlaceholder": "Model name, e.g. GPT-4.1",
+      "customModelNameDefault": "Custom Model",
+      "models": {
+        "gpt_4o": "GPT-4o",
+        "gpt_4o_mini": "GPT-4o mini",
+        "gpt_4_1": "GPT-4.1",
+        "claude_sonnet_4_5": "Claude Sonnet 4.5",
+        "claude_opus_4_1": "Claude Opus 4.1",
+        "deepseek_chat": "DeepSeek Chat",
+        "qwen_max_latest": "Qwen Max Latest"
+      },
+      "temperatureLabel": "Temperature: {{value}}",
+      "temperatureHint": "Higher values make outputs more diverse."
+    },
+    "stepChannel": {
+      "description": "Choose a channel type and fill in the connection settings.",
+      "channels": {
+        "openclaw": {
+          "label": "OpenClaw",
+          "description": "Connect to the local OpenClaw gateway for the default setup."
+        },
+        "openai-compatible": {
+          "label": "OpenAI Compatible",
+          "description": "Connect to any service compatible with the OpenAI API."
+        },
+        "custom": {
+          "label": "Custom",
+          "description": "Use a private protocol or a custom integration."
+        }
+      },
+      "apiKeyLabel": "API Key",
+      "apiKeyPlaceholder": "Enter a key reference or raw API key",
+      "endpointLabel": "Endpoint",
+      "endpointPlaceholderOpenclaw": "Leave blank to use the default gateway address",
+      "endpointPlaceholderOther": "Enter a service URL, e.g. https://api.example.com"
+    },
+    "footer": {
+      "cancel": "Cancel",
+      "previous": "Previous",
+      "next": "Next",
+      "create": "Create Agent",
+      "creating": "Creating..."
+    },
+    "errors": {
+      "createFailed": "Failed to create the agent. Please try again."
+    }
+  }
+}

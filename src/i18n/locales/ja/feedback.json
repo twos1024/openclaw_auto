@@ -1,0 +1,25 @@
+{
+  "page": {
+    "title": "フィードバック",
+    "description": "困ったことや改善提案をお知らせください。",
+    "thanks": "OpenClaw Manager をご利用いただきありがとうございます。皆さまのフィードバックが製品をより良くします。"
+  },
+  "form": {
+    "title": "フィードバックを送信",
+    "description": "問題点、機能要望、提案などを記入してください。",
+    "placeholder": "問題や提案を入力してください...",
+    "emailPlaceholder": "メールアドレス（任意）",
+    "validation": "送信前にフィードバック内容を入力してください。",
+    "submit": "フィードバックを送信",
+    "submitting": "送信中...",
+    "successTitle": "フィードバックをありがとうございます！",
+    "successDescription": "すべてのメッセージを丁寧に読み、継続的に改善していきます。",
+    "retry": "もう一度送信"
+  },
+  "contact": {
+    "title": "連絡先",
+    "description": "その他の連絡方法",
+    "githubLabel": "GitHub Issues",
+    "githubValue": "github.com/openclaw"
+  }
+}

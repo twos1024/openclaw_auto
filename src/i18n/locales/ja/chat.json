@@ -1,0 +1,26 @@
+{
+  "page": {
+    "title": "AI チャット",
+    "titleWithAgent": "{{agentName}} とチャット",
+    "subtitle": "こんにちは。何をお手伝いしましょうか？",
+    "subtitleWithAgent": "現在の Agent: {{agentModel}}",
+    "description": "【Agent 管理】で AI Agent を作成して起動すると、会話を開始できます。",
+    "hints": {
+      "python": "Python コードを書いて",
+      "translate": "翻訳して",
+      "explain": "この概念を説明して",
+      "brainstorm": "アイデアを出して"
+    }
+  },
+  "actions": {
+    "copy": "コピー",
+    "copied": "コピーしました",
+    "close": "閉じる",
+    "stop": "停止"
+  },
+  "form": {
+    "attachments": "添付ファイル（近日対応）",
+    "placeholder": "メッセージを送信（Enter で送信、Shift+Enter で改行）",
+    "placeholderDisabled": "先に Gateway を起動してください..."
+  }
+}

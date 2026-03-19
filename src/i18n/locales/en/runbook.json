@@ -1,0 +1,17 @@
+{
+  "context": {
+    "empty": "There is no clear blocker right now, so you can continue directly to the relevant page."
+  },
+  "assistant": {
+    "title": "OpenClaw setup assistant",
+    "refresh": "Recheck",
+    "loading": "Reading the current step...",
+    "currentBlocker": "Focus on: ",
+    "checkedAt": "Checked at: "
+  },
+  "launchChecks": {
+    "title": "Launch Checks",
+    "subtitle": "These checks decide whether setup can continue cleanly from install to dashboard.",
+    "open": "Open"
+  }
+}

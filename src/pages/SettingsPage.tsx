@@ -1,25 +1,21 @@
 import { useEffect, useState } from "react";
 import { RefreshCw, Play, Square, RotateCcw, CheckCircle2, AlertCircle, Server, Globe, Shield, Info } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { invokeCommand } from "@/services/tauriClient";
+import { serviceService, type GatewayStatus } from "@/services/serviceService";
 import { clearGatewayUrlCache } from "@/lib/gateway-client";
 import { APP_DISPLAY } from "@/lib/constants";
+import type { AppLanguage, ThemePreference } from "@/lib/preferences";
 import { cn } from "@/lib/utils";
+import { useSettingsStore } from "@/store/useSettingsStore";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Select } from "@/components/ui/select";
 
 // ─── Types ─────────────────────────────────────────────────────────────────────
-
-interface GatewayStatus {
-  state: "running" | "stopped" | "starting" | "stopping" | "error" | "unknown";
-  running: boolean;
-  port: number;
-  address: string;
-  pid: number | null;
-  statusDetail: string;
-}
 
 interface AppSettings {
   gatewayPollMs: number;
@@ -31,37 +27,51 @@ interface AppSettings {
 // ─── Gateway status card ──────────────────────────────────────────────────────
 
 function GatewayCard() {
+  const { t } = useTranslation(["common", "settings"]);
   const [status, setStatus] = useState<GatewayStatus | null>(null);
   const [loading, setLoading] = useState<"start" | "stop" | "restart" | null>(null);
   const [polling, setPolling] = useState(false);
+  const [actionError, setActionError] = useState<string | null>(null);
 
   const refresh = async () => {
     setPolling(true);
-    const result = await invokeCommand<GatewayStatus>("get_gateway_status");
-    if (result.success && result.data) setStatus(result.data);
+    const next = await serviceService.getGatewayStatus();
+    setStatus(next);
     setPolling(false);
   };
 
   const start = async () => {
     setLoading("start");
+    setActionError(null);
     clearGatewayUrlCache();
-    await invokeCommand("start_gateway");
+    const result = await serviceService.startGateway();
+    if (result.status !== "success") {
+      setActionError(result.detail);
+    }
     await refresh();
     setLoading(null);
   };
 
   const stop = async () => {
     setLoading("stop");
+    setActionError(null);
     clearGatewayUrlCache();
-    await invokeCommand("stop_gateway");
+    const result = await serviceService.stopGateway();
+    if (result.status !== "success") {
+      setActionError(result.detail);
+    }
     await refresh();
     setLoading(null);
   };
 
   const restart = async () => {
     setLoading("restart");
+    setActionError(null);
     clearGatewayUrlCache();
-    await invokeCommand("restart_gateway");
+    const result = await serviceService.restartGateway();
+    if (result.status !== "success") {
+      setActionError(result.detail);
+    }
     await refresh();
     setLoading(null);
   };
@@ -83,6 +93,16 @@ function GatewayCard() {
     error: "text-destructive",
     unknown: "text-muted-foreground",
   }[state] ?? "text-muted-foreground";
+  const stateLabel = status
+    ? {
+        running: t("settings:gateway.status.running"),
+        stopped: t("settings:gateway.status.stopped"),
+        starting: t("settings:gateway.status.starting"),
+        stopping: t("settings:gateway.status.stopping"),
+        error: t("settings:gateway.status.error"),
+        unknown: t("settings:gateway.status.unknown"),
+      }[state]
+    : t("settings:gateway.status.checking");
 
   return (
     <Card>
@@ -90,34 +110,25 @@ function GatewayCard() {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Server className="h-4 w-4 text-muted-foreground" />
-            <CardTitle>Gateway 服务</CardTitle>
+            <CardTitle>{t("settings:gateway.title")}</CardTitle>
           </div>
           <Button variant="ghost" size="icon" onClick={() => void refresh()} disabled={polling} className="h-7 w-7">
             <RefreshCw className={cn("h-3.5 w-3.5", polling && "animate-spin")} />
           </Button>
         </div>
-        <CardDescription>管理 OpenClaw 网关进程的启停状态</CardDescription>
+        <CardDescription>{t("settings:gateway.description")}</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         {/* Status */}
         <div className="flex items-center justify-between rounded-xl bg-muted/40 px-4 py-3">
           <div className="flex items-center gap-2">
             <span className={cn("h-2 w-2 rounded-full", isRunning ? "bg-green-500 shadow-[0_0_6px_rgba(34,197,94,0.5)]" : "bg-muted-foreground/40")} />
-            <span className={cn("text-sm font-medium", stateColor)}>
-              {status ? {
-                running: "运行中",
-                stopped: "已停止",
-                starting: "启动中...",
-                stopping: "停止中...",
-                error: "错误",
-                unknown: "未知",
-              }[state] : "查询中..."}
-            </span>
+            <span className={cn("text-sm font-medium", stateColor)}>{stateLabel}</span>
           </div>
           {status && (
             <div className="flex items-center gap-3 text-xs text-muted-foreground">
-              {status.port > 0 && <span>端口 {status.port}</span>}
-              {status.pid && <span>PID {status.pid}</span>}
+              {(status.port ?? 0) > 0 && <span>{t("settings:gateway.labels.port")} {status.port}</span>}
+              {status.pid && <span>{t("settings:gateway.labels.pid")} {status.pid}</span>}
             </div>
           )}
         </div>
@@ -125,23 +136,26 @@ function GatewayCard() {
         {status?.statusDetail && (
           <p className="text-xs text-muted-foreground px-1">{status.statusDetail}</p>
         )}
+        {actionError ? (
+          <p className="text-xs text-destructive px-1">{actionError}</p>
+        ) : null}
 
         {/* Controls */}
         <div className="flex gap-2">
           {!isRunning ? (
             <Button onClick={() => void start()} disabled={loading !== null} className="flex-1">
               {loading === "start" ? <RefreshCw className="h-4 w-4 animate-spin mr-2" /> : <Play className="h-4 w-4 mr-2" fill="currentColor" />}
-              启动 Gateway
+              {t("settings:gateway.actions.start")}
             </Button>
           ) : (
             <>
               <Button variant="outline" onClick={() => void restart()} disabled={loading !== null} className="flex-1">
                 {loading === "restart" ? <RefreshCw className="h-4 w-4 animate-spin mr-2" /> : <RotateCcw className="h-4 w-4 mr-2" />}
-                重启
+                {t("settings:gateway.actions.restart")}
               </Button>
               <Button variant="outline" onClick={() => void stop()} disabled={loading !== null} className="text-amber-600 border-amber-200 hover:bg-amber-50 dark:border-amber-800 dark:hover:bg-amber-950/40 flex-1">
                 {loading === "stop" ? <RefreshCw className="h-4 w-4 animate-spin mr-2" /> : <Square className="h-4 w-4 mr-2" fill="currentColor" />}
-                停止
+                {t("settings:gateway.actions.stop")}
               </Button>
             </>
           )}
@@ -150,7 +164,7 @@ function GatewayCard() {
         {isRunning && status?.address && (
           <div className="flex items-center gap-2 text-xs text-muted-foreground bg-green-500/5 border border-green-500/10 rounded-lg px-3 py-2">
             <CheckCircle2 className="h-3.5 w-3.5 text-green-500 shrink-0" />
-            <span>服务地址: <code className="font-mono">{status.address}</code></span>
+            <span>{t("settings:gateway.labels.address")}: <code className="font-mono">{status.address}</code></span>
           </div>
         )}
       </CardContent>
@@ -161,6 +175,7 @@ function GatewayCard() {
 // ─── App settings card ────────────────────────────────────────────────────────
 
 function AppSettingsCard() {
+  const { t } = useTranslation(["common", "settings"]);
   const [form, setForm] = useState<AppSettings>({
     gatewayPollMs: 5000,
     logLineLimit: 500,
@@ -181,9 +196,9 @@ function AppSettingsCard() {
 
   const validate = (): string | null => {
     if (form.gatewayPollMs < 1000 || form.gatewayPollMs > 60000)
-      return "Gateway 轮询间隔须在 1000–60000 ms 之间";
+      return t("settings:app.validation.gatewayPollMsRange");
     if (form.logLineLimit < 50 || form.logLineLimit > 5000)
-      return "日志行数须在 50–5000 之间";
+      return t("settings:app.validation.logLineLimitRange");
     return null;
   };
 
@@ -197,7 +212,7 @@ function AppSettingsCard() {
       setSaved(true);
       setTimeout(() => setSaved(false), 2000);
     } catch {
-      setSaveError("保存失败，请重试");
+      setSaveError(t("settings:app.validation.saveFailed"));
     } finally {
       setSaving(false);
     }
@@ -208,14 +223,14 @@ function AppSettingsCard() {
       <CardHeader>
         <div className="flex items-center gap-2">
           <Info className="h-4 w-4 text-muted-foreground" />
-          <CardTitle>应用设置</CardTitle>
+          <CardTitle>{t("settings:app.title")}</CardTitle>
         </div>
-        <CardDescription>轮询间隔、日志、诊断目录等配置</CardDescription>
+        <CardDescription>{t("settings:app.description")}</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="grid grid-cols-2 gap-4">
           <label className="flex flex-col gap-1.5">
-            <span className="text-sm font-medium">Gateway 轮询间隔 (ms)</span>
+            <span className="text-sm font-medium">{t("settings:app.fields.gatewayPollMs")}</span>
             <Input
               type="number"
               min={1000}
@@ -225,7 +240,7 @@ function AppSettingsCard() {
             />
           </label>
           <label className="flex flex-col gap-1.5">
-            <span className="text-sm font-medium">日志行数限制</span>
+            <span className="text-sm font-medium">{t("settings:app.fields.logLineLimit")}</span>
             <Input
               type="number"
               min={50}
@@ -236,11 +251,11 @@ function AppSettingsCard() {
           </label>
         </div>
         <label className="flex flex-col gap-1.5">
-          <span className="text-sm font-medium">诊断目录</span>
+          <span className="text-sm font-medium">{t("settings:app.fields.diagnosticsDir")}</span>
           <Input
             value={form.diagnosticsDir}
             onChange={(e) => setForm((f) => ({ ...f, diagnosticsDir: e.target.value }))}
-            placeholder="留空使用默认目录"
+            placeholder={t("settings:app.fields.diagnosticsDirHint")}
           />
         </label>
         {saveError && (
@@ -250,8 +265,62 @@ function AppSettingsCard() {
         )}
         <Button onClick={() => void save()} disabled={saving} className={cn(saved && "bg-green-500 hover:bg-green-600")}>
           {saving ? <RefreshCw className="h-4 w-4 animate-spin mr-2" /> : saved ? <CheckCircle2 className="h-4 w-4 mr-2" /> : null}
-          {saving ? "保存中..." : saved ? "已保存" : "保存设置"}
+          {saving ? t("settings:app.actions.saving") : saved ? t("settings:app.actions.saved") : t("settings:app.actions.save")}
         </Button>
+      </CardContent>
+    </Card>
+  );
+}
+
+function PreferencesCard() {
+  const { t } = useTranslation(["common", "settings"]);
+  const theme = useSettingsStore((state) => state.theme);
+  const language = useSettingsStore((state) => state.language);
+  const setupComplete = useSettingsStore((state) => state.setupComplete);
+  const setTheme = useSettingsStore((state) => state.setTheme);
+  const setLanguage = useSettingsStore((state) => state.setLanguage);
+  const setSetupComplete = useSettingsStore((state) => state.setSetupComplete);
+
+  return (
+    <Card>
+      <CardHeader>
+        <div className="flex items-center gap-2">
+          <Shield className="h-4 w-4 text-muted-foreground" />
+          <CardTitle>{t("settings:preferencesTitle")}</CardTitle>
+          <Badge variant={setupComplete ? "success" : "secondary"}>{setupComplete ? t("settings:preferences.setupBadge.complete") : t("settings:preferences.setupBadge.incomplete")}</Badge>
+        </div>
+        <CardDescription>{t("settings:preferencesDescription")}</CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="grid gap-4 md:grid-cols-2">
+          <label className="flex flex-col gap-1.5">
+            <span className="text-sm font-medium">{t("common:theme")}</span>
+            <Select value={theme} onChange={(event) => setTheme(event.target.value as ThemePreference)}>
+              <option value="light">{t("settings:themeLight")}</option>
+              <option value="dark">{t("settings:themeDark")}</option>
+              <option value="system">{t("settings:themeSystem")}</option>
+            </Select>
+            <span className="text-xs text-muted-foreground">{t("settings:themeDescription")}</span>
+          </label>
+
+          <label className="flex flex-col gap-1.5">
+            <span className="text-sm font-medium">{t("common:language")}</span>
+            <Select value={language} onChange={(event) => setLanguage(event.target.value as AppLanguage)}>
+              <option value="zh">{t("settings:languageZh")}</option>
+              <option value="en">{t("settings:languageEn")}</option>
+              <option value="ja">{t("settings:languageJa")}</option>
+            </Select>
+            <span className="text-xs text-muted-foreground">{t("settings:languageDescription")}</span>
+          </label>
+        </div>
+
+        <div className="flex items-center justify-between rounded-xl border border-border bg-muted/30 px-4 py-3">
+          <div>
+            <p className="text-sm font-medium text-foreground">{t("settings:preferences.wizard.title")}</p>
+            <p className="mt-1 text-xs text-muted-foreground">{t("settings:preferences.wizard.description")}</p>
+          </div>
+          <Switch checked={setupComplete} onCheckedChange={setSetupComplete} />
+        </div>
       </CardContent>
     </Card>
   );
@@ -260,6 +329,7 @@ function AppSettingsCard() {
 // ─── Environment card ─────────────────────────────────────────────────────────
 
 function EnvironmentCard() {
+  const { t } = useTranslation(["common", "settings"]);
   const [env, setEnv] = useState<{
     platform: string;
     npmFound: boolean;
@@ -287,7 +357,7 @@ function EnvironmentCard() {
           : <AlertCircle className="h-4 w-4 text-destructive" />}
         <span className="text-sm">{label}</span>
       </div>
-      <span className="text-xs text-muted-foreground font-mono">{value ?? (ok ? "✓" : "未找到")}</span>
+      <span className="text-xs text-muted-foreground font-mono">{value ?? (ok ? "✓" : t("settings:environment.status.notFound"))}</span>
     </div>
   );
 
@@ -296,27 +366,27 @@ function EnvironmentCard() {
       <CardHeader>
         <div className="flex items-center gap-2">
           <Globe className="h-4 w-4 text-muted-foreground" />
-          <CardTitle>运行环境</CardTitle>
+          <CardTitle>{t("settings:environment.title")}</CardTitle>
         </div>
-        <CardDescription>Node.js、npm、OpenClaw CLI 检测结果</CardDescription>
+        <CardDescription>{t("settings:environment.description")}</CardDescription>
       </CardHeader>
       <CardContent>
         {loading ? (
           <div className="flex items-center gap-2 text-sm text-muted-foreground py-4">
-            <RefreshCw className="h-4 w-4 animate-spin" />检测环境中...
+            <RefreshCw className="h-4 w-4 animate-spin" />{t("settings:environment.status.checking")}
           </div>
         ) : env ? (
           <div className="space-y-0">
-            <EnvRow label="平台" ok={true} value={env.platform} />
-            <EnvRow label="npm" ok={env.npmFound} value={env.npmVersion ?? undefined} />
+            <EnvRow label={t("settings:environment.labels.platform")} ok={true} value={env.platform} />
+            <EnvRow label={t("settings:environment.labels.npm")} ok={env.npmFound} value={env.npmVersion ?? undefined} />
             <EnvRow
-              label="OpenClaw CLI"
+              label={t("settings:environment.labels.openclawCli")}
               ok={env.openclawFound}
               value={env.openclawVersion ?? env.openclawPath ?? undefined}
             />
           </div>
         ) : (
-          <p className="text-sm text-muted-foreground">环境检测失败</p>
+          <p className="text-sm text-muted-foreground">{t("settings:environment.status.failed")}</p>
         )}
       </CardContent>
     </Card>
@@ -326,6 +396,8 @@ function EnvironmentCard() {
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export function SettingsPage(): JSX.Element {
+  const { t } = useTranslation(["common", "settings"]);
+
   return (
     <div className="flex flex-col gap-6 max-w-3xl">
       {/* Header */}
@@ -333,14 +405,15 @@ export function SettingsPage(): JSX.Element {
         <h1
           className="page-heading"
         >
-          设置
+          {t("settings:title")}
         </h1>
         <p className="text-muted-foreground text-sm mt-1">
-          Gateway 管理、运行环境、应用偏好配置
+          {t("settings:description")}
         </p>
       </div>
 
       <GatewayCard />
+      <PreferencesCard />
       <EnvironmentCard />
       <AppSettingsCard />
 
@@ -348,7 +421,7 @@ export function SettingsPage(): JSX.Element {
       <div className="flex items-center gap-3 text-xs text-muted-foreground px-1">
         <span>{APP_DISPLAY}</span>
         <span>·</span>
-        <span>Powered by APIMart</span>
+        <span>{t("common:poweredBy")}</span>
       </div>
     </div>
   );

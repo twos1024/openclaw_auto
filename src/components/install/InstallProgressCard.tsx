@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import type { InstallProgressModel } from "../../types/install";
 
 const toneStyles = {
@@ -14,6 +15,7 @@ export interface InstallProgressCardProps {
 }
 
 export function InstallProgressCard({ progress }: InstallProgressCardProps): JSX.Element | null {
+  const { t } = useTranslation(["install"]);
   if (!progress.visible) {
     return null;
   }
@@ -52,7 +54,7 @@ export function InstallProgressCard({ progress }: InstallProgressCardProps): JSX
 
       <div
         role="progressbar"
-        aria-label="安装进度"
+        aria-label={t("install:progress.ariaLabel")}
         aria-valuemin={0}
         aria-valuemax={100}
         aria-valuenow={progress.percent}

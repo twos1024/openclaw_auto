@@ -1,0 +1,74 @@
+{
+  "page": {
+    "title": "Channel Management",
+    "description": "Manage each delivery channel and its bound provider.",
+    "stats": "{{total}} total, {{connected}} connected"
+  },
+  "actions": {
+    "create": "New Channel",
+    "loading": "Loading channels...",
+    "connect": "Connect",
+    "disconnect": "Disconnect",
+    "confirmDelete": "Delete channel “{{name}}”?"
+  },
+  "empty": {
+    "title": "No channels yet",
+    "description": "Create a channel first, then bind providers and agents.",
+    "cta": "Create your first channel"
+  },
+  "status": {
+    "connected": "Connected",
+    "error": "Error",
+    "idle": "Idle",
+    "disconnected": "Disconnected"
+  },
+  "card": {
+    "noProvider": "No provider bound",
+    "connectionType": "Connection: {{value}}",
+    "provider": "Provider: {{value}}",
+    "boundAgents": "Bound agents: {{count}}",
+    "updatedAt": "Updated: {{value}}"
+  },
+  "dialog": {
+    "title": "Create Channel",
+    "description": "Fill in the basic channel information, then choose providers and agents to bind.",
+    "fields": {
+      "name": "Name",
+      "type": "Channel Type",
+      "connectionType": "Connection Type",
+      "provider": "Provider",
+      "agents": "Bound Agents",
+      "description": "Description"
+    },
+    "placeholders": {
+      "name": "e.g. Enterprise Support Channel",
+      "description": "Describe the channel's purpose or usage"
+    },
+    "options": {
+      "type": {
+        "openclaw": "OpenClaw",
+        "openai-compatible": "OpenAI Compatible",
+        "custom": "Custom",
+        "webhook": "Webhook"
+      },
+      "connection": {
+        "none": "None",
+        "api-key": "API Key",
+        "oauth": "OAuth"
+      }
+    },
+    "noProvider": "No provider",
+    "hints": {
+      "noAgents": "No agents are available yet. Create one first."
+    },
+    "actions": {
+      "cancel": "Cancel",
+      "create": "Create Channel",
+      "creating": "Creating..."
+    },
+    "errors": {
+      "nameRequired": "Please enter a channel name.",
+      "createFailed": "Failed to create the channel. Please try again."
+    }
+  }
+}

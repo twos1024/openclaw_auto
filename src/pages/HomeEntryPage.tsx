@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
 import { Link, Navigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { useRunbook } from "../hooks/useRunbook";
 import { useShellActions } from "../hooks/useShellActions";
 import { OverviewPage } from "./OverviewPage";
 
 export function HomeEntryPage(): JSX.Element {
+  const { t } = useTranslation("overview");
   const { model, isLoading, errorText } = useRunbook(true);
   const { openSetupAssistant } = useShellActions();
   const [hasAutoOpened, setHasAutoOpened] = useState<boolean>(false);
@@ -32,8 +34,8 @@ export function HomeEntryPage(): JSX.Element {
           gap: 8,
         }}
       >
-        <strong style={{ color: "#0f172a" }}>正在准备新手引导</strong>
-        <p style={{ margin: 0, color: "#475569" }}>正在判断你现在应该先做哪一步。</p>
+        <strong style={{ color: "#0f172a" }}>{t("home.loading.title")}</strong>
+        <p style={{ margin: 0, color: "#475569" }}>{t("home.loading.description")}</p>
       </section>
     );
   }
@@ -52,10 +54,10 @@ export function HomeEntryPage(): JSX.Element {
         display: "grid",
         gap: 8,
       }}
-    >
-      <strong style={{ color: "#991b1b" }}>无法进入新手引导</strong>
+      >
+      <strong style={{ color: "#991b1b" }}>{t("home.error.title")}</strong>
       <p style={{ margin: 0, color: "#7f1d1d" }}>
-        {errorText ?? "当前无法判断下一步。你可以先打开概览页或安装页继续。"}
+        {errorText ?? t("home.error.description")}
       </p>
       <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
         <Link
@@ -70,7 +72,7 @@ export function HomeEntryPage(): JSX.Element {
             fontWeight: 700,
           }}
         >
-          打开概览
+          {t("home.actions.overview")}
         </Link>
         <Link
           to="/install?wizard=1"
@@ -85,7 +87,7 @@ export function HomeEntryPage(): JSX.Element {
             fontWeight: 700,
           }}
         >
-          打开安装向导
+          {t("home.actions.installWizard")}
         </Link>
       </div>
     </section>

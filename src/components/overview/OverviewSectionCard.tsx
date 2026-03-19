@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import type { HealthLevel, OverviewSection } from "../../types/status";
 
 const levelColorMap: Record<HealthLevel, string> = {
@@ -9,6 +10,7 @@ const levelColorMap: Record<HealthLevel, string> = {
 };
 
 function StatusBadge({ level }: { level: HealthLevel }): JSX.Element {
+  const { t } = useTranslation("overview");
   return (
     <span
       style={{
@@ -21,7 +23,7 @@ function StatusBadge({ level }: { level: HealthLevel }): JSX.Element {
         padding: "2px 8px",
       }}
     >
-      {level}
+      {t(`level.${level}`)}
     </span>
   );
 }
@@ -31,6 +33,7 @@ export interface OverviewSectionCardProps {
 }
 
 export function OverviewSectionCard({ section }: OverviewSectionCardProps): JSX.Element {
+  const { t } = useTranslation("overview");
   return (
     <section
       style={{
@@ -61,7 +64,7 @@ export function OverviewSectionCard({ section }: OverviewSectionCardProps): JSX.
 
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10 }}>
         <span style={{ fontSize: 12, color: "#64748b" }}>
-          Updated: {new Date(section.updatedAt).toLocaleString()}
+          {t("section.updated")} {new Date(section.updatedAt).toLocaleString()}
         </span>
         <Link
           to={section.route}

@@ -1,0 +1,81 @@
+{
+  "title": "Settings",
+  "description": "Gateway control, runtime environment, and app preferences.",
+  "preferencesTitle": "Interface preferences",
+  "preferencesDescription": "Theme, language, and first-run wizard state.",
+  "themeDescription": "Switch between light, dark, or system appearance.",
+  "languageDescription": "Change the UI language. Only the foundation is wired so far.",
+  "themeLight": "Light",
+  "themeDark": "Dark",
+  "themeSystem": "System",
+  "languageZh": "简体中文",
+  "languageEn": "English",
+  "languageJa": "日本語",
+  "gateway": {
+    "title": "Gateway service",
+    "description": "Manage the OpenClaw gateway process lifecycle.",
+    "status": {
+      "running": "Running",
+      "stopped": "Stopped",
+      "starting": "Starting...",
+      "stopping": "Stopping...",
+      "error": "Error",
+      "unknown": "Unknown",
+      "checking": "Checking..."
+    },
+    "labels": {
+      "port": "Port",
+      "pid": "PID",
+      "address": "Service address"
+    },
+    "actions": {
+      "start": "Start Gateway",
+      "restart": "Restart",
+      "stop": "Stop"
+    }
+  },
+  "app": {
+    "title": "App settings",
+    "description": "Polling interval, logs, diagnostics directory, and related options.",
+    "fields": {
+      "gatewayPollMs": "Gateway polling interval (ms)",
+      "logLineLimit": "Log line limit",
+      "diagnosticsDir": "Diagnostics directory",
+      "diagnosticsDirHint": "Leave blank to use the default directory"
+    },
+    "validation": {
+      "gatewayPollMsRange": "Gateway polling interval must be between 1000 and 60000 ms.",
+      "logLineLimitRange": "Log line limit must be between 50 and 5000.",
+      "saveFailed": "Save failed. Please try again."
+    },
+    "actions": {
+      "saving": "Saving...",
+      "saved": "Saved",
+      "save": "Save settings"
+    }
+  },
+  "preferences": {
+    "setupBadge": {
+      "complete": "Setup complete",
+      "incomplete": "Setup incomplete"
+    },
+    "wizard": {
+      "title": "Setup Wizard completed",
+      "description": "This switch writes to persisted state so the first-run flow can reuse it later."
+    }
+  },
+  "environment": {
+    "title": "Runtime environment",
+    "description": "Node.js, npm, and OpenClaw CLI detection results.",
+    "status": {
+      "checking": "Checking environment...",
+      "failed": "Environment detection failed",
+      "notFound": "Not found"
+    },
+    "labels": {
+      "platform": "Platform",
+      "npm": "npm",
+      "openclawCli": "OpenClaw CLI"
+    }
+  }
+}

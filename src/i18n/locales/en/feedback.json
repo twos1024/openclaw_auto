@@ -1,0 +1,25 @@
+{
+  "page": {
+    "title": "Feedback",
+    "description": "Tell us about problems you ran into or ideas for improvement.",
+    "thanks": "Thanks for using OpenClaw Manager. Your feedback makes the product better."
+  },
+  "form": {
+    "title": "Submit feedback",
+    "description": "Describe the issue, feature request, or any suggestion you have.",
+    "placeholder": "Describe your issue or suggestion...",
+    "emailPlaceholder": "Email address (optional)",
+    "validation": "Please enter feedback before submitting.",
+    "submit": "Submit feedback",
+    "submitting": "Submitting...",
+    "successTitle": "Thanks for your feedback!",
+    "successDescription": "We read every message carefully and keep improving the product.",
+    "retry": "Send another"
+  },
+  "contact": {
+    "title": "Contact",
+    "description": "Other ways to reach us",
+    "githubLabel": "GitHub Issues",
+    "githubValue": "github.com/openclaw"
+  }
+}

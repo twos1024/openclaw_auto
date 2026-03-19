@@ -1,0 +1,22 @@
+{
+  "agents": "Agents",
+  "chat": "Chat",
+  "models": "Models",
+  "channels": "Channels",
+  "providers": "Providers",
+  "cron": "Cron",
+  "plugins": "Plugins",
+  "skills": "Skills",
+  "settings": "Settings",
+  "feedback": "Feedback",
+  "newChat": "New chat",
+  "agentsCount": "Agents",
+  "running": "Running",
+  "buckets": {
+    "today": "Today",
+    "yesterday": "Yesterday",
+    "thisWeek": "This week",
+    "thisMonth": "This month",
+    "older": "Earlier"
+  }
+}

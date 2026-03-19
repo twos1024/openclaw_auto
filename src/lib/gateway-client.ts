@@ -14,19 +14,33 @@ const CACHE_TTL_MS = 30_000;
 const DEFAULT_TIMEOUT_MS = 10_000;
 
 let _cached: CachedUrl | null = null;
+let _inflight: Promise<string | null> | null = null;
 
 export async function getGatewayUrl(): Promise<string | null> {
   const now = Date.now();
   if (_cached && now - _cached.cachedAt < CACHE_TTL_MS) {
     return _cached.url;
   }
-  const result = await invokeCommand<{ address: string; running: boolean }>("get_gateway_status");
-  if (result.success && result.data?.running && result.data.address) {
-    _cached = { url: result.data.address, cachedAt: now };
-    return _cached.url;
+
+  if (_inflight) {
+    return _inflight;
   }
-  _cached = null;
-  return null;
+
+  _inflight = (async () => {
+    const result = await invokeCommand<{ address: string; running: boolean }>("get_gateway_status");
+    if (result.success && result.data?.running && result.data.address) {
+      _cached = { url: result.data.address, cachedAt: Date.now() };
+      return _cached.url;
+    }
+    _cached = null;
+    return null;
+  })();
+
+  try {
+    return await _inflight;
+  } finally {
+    _inflight = null;
+  }
 }
 
 export function clearGatewayUrlCache() {

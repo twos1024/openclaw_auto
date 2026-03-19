@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { StatusBadge } from "../common/StatusBadge";
 import { SurfaceCard } from "../common/SurfaceCard";
 import type { RunbookModel } from "../../types/workspace";
@@ -8,10 +9,11 @@ export interface RunbookLaunchChecksProps {
 }
 
 export function RunbookLaunchChecks({ model }: RunbookLaunchChecksProps): JSX.Element {
+  const { t } = useTranslation("runbook");
   return (
     <SurfaceCard
-      title="Launch Checks"
-      subtitle="These checks decide whether setup can continue cleanly from install to dashboard."
+      title={t("launchChecks.title")}
+      subtitle={t("launchChecks.subtitle")}
     >
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 12 }}>
         {model.launchChecks.map((check) => (
@@ -45,7 +47,7 @@ export function RunbookLaunchChecks({ model }: RunbookLaunchChecksProps): JSX.El
                   display: "inline-block",
                 }}
               >
-                Open
+                {t("launchChecks.open")}
               </Link>
             </div>
           </article>

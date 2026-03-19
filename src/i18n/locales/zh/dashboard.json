@@ -1,0 +1,67 @@
+{
+  "title": "Dashboard 诊断",
+  "description": "查看当前内嵌阶段、端点信息和当前平台上的排障重点。",
+  "embedPhase": "内嵌阶段：{{value}}",
+  "phase": {
+    "loading": "加载中",
+    "loaded": "已加载",
+    "timeout": "超时",
+    "blocked": "被阻止",
+    "unavailable": "不可用"
+  },
+  "tone": {
+    "healthy": "正常",
+    "warning": "警告",
+    "error": "错误",
+    "neutral": "待处理"
+  },
+  "recommendedAction": {
+    "title": "推荐下一步",
+    "next": "下一步"
+  },
+  "platform": {
+    "label": "平台",
+    "unknown": "未知"
+  },
+  "diagnostics": {
+    "platformNoteFallback": "若内嵌页面加载异常，优先检查 Gateway 状态、iframe 安全策略和本地端口连通性。",
+    "probing": "正在探测 Dashboard 端点..."
+  },
+  "toolbar": {
+    "statusWaiting": "正在等待 Gateway 状态...",
+    "title": "嵌入式 Dashboard",
+    "endpoint": "端点：",
+    "refreshStatus": "刷新状态",
+    "refreshing": "刷新中...",
+    "reloadFrame": "重载框架",
+    "restartGateway": "重启 Gateway",
+    "restarting": "重启中...",
+    "openExternal": "外部打开",
+    "opening": "打开中..."
+  },
+  "frame": {
+    "title": "OpenClaw Dashboard",
+    "loadingAria": "Dashboard loading",
+    "actions": {
+      "reloadFrame": "重载框架",
+      "openExternal": "外部打开",
+      "restartGateway": "重启 Gateway",
+      "openSetupAssistant": "打开设置助手"
+    }
+  },
+  "unavailable": {
+    "title": "Dashboard 不可用",
+    "description": "Gateway 还没有进入可用状态，因此当前不能加载内嵌 Dashboard。",
+    "actions": {
+      "starting": "正在启动...",
+      "start": "启动 Gateway",
+      "setupAssistant": "打开设置助手"
+    }
+  },
+  "adminBanner": {
+    "title": "未以管理员权限运行",
+    "relaunching": "正在提权...",
+    "relaunch": "以管理员身份重启",
+    "closeLabel": "关闭提示"
+  }
+}

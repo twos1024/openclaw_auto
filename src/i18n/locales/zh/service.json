@@ -1,0 +1,32 @@
+{
+  "page": {
+    "title": "Gateway 服务",
+    "description": "先启动 Gateway，再打开 Dashboard。",
+    "polling": "轮询：{{state}}",
+    "pollingOn": "开启 ({{seconds}}s)",
+    "pollingOff": "关闭",
+    "initializing": "| 正在初始化..."
+  },
+  "status": {
+    "portConflict": {
+      "title": "端口被占用",
+      "prefix": "Gateway ",
+      "portLabel": "port",
+      "targetPort": "target port",
+      "suffix": "已被其他进程占用。",
+      "suggestion": "先释放这个端口，或者换一个空闲端口，再重新启动 Gateway。"
+    }
+  },
+  "nextStep": {
+    "title": "下一步",
+    "description": "先启动 Gateway，确认运行后再打开 Dashboard。"
+  },
+  "snapshot": {
+    "title": "运行快照",
+    "running": "运行状态：",
+    "yes": "是",
+    "no": "否",
+    "pid": "PID:",
+    "lastStarted": "最近启动："
+  }
+}

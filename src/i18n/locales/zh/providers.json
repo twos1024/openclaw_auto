@@ -1,0 +1,75 @@
+{
+  "page": {
+    "title": "提供方管理",
+    "description": "管理模型提供方、鉴权信息和可用状态。",
+    "stats": "共 {{total}} 个，已就绪 {{ready}} 个"
+  },
+  "actions": {
+    "create": "新建提供方",
+    "loading": "正在加载提供方...",
+    "validate": "校验",
+    "enable": "启用",
+    "disable": "停用",
+    "confirmDelete": "确认删除提供方“{{name}}”吗？"
+  },
+  "empty": {
+    "title": "还没有提供方",
+    "description": "先创建一个提供方，再为通道和智能体提供模型能力。",
+    "cta": "创建第一个提供方"
+  },
+  "status": {
+    "ready": "就绪",
+    "checking": "校验中",
+    "error": "异常",
+    "disabled": "已停用"
+  },
+  "card": {
+    "apiKey": "API Key：{{value}}",
+    "hidden": "已隐藏",
+    "baseUrl": "基础地址：{{value}}",
+    "default": "默认",
+    "modelCount": "模型数量：{{value}}",
+    "updatedAt": "更新时间：{{value}}"
+  },
+  "dialog": {
+    "title": "创建提供方",
+    "description": "填写提供方信息，以便后续为通道和智能体提供模型。",
+    "fields": {
+      "name": "名称",
+      "vendor": "厂商",
+      "apiKey": "API Key",
+      "baseUrl": "基础地址"
+    },
+    "placeholders": {
+      "name": "例如：默认 OpenAI 提供方",
+      "apiKey": "请输入 API Key",
+      "apiKeyOllama": "Ollama 无需 API Key",
+      "baseUrl": "可选，例如：https://api.openai.com/v1"
+    },
+    "options": {
+      "vendor": {
+        "openai": "OpenAI",
+        "anthropic": "Anthropic",
+        "deepseek": "DeepSeek",
+        "ollama": "Ollama",
+        "google": "Google",
+        "qwen": "Qwen",
+        "zhipu": "智谱",
+        "moonshot": "Moonshot",
+        "groq": "Groq",
+        "mistral": "Mistral",
+        "custom": "自定义"
+      }
+    },
+    "actions": {
+      "cancel": "取消",
+      "create": "创建提供方",
+      "creating": "正在创建..."
+    },
+    "errors": {
+      "nameRequired": "请输入提供方名称。",
+      "apiKeyRequired": "请输入 API Key。",
+      "createFailed": "创建提供方失败，请重试。"
+    }
+  }
+}

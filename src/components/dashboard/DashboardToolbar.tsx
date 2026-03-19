@@ -1,3 +1,5 @@
+import { useTranslation } from "react-i18next";
+
 export interface DashboardToolbarProps {
   address: string | null;
   statusDetail: string;
@@ -49,6 +51,8 @@ export function DashboardToolbar({
   onRestart,
   onOpenExternal,
 }: DashboardToolbarProps): JSX.Element {
+  const { t } = useTranslation("dashboard");
+
   return (
     <section
       style={{
@@ -61,25 +65,25 @@ export function DashboardToolbar({
       }}
     >
       <div style={{ display: "grid", gap: 6 }}>
-        <h2 style={{ margin: 0 }}>Embedded Dashboard</h2>
+        <h2 style={{ margin: 0 }}>{t("toolbar.title")}</h2>
         <p style={{ margin: 0, color: "#475569" }}>{statusDetail}</p>
-        <p style={{ margin: 0, fontSize: 13, color: "#64748b" }}>Endpoint: {address ?? "-"}</p>
+        <p style={{ margin: 0, fontSize: 13, color: "#64748b" }}>{t("toolbar.endpoint")} {address ?? "-"}</p>
       </div>
 
       <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
         <ToolbarButton
-          label={isRefreshing ? "Refreshing..." : "Refresh Status"}
+          label={isRefreshing ? t("toolbar.refreshing") : t("toolbar.refreshStatus")}
           onClick={onRefreshStatus}
           disabled={isRefreshing}
         />
-        <ToolbarButton label="Reload Frame" onClick={onReloadFrame} disabled={!isRunning} />
+        <ToolbarButton label={t("toolbar.reloadFrame")} onClick={onReloadFrame} disabled={!isRunning} />
         <ToolbarButton
-          label={isRestarting ? "Restarting..." : "Restart Gateway"}
+          label={isRestarting ? t("toolbar.restarting") : t("toolbar.restartGateway")}
           onClick={onRestart}
           disabled={!isRunning || isRestarting}
         />
         <ToolbarButton
-          label={isOpeningExternal ? "Opening..." : "Open External"}
+          label={isOpeningExternal ? t("toolbar.opening") : t("toolbar.openExternal")}
           onClick={onOpenExternal}
           disabled={!isRunning || isOpeningExternal}
         />

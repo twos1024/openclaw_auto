@@ -27,11 +27,3 @@ export function timeBucket(isoOrMs: string | number): "today" | "yesterday" | "t
   if (d < 30 * DAY) return "thisMonth";
   return "older";
 }
-
-export const BUCKET_LABELS: Record<ReturnType<typeof timeBucket>, string> = {
-  today: "今天",
-  yesterday: "昨天",
-  thisWeek: "本周",
-  thisMonth: "本月",
-  older: "更早",
-};

@@ -1,5 +1,6 @@
 import { useCallback } from "react";
 import { Link, useSearchParams } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { InstallEnvironmentPanel } from "../components/install/InstallEnvironmentPanel";
 import { InstallIssueCard } from "../components/install/InstallIssueCard";
 import { InstallPhaseTimeline } from "../components/install/InstallPhaseTimeline";
@@ -29,6 +30,7 @@ type NextStepState =
     };
 
 export function InstallPage(): JSX.Element {
+  const { t } = useTranslation(["common", "install"]);
   const [searchParams, setSearchParams] = useSearchParams();
   const { model: runbookModel } = useRunbook(true, 30000);
   const {
@@ -66,43 +68,43 @@ export function InstallPage(): JSX.Element {
   }, [searchParams, setSearchParams]);
   const nextStepState: NextStepState = runtimeBlockMode
     ? {
-        title: "先修复运行环境",
-        description: "当前不是可执行本机安装的桌面环境。先切到桌面运行时，再继续。",
-        actionLabel: "打开设置",
+        title: t("install:page.nextStep.fixRuntime.title"),
+        description: t("install:page.nextStep.fixRuntime.description"),
+        actionLabel: t("install:page.nextStep.fixRuntime.actionLabel"),
         route: "/settings",
       }
     : serviceReady
       ? {
-          title: "已经可以开始使用",
-          description: "OpenClaw 已经安装并启动完成，现在直接打开 Dashboard 即可。",
-          actionLabel: "打开 Dashboard",
+          title: t("install:page.nextStep.ready.title"),
+          description: t("install:page.nextStep.ready.description"),
+          actionLabel: t("install:page.nextStep.ready.actionLabel"),
           route: "/dashboard",
         }
       : configReady
         ? {
-            title: "下一步：启动 Gateway",
-            description: "API Key 已保存。现在去启动 Gateway，然后就可以开始使用。",
-            actionLabel: "启动 Gateway",
+            title: t("install:page.nextStep.service.title"),
+            description: t("install:page.nextStep.service.description"),
+            actionLabel: t("install:page.nextStep.service.actionLabel"),
             route: "/service",
           }
       : installResult?.status === "success" || installResult?.status === "warning"
       ? {
-          title: "安装已完成",
-          description: "下一步只做一件事：去配置 API Key，然后保存。",
-          actionLabel: "配置 API Key",
+          title: t("install:page.nextStep.config.title"),
+          description: t("install:page.nextStep.config.description"),
+          actionLabel: t("install:page.nextStep.config.actionLabel"),
           route: "/config",
         }
       : installBlockedByEnv
         ? {
-            title: "先补齐 npm",
-            description: "安装前先把 Node.js / npm 装好，然后回到这里刷新环境。",
-            actionLabel: "刷新环境",
+            title: t("install:page.nextStep.env.title"),
+            description: t("install:page.nextStep.env.description"),
+            actionLabel: t("install:page.nextStep.env.actionLabel"),
             onClick: () => void refreshEnvironment(),
           }
       : {
-          title: "开始安装",
-          description: "打开向导，按提示完成 OpenClaw 安装。",
-          actionLabel: "在此打开安装向导",
+          title: t("install:page.nextStep.start.title"),
+          description: t("install:page.nextStep.start.description"),
+          actionLabel: t("install:page.nextStep.start.actionLabel"),
           onClick: openWizard,
         };
   const nextStepRoute = "route" in nextStepState ? nextStepState.route : null;
@@ -111,9 +113,9 @@ export function InstallPage(): JSX.Element {
   return (
     <div style={{ display: "grid", gap: 16 }}>
       <PageHero
-        title="安装 OpenClaw"
-        description="先完成安装，再填 API Key，最后启动 Gateway。这个页面把新手需要做的事收成一条线。"
-        meta={environment ? `Platform: ${environment.platform} / ${environment.architecture}` : undefined}
+        title={t("install:page.hero.title")}
+        description={t("install:page.hero.description")}
+        meta={environment ? t("install:page.hero.meta", { platform: environment.platform, architecture: environment.architecture }) : undefined}
         action={
           <button
             type="button"
@@ -128,7 +130,7 @@ export function InstallPage(): JSX.Element {
               cursor: "pointer",
             }}
           >
-            打开安装向导
+            {t("install:page.hero.action")}
           </button>
         }
       />
@@ -182,15 +184,15 @@ export function InstallPage(): JSX.Element {
       </section>
 
       {envError ? (
-        <NoticeBanner title="环境探测失败" tone="error">
+        <NoticeBanner title={t("install:page.banners.envError.title")} tone="error">
           <p style={{ margin: "8px 0 0" }}>{envError.message}</p>
-          <p style={{ margin: "8px 0 0", fontSize: 13 }}>建议：{envError.suggestion}</p>
+          <p style={{ margin: "8px 0 0", fontSize: 13 }}>{t("install:page.banners.envError.suggestionPrefix")}{envError.suggestion}</p>
         </NoticeBanner>
       ) : null}
 
       <RunbookContextPanel
-        title="当前步骤"
-        description="只看当前一步，别同时处理安装、配置和服务。"
+        title={t("install:page.runbook.title")}
+        description={t("install:page.runbook.description")}
         model={runbookModel}
       />
 
@@ -214,9 +216,9 @@ export function InstallPage(): JSX.Element {
 
       {visibleIssue ? <InstallIssueCard issue={visibleIssue} /> : null}
 
-      <NoticeBanner title="安装顺序" tone="info">
+      <NoticeBanner title={t("install:page.banners.order.title")} tone="info">
         <p style={{ margin: 0, color: "#475569" }}>
-          先安装 OpenClaw，再去 Config 填 API Key，保存后到 Service 启动 Gateway。
+          {t("install:page.banners.order.description")}
         </p>
       </NoticeBanner>
 

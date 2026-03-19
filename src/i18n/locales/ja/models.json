@@ -1,0 +1,43 @@
+{
+  "page": {
+    "title": "モデル使用量",
+    "descriptionRunning": "Gateway 実行中 · 最近のモデル使用量を読み込んでいます",
+    "descriptionIdle": "Gateway が起動していません · 起動するとモデル使用量を確認できます"
+  },
+  "toolbar": {
+    "timeRange": {
+      "7d": "直近 7 日",
+      "30d": "直近 30 日",
+      "all": "すべて"
+    }
+  },
+  "stats": {
+    "totalTokens": "総 Token 消費",
+    "estimatedCost": "概算費用",
+    "modelCount": "使用モデル数",
+    "averageCost": "1 回あたりの平均費用",
+    "records": "{{count}} 件の記録",
+    "range": {
+      "7d": "直近 7 日",
+      "30d": "直近 30 日",
+      "all": "全期間"
+    },
+    "perRecord": "記録ごとの平均"
+  },
+  "table": {
+    "title": "モデル使用量の詳細",
+    "description": "リクエストごとの token 消費と費用の推移を表示します。",
+    "headers": {
+      "date": "日付",
+      "model": "モデル",
+      "input": "入力",
+      "output": "出力",
+      "total": "合計",
+      "cost": "費用"
+    }
+  },
+  "status": {
+    "loading": "読み込み中...",
+    "empty": "まだモデル使用量データはありません。最初の会話の後に統計が表示されます。"
+  }
+}

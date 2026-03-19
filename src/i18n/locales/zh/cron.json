@@ -1,0 +1,78 @@
+{
+  "page": {
+    "title": "定时任务",
+    "description": "管理周期执行任务、触发记录和执行状态。",
+    "stats": "共 {{total}} 个，启用 {{enabled}} 个"
+  },
+  "actions": {
+    "create": "新建任务",
+    "loading": "正在加载定时任务...",
+    "trigger": "立即执行",
+    "viewHistory": "查看历史",
+    "hideHistory": "收起历史",
+    "confirmDelete": "确认删除任务“{{name}}”吗？"
+  },
+  "empty": {
+    "title": "还没有定时任务",
+    "description": "创建一个定时任务，让智能体按计划自动运行。",
+    "cta": "创建第一个任务"
+  },
+  "status": {
+    "success": "成功",
+    "failed": "失败",
+    "running": "运行中",
+    "disabled": "已禁用",
+    "idle": "空闲"
+  },
+  "card": {
+    "agent": "智能体：{{value}}",
+    "channel": "通道：{{value}}",
+    "nextRun": "下次执行：{{value}}",
+    "lastRun": "上次执行：{{value}}",
+    "notCalculated": "尚未计算",
+    "none": "无",
+    "noTemplate": "未配置模板内容",
+    "enabled": "启用",
+    "noHistory": "当前没有执行历史。",
+    "duration": "耗时：{{value}}",
+    "notAvailable": "不可用",
+    "noSummary": "暂无摘要"
+  },
+  "dialog": {
+    "title": "创建定时任务",
+    "description": "填写任务信息，绑定智能体和通道后即可按计划执行。",
+    "defaults": {
+      "schedule": "0 9 * * 1-5"
+    },
+    "fields": {
+      "name": "名称",
+      "schedule": "执行计划",
+      "agent": "智能体",
+      "channel": "通道",
+      "template": "模板内容",
+      "enabled": "启用任务"
+    },
+    "placeholders": {
+      "name": "例如：工作日早报",
+      "schedule": "例如：0 9 * * 1-5",
+      "agent": "选择智能体",
+      "channel": "选择通道",
+      "template": "输入任务模板内容"
+    },
+    "hints": {
+      "enabled": "关闭后任务不会自动触发。"
+    },
+    "actions": {
+      "cancel": "取消",
+      "create": "创建任务",
+      "creating": "正在创建..."
+    },
+    "errors": {
+      "nameRequired": "请输入任务名称。",
+      "scheduleRequired": "请输入执行计划。",
+      "agentRequired": "请选择智能体。",
+      "channelRequired": "请选择通道。",
+      "createFailed": "创建任务失败，请重试。"
+    }
+  }
+}

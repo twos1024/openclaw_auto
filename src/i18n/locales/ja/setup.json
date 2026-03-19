@@ -1,0 +1,105 @@
+{
+  "page": {
+    "title": "セットアップウィザード",
+    "description": "実行環境の確認、提供元設定、ゲートウェイ起動を順に完了します。",
+    "badges": {
+      "completed": "完了済み",
+      "fresh": "初回実行"
+    },
+    "stepIndex": "ステップ {{current}} / {{total}}"
+  },
+  "steps": {
+    "welcome": "案内",
+    "runtime": "実行環境",
+    "provider": "提供元",
+    "install": "インストール",
+    "complete": "完了"
+  },
+  "welcome": {
+    "body": "このウィザードでは、初回起動に必要な最小設定を案内します。",
+    "hint": "後続の連携トラブルを避けるため、順番どおりに進めることを推奨します。"
+  },
+  "runtime": {
+    "actions": {
+      "check": "環境を確認"
+    },
+    "state": {
+      "passed": "準備完了",
+      "pending": "未確認"
+    },
+    "fields": {
+      "platform": "プラットフォーム: {{value}}",
+      "npm": "npm: {{value}}",
+      "openclaw": "OpenClaw: {{value}}"
+    },
+    "values": {
+      "installed": "インストール済み",
+      "missing": "未インストール"
+    },
+    "requirement": "現在の環境は要件を満たしていません。先に不足している依存関係を追加してください。",
+    "idle": "「環境を確認」をクリックして開始します。",
+    "errors": {
+      "detectFailed": "環境の検出に失敗しました。もう一度お試しください。"
+    }
+  },
+  "provider": {
+    "modeLabel": "設定方法",
+    "defaults": {
+      "name": "メイン提供元"
+    },
+    "modes": {
+      "existing": "既存の提供元を使う",
+      "new": "新しい提供元を作成"
+    },
+    "placeholders": {
+      "selectExisting": "既存の提供元を選択",
+      "name": "提供元名",
+      "apiKey": "API キー",
+      "apiKeyOllama": "Ollama では API キーは不要です",
+      "baseUrl": "ベース URL（任意）"
+    },
+    "actions": {
+      "validate": "提供元を検証",
+      "createAndValidate": "作成して検証"
+    },
+    "state": {
+      "validated": "検証済み",
+      "pending": "未検証"
+    },
+    "errors": {
+      "selectExisting": "既存の提供元を選択してください。",
+      "validateFailed": "提供元の検証に失敗しました。設定を確認してください。",
+      "nameRequired": "提供元名を入力してください。",
+      "apiKeyRequired": "API キーを入力してください。",
+      "createFailed": "提供元の作成に失敗しました。もう一度お試しください。",
+      "missingRecord": "新しく作成された提供元レコードが見つかりません。"
+    }
+  },
+  "install": {
+    "idle": "インストールと起動の準備ができました。",
+    "installing": "OpenClaw をインストール中...",
+    "skipExisting": "OpenClaw は既にインストールされています。インストールをスキップします。",
+    "startedWithAddress": "ゲートウェイを起動しました: {{value}}",
+    "started": "ゲートウェイを起動しました",
+    "actions": {
+      "install": "ゲートウェイをインストールして起動"
+    },
+    "state": {
+      "running": "実行中",
+      "pending": "未開始"
+    },
+    "errors": {
+      "startFailed": "ゲートウェイの起動に失敗しました。もう一度お試しください。",
+      "statusFailed": "ゲートウェイの状態取得に失敗しました。"
+    }
+  },
+  "complete": {
+    "title": "セットアップ完了",
+    "description": "環境の準備が整いました。チャット画面へ進んでください。"
+  },
+  "actions": {
+    "previous": "前へ",
+    "next": "次へ",
+    "finish": "アプリへ進む"
+  }
+}

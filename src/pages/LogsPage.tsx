@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import { NoticeBanner } from "../components/common/NoticeBanner";
 import { PageHero } from "../components/common/PageHero";
 import { ErrorSummaryPanel } from "../components/logs/ErrorSummaryPanel";
@@ -7,6 +8,7 @@ import { useLogs } from "../hooks/useLogs";
 import { useRunbook } from "../hooks/useRunbook";
 
 export function LogsPage(): JSX.Element {
+  const { t } = useTranslation(["logs"]);
   const { model: runbookModel } = useRunbook(true, 30000);
   const {
     source,
@@ -35,20 +37,29 @@ export function LogsPage(): JSX.Element {
   return (
     <div style={{ display: "grid", gap: 16 }}>
       <PageHero
-        title="Logs"
-        description="Logs page is now part of the guided recovery flow. Use it to verify whether install, startup, or gateway failures already produced useful diagnostics before changing config or service state."
-        meta={`总日志 ${rawLines.length} 行，过滤后 ${visibleLines.length} 行${lastUpdatedAt ? `，最近更新：${new Date(lastUpdatedAt).toLocaleString()}` : ""}`}
+        title={t("logs:page.title")}
+        description={t("logs:page.description")}
+        meta={lastUpdatedAt
+          ? t("logs:page.metaWithUpdatedAt", {
+              total: rawLines.length,
+              visible: visibleLines.length,
+              updatedAt: new Date(lastUpdatedAt).toLocaleString(),
+            })
+          : t("logs:page.meta", {
+              total: rawLines.length,
+              visible: visibleLines.length,
+            })}
       />
 
       {loadError ? (
-        <NoticeBanner title="日志读取提示" tone="error">
+        <NoticeBanner title={t("logs:page.loadErrorTitle")} tone="error">
           <p style={{ margin: "8px 0 0" }}>{loadError}</p>
         </NoticeBanner>
       ) : null}
 
       <RunbookContextPanel
-        title="Recovery Context"
-        description="Logs are usually the fastest way to validate whether the current blocker is install-, config-, or service-related. Use the quick links to jump back once you know where the fault sits."
+        title={t("logs:page.runbook.title")}
+        description={t("logs:page.runbook.description")}
         model={runbookModel}
       />
 
@@ -79,7 +90,7 @@ export function LogsPage(): JSX.Element {
         lines={visibleLines}
         keyword={keyword}
         isLoading={isLoading}
-        emptyText="当前过滤条件下没有日志。"
+        emptyText={t("logs:viewer.empty")}
       />
     </div>
   );

@@ -1,0 +1,105 @@
+{
+  "page": {
+    "title": "Setup Wizard",
+    "description": "Complete runtime checks, provider setup, and gateway startup step by step.",
+    "badges": {
+      "completed": "Completed",
+      "fresh": "First Run"
+    },
+    "stepIndex": "Step {{current}} / {{total}}"
+  },
+  "steps": {
+    "welcome": "Welcome",
+    "runtime": "Runtime",
+    "provider": "Provider",
+    "install": "Install",
+    "complete": "Complete"
+  },
+  "welcome": {
+    "body": "This wizard will help you finish the minimum setup needed for the first launch.",
+    "hint": "We recommend completing the steps in order to avoid integration issues later."
+  },
+  "runtime": {
+    "actions": {
+      "check": "Check Environment"
+    },
+    "state": {
+      "passed": "Ready",
+      "pending": "Pending"
+    },
+    "fields": {
+      "platform": "Platform: {{value}}",
+      "npm": "npm: {{value}}",
+      "openclaw": "OpenClaw: {{value}}"
+    },
+    "values": {
+      "installed": "Installed",
+      "missing": "Missing"
+    },
+    "requirement": "The current environment does not meet the requirements. Install the missing dependencies first.",
+    "idle": "Click “Check Environment” to start.",
+    "errors": {
+      "detectFailed": "Environment detection failed. Please try again."
+    }
+  },
+  "provider": {
+    "modeLabel": "Setup Mode",
+    "defaults": {
+      "name": "Primary Provider"
+    },
+    "modes": {
+      "existing": "Use Existing Provider",
+      "new": "Create New Provider"
+    },
+    "placeholders": {
+      "selectExisting": "Select an existing provider",
+      "name": "Provider name",
+      "apiKey": "API Key",
+      "apiKeyOllama": "Ollama does not require an API key",
+      "baseUrl": "Base URL (optional)"
+    },
+    "actions": {
+      "validate": "Validate Provider",
+      "createAndValidate": "Create and Validate"
+    },
+    "state": {
+      "validated": "Validated",
+      "pending": "Pending"
+    },
+    "errors": {
+      "selectExisting": "Please select an existing provider.",
+      "validateFailed": "Provider validation failed. Please check the configuration.",
+      "nameRequired": "Please enter a provider name.",
+      "apiKeyRequired": "Please enter an API key.",
+      "createFailed": "Failed to create the provider. Please try again.",
+      "missingRecord": "The newly created provider record could not be found."
+    }
+  },
+  "install": {
+    "idle": "Ready to start installation and startup.",
+    "installing": "Installing OpenClaw...",
+    "skipExisting": "OpenClaw is already installed. Skipping installation.",
+    "startedWithAddress": "Gateway started: {{value}}",
+    "started": "Gateway started",
+    "actions": {
+      "install": "Install and Start Gateway"
+    },
+    "state": {
+      "running": "Running",
+      "pending": "Pending"
+    },
+    "errors": {
+      "startFailed": "Failed to start the gateway. Please try again.",
+      "statusFailed": "Failed to fetch gateway status."
+    }
+  },
+  "complete": {
+    "title": "Setup Complete",
+    "description": "The environment is ready. Go to the chat page to begin."
+  },
+  "actions": {
+    "previous": "Previous",
+    "next": "Next",
+    "finish": "Enter App"
+  }
+}

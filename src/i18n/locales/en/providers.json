@@ -1,0 +1,75 @@
+{
+  "page": {
+    "title": "Provider Management",
+    "description": "Manage model providers, credentials, and readiness.",
+    "stats": "{{total}} total, {{ready}} ready"
+  },
+  "actions": {
+    "create": "New Provider",
+    "loading": "Loading providers...",
+    "validate": "Validate",
+    "enable": "Enable",
+    "disable": "Disable",
+    "confirmDelete": "Delete provider “{{name}}”?"
+  },
+  "empty": {
+    "title": "No providers yet",
+    "description": "Create a provider first, then power channels and agents with it.",
+    "cta": "Create your first provider"
+  },
+  "status": {
+    "ready": "Ready",
+    "checking": "Checking",
+    "error": "Error",
+    "disabled": "Disabled"
+  },
+  "card": {
+    "apiKey": "API key: {{value}}",
+    "hidden": "Hidden",
+    "baseUrl": "Base URL: {{value}}",
+    "default": "Default",
+    "modelCount": "Model count: {{value}}",
+    "updatedAt": "Updated: {{value}}"
+  },
+  "dialog": {
+    "title": "Create Provider",
+    "description": "Fill in provider details so channels and agents can use its models.",
+    "fields": {
+      "name": "Name",
+      "vendor": "Vendor",
+      "apiKey": "API Key",
+      "baseUrl": "Base URL"
+    },
+    "placeholders": {
+      "name": "e.g. Default OpenAI Provider",
+      "apiKey": "Enter an API key",
+      "apiKeyOllama": "Ollama does not require an API key",
+      "baseUrl": "Optional, e.g. https://api.openai.com/v1"
+    },
+    "options": {
+      "vendor": {
+        "openai": "OpenAI",
+        "anthropic": "Anthropic",
+        "deepseek": "DeepSeek",
+        "ollama": "Ollama",
+        "google": "Google",
+        "qwen": "Qwen",
+        "zhipu": "Zhipu",
+        "moonshot": "Moonshot",
+        "groq": "Groq",
+        "mistral": "Mistral",
+        "custom": "Custom"
+      }
+    },
+    "actions": {
+      "cancel": "Cancel",
+      "create": "Create Provider",
+      "creating": "Creating..."
+    },
+    "errors": {
+      "nameRequired": "Please enter a provider name.",
+      "apiKeyRequired": "Please enter an API key.",
+      "createFailed": "Failed to create the provider. Please try again."
+    }
+  }
+}

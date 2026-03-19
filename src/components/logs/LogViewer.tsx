@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import type { LogSource, LogSourceOption } from "../../types/logs";
 
 export interface LogFilterBarProps {
@@ -69,6 +70,7 @@ export function LogFilterBar({
   onRefresh,
   isRefreshing,
 }: LogFilterBarProps): JSX.Element {
+  const { t } = useTranslation(["logs"]);
   return (
     <section
       style={{
@@ -107,7 +109,7 @@ export function LogFilterBar({
           type="text"
           value={keyword}
           onChange={(event) => onKeywordChange(event.target.value)}
-          placeholder="输入关键字过滤日志，例如：EADDRINUSE / timeout"
+          placeholder={t("logs:viewer.filterPlaceholder")}
           style={{
             flex: "1 1 360px",
             border: "1px solid #cbd5e1",
@@ -131,7 +133,7 @@ export function LogFilterBar({
             opacity: isRefreshing ? 0.7 : 1,
           }}
         >
-          {isRefreshing ? "刷新中..." : "手动刷新"}
+          {isRefreshing ? t("logs:viewer.actions.refreshing") : t("logs:viewer.actions.refresh")}
         </button>
       </div>
     </section>
@@ -142,8 +144,10 @@ export function LogViewer({
   lines,
   keyword,
   isLoading,
-  emptyText = "暂无日志输出。",
+  emptyText,
 }: LogViewerProps): JSX.Element {
+  const { t } = useTranslation(["logs"]);
+  const resolvedEmptyText = emptyText ?? t("logs:viewer.empty");
   return (
     <section
       style={{
@@ -155,7 +159,7 @@ export function LogViewer({
       }}
     >
       <h3 style={{ marginTop: 0, marginBottom: 10, color: "#cbd5e1", fontSize: 15 }}>
-        Log Viewer ({lines.length} lines)
+        {t("logs:viewer.title", { count: lines.length })}
       </h3>
 
       <div
@@ -172,9 +176,9 @@ export function LogViewer({
         }}
       >
         {isLoading ? (
-          <p style={{ margin: 0, color: "#94a3b8" }}>日志加载中...</p>
+          <p style={{ margin: 0, color: "#94a3b8" }}>{t("logs:viewer.loading")}</p>
         ) : lines.length === 0 ? (
-          <p style={{ margin: 0, color: "#94a3b8" }}>{emptyText}</p>
+          <p style={{ margin: 0, color: "#94a3b8" }}>{resolvedEmptyText}</p>
         ) : (
           lines.map((line, index) => (
             <div key={`${index}-${line.slice(0, 16)}`} style={{ whiteSpace: "pre-wrap" }}>
@@ -187,4 +191,3 @@ export function LogViewer({
     </section>
   );
 }
-

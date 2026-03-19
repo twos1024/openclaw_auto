@@ -1,11 +1,15 @@
 pub mod admin;
+pub mod agent;
+pub mod channel;
 pub mod config;
 pub mod connectivity;
+pub mod cron;
 pub mod env;
 pub mod gateway;
 pub mod install;
 pub mod instance;
 pub mod logs;
 pub mod overview;
+pub mod provider;
 pub mod runbook;
 pub mod settings;

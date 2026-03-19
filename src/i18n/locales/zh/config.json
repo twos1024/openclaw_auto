@@ -1,0 +1,35 @@
+{
+  "page": {
+    "title": "API Key 配置",
+    "description": "这里先填 API Key，再测试连接，最后保存配置。",
+    "loadIssueTitle": "配置加载提示",
+    "suggestionPrefix": "建议：",
+    "defaultValues": "当前表单是默认值，不代表磁盘上的真实配置。",
+    "loadedPath": "配置路径："
+  },
+  "form": {
+    "provider": {
+      "label": "提供方",
+      "options": {
+        "openaiCompatible": "OpenAI 兼容",
+        "ollama": "Ollama"
+      }
+    }
+  },
+  "actions": {
+    "testing": "正在测试...",
+    "testConnection": "测试连接",
+    "saving": "正在保存...",
+    "save": "保存配置",
+    "reset": "重置",
+    "startGateway": "启动 Gateway"
+  },
+  "result": {
+    "testTitle": "测试结果",
+    "saveTitle": "保存结果",
+    "code": "错误码：",
+    "latency": "耗时：",
+    "backup": "备份：",
+    "savedTo": "保存到："
+  }
+}

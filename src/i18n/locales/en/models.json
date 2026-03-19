@@ -1,0 +1,43 @@
+{
+  "page": {
+    "title": "Model usage",
+    "descriptionRunning": "Gateway is running · reading recent model usage",
+    "descriptionIdle": "Gateway is not running · start it to view model usage"
+  },
+  "toolbar": {
+    "timeRange": {
+      "7d": "Last 7 days",
+      "30d": "Last 30 days",
+      "all": "All"
+    }
+  },
+  "stats": {
+    "totalTokens": "Total tokens",
+    "estimatedCost": "Estimated cost",
+    "modelCount": "Models used",
+    "averageCost": "Average cost per request",
+    "records": "{{count}} records",
+    "range": {
+      "7d": "Last 7 days",
+      "30d": "Last 30 days",
+      "all": "All time"
+    },
+    "perRecord": "Average per record"
+  },
+  "table": {
+    "title": "Model usage details",
+    "description": "Shows token consumption and cost trends per request.",
+    "headers": {
+      "date": "Date",
+      "model": "Model",
+      "input": "Input",
+      "output": "Output",
+      "total": "Total",
+      "cost": "Cost"
+    }
+  },
+  "status": {
+    "loading": "Loading...",
+    "empty": "No model usage data yet. A summary will appear after your first conversation."
+  }
+}

@@ -1,16 +1,18 @@
 import { useEffect, useRef, useState, useCallback } from "react";
-import { AlertCircle, SendHorizontal, Square, Sparkles, Paperclip, X } from "lucide-react";
+import { AlertCircle, SendHorizontal, Square, Sparkles, Paperclip } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import { useChatStore, type ChatMessage } from "@/store/useChatStore";
-import { useAppStore } from "@/store/useAppStore";
+import { useAgentStore } from "@/store/useAgentStore";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 
 // ─── Message bubble ───────────────────────────────────────────────────────────
 
 function MessageBubble({ msg, isStreaming }: { msg: ChatMessage; isStreaming?: boolean }) {
+  const { t } = useTranslation("chat");
   const isUser = msg.role === "user";
   const [copied, setCopied] = useState(false);
 
@@ -54,7 +56,7 @@ function MessageBubble({ msg, isStreaming }: { msg: ChatMessage; isStreaming?: b
             onClick={() => void copy()}
             className="opacity-0 group-hover:opacity-100 transition-opacity text-[11px] text-muted-foreground hover:text-foreground px-1"
           >
-            {copied ? "已复制" : "复制"}
+            {copied ? t("actions.copied") : t("actions.copy")}
           </button>
         )}
       </div>
@@ -88,25 +90,33 @@ function TypingIndicator() {
 // ─── Welcome screen ───────────────────────────────────────────────────────────
 
 function WelcomeScreen() {
-  const instances = useAppStore((s) => s.instances);
-  const activeInstances = instances.filter((i) => i.status === "active");
+  const { t } = useTranslation("chat");
+  const agents = useAgentStore((state) => state.agents);
+  const activeAgents = agents.filter((agent) => agent.status === "active");
+  const currentAgent = activeAgents[0];
+  const hints = [
+    t("page.hints.python"),
+    t("page.hints.translate"),
+    t("page.hints.explain"),
+    t("page.hints.brainstorm"),
+  ];
 
   return (
     <div className="flex flex-col items-center justify-center h-[55vh] text-center">
       <h1
         className="page-heading mb-6 text-5xl"
       >
-        {activeInstances.length > 0
-          ? `与 ${activeInstances[0].displayName} 对话`
-          : "你好，有什么可以帮你的吗？"}
+        {currentAgent
+          ? t("page.titleWithAgent", { agentName: currentAgent.displayName })
+          : t("page.subtitle")}
       </h1>
       <p className="text-muted-foreground text-sm mb-8">
-        {activeInstances.length > 0
-          ? `当前实例：${activeInstances[0].modelName || activeInstances[0].modelId}`
-          : "在【实例管理】中创建并启动一个 AI 机器人开始对话。"}
+        {currentAgent
+          ? t("page.subtitleWithAgent", { agentModel: currentAgent.modelName || currentAgent.modelId })
+          : t("page.description")}
       </p>
       <div className="flex flex-wrap gap-2 justify-center max-w-lg">
-        {["写一段 Python 代码", "帮我翻译", "解释这个概念", "头脑风暴"].map((hint) => (
+        {hints.map((hint) => (
           <span
             key={hint}
             className="px-4 py-1.5 rounded-full border border-black/10 dark:border-white/10 text-[13px] text-foreground/60 bg-black/[0.02] dark:bg-white/5"
@@ -134,6 +144,7 @@ function ChatInput({
   sending: boolean;
   isEmpty: boolean;
 }) {
+  const { t } = useTranslation("chat");
   const [input, setInput] = useState("");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const isComposingRef = useRef(false);
@@ -177,7 +188,7 @@ function ChatInput({
           <button
             className="shrink-0 h-10 w-10 flex items-center justify-center rounded-full text-muted-foreground hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
             disabled={disabled || sending}
-            title="附件（即将支持）"
+            title={t("form.attachments")}
           >
             <Paperclip className="h-4 w-4" />
           </button>
@@ -189,7 +200,7 @@ function ChatInput({
             onKeyDown={handleKeyDown}
             onCompositionStart={() => { isComposingRef.current = true; }}
             onCompositionEnd={() => { isComposingRef.current = false; }}
-            placeholder={disabled ? "请先启动 Gateway..." : "发送消息（Enter 发送，Shift+Enter 换行）"}
+            placeholder={disabled ? t("form.placeholderDisabled") : t("form.placeholder")}
             disabled={disabled}
             className="min-h-[40px] max-h-[200px] border-0 focus-visible:ring-0 shadow-none bg-transparent py-2.5 px-2 text-[15px] placeholder:text-muted-foreground/50 leading-relaxed"
             rows={1}
@@ -220,6 +231,7 @@ function ChatInput({
 // ─── Main page ────────────────────────────────────────────────────────────────
 
 export function ChatPage(): JSX.Element {
+  const { t } = useTranslation("chat");
   const messages = useChatStore((s) => s.messages);
   const streamingText = useChatStore((s) => s.streamingText);
   const streamingTools = useChatStore((s) => s.streamingTools);
@@ -314,7 +326,7 @@ export function ChatPage(): JSX.Element {
               {error}
             </p>
             <button onClick={clearError} className="text-xs text-destructive/60 hover:text-destructive underline">
-              关闭
+              {t("actions.close")}
             </button>
           </div>
         </div>

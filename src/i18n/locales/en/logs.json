@@ -1,0 +1,37 @@
+{
+  "page": {
+    "title": "Logs",
+    "description": "The Logs page is part of the guided recovery flow. Use it to confirm whether install, startup, or gateway failures already produced useful diagnostics before changing config or service state.",
+    "meta": "Total logs: {{total}} lines, filtered: {{visible}} lines",
+    "metaWithUpdatedAt": "Total logs: {{total}} lines, filtered: {{visible}} lines, last updated: {{updatedAt}}",
+    "loadErrorTitle": "Log read hint",
+    "runbook": {
+      "title": "Recovery context",
+      "description": "Logs are usually the fastest way to validate whether the blocker is install-, config-, or service-related. Use the quick links to jump back once you know where the fault is."
+    }
+  },
+  "summary": {
+    "title": "Error summary",
+    "actions": {
+      "copying": "Copying...",
+      "copy": "Copy diagnostics summary",
+      "exporting": "Exporting...",
+      "export": "Export diagnostics info",
+      "bundling": "Bundling...",
+      "bundle": "Export diagnostics ZIP"
+    },
+    "empty": "No clear errors detected. If the service is still failing, try a different keyword or inspect the full log context.",
+    "hitCount": "Hit {{count}} times",
+    "suggestionPrefix": "Suggestion: "
+  },
+  "viewer": {
+    "filterPlaceholder": "Filter logs with a keyword, e.g. EADDRINUSE / timeout",
+    "actions": {
+      "refreshing": "Refreshing...",
+      "refresh": "Refresh now"
+    },
+    "title": "Log Viewer ({{count}} lines)",
+    "loading": "Loading logs...",
+    "empty": "No log output."
+  }
+}

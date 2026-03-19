@@ -1,0 +1,22 @@
+{
+  "agents": "Agents",
+  "chat": "チャット",
+  "models": "Models",
+  "channels": "Channels",
+  "providers": "Providers",
+  "cron": "Cron",
+  "plugins": "プラグイン",
+  "skills": "スキル",
+  "settings": "設定",
+  "feedback": "フィードバック",
+  "newChat": "新しい会話",
+  "agentsCount": "Agents",
+  "running": "稼働中",
+  "buckets": {
+    "today": "今日",
+    "yesterday": "昨日",
+    "thisWeek": "今週",
+    "thisMonth": "今月",
+    "older": "それ以前"
+  }
+}

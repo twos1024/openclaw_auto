@@ -1,3 +1,4 @@
+import { useTranslation } from "react-i18next";
 import type { InstallPhase, InstallPhaseStatus } from "../../types/install";
 
 const statusStyles: Record<InstallPhaseStatus, { bg: string; color: string; border: string }> = {
@@ -8,15 +9,8 @@ const statusStyles: Record<InstallPhaseStatus, { bg: string; color: string; bord
   running: { bg: "#eff6ff", color: "#1d4ed8", border: "#93c5fd" },
 };
 
-const statusLabels: Record<InstallPhaseStatus, string> = {
-  success: "已完成",
-  warning: "需关注",
-  failure: "失败",
-  pending: "等待中",
-  running: "进行中",
-};
-
 function StatusBadge({ status }: { status: InstallPhaseStatus }): JSX.Element {
+  const { t } = useTranslation(["install"]);
   const style = statusStyles[status];
   return (
     <span
@@ -30,7 +24,7 @@ function StatusBadge({ status }: { status: InstallPhaseStatus }): JSX.Element {
         border: `1px solid ${style.border}`,
       }}
     >
-      {statusLabels[status]}
+      {t(`install:phase.status.${status}`)}
     </span>
   );
 }
@@ -41,6 +35,7 @@ export interface InstallPhaseTimelineProps {
 }
 
 export function InstallPhaseTimeline({ phases, activePhaseId = null }: InstallPhaseTimelineProps): JSX.Element {
+  const { t } = useTranslation(["install"]);
   return (
     <section
       style={{
@@ -53,7 +48,7 @@ export function InstallPhaseTimeline({ phases, activePhaseId = null }: InstallPh
       }}
     >
       <div>
-        <h3 style={{ margin: 0 }}>安装步骤</h3>
+        <h3 style={{ margin: 0 }}>{t("install:phase.title")}</h3>
       </div>
 
       <div style={{ display: "grid", gap: 10 }}>
@@ -72,9 +67,7 @@ export function InstallPhaseTimeline({ phases, activePhaseId = null }: InstallPh
               }}
             >
               <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "center" }}>
-                <strong style={{ color: "#0f172a" }}>
-                  {index + 1}. {phase.title}
-                </strong>
+                <strong style={{ color: "#0f172a" }}>{index + 1}. {phase.title}</strong>
                 <StatusBadge status={phase.status} />
               </div>
               <p style={{ margin: 0, color: "#334155" }}>{phase.detail}</p>

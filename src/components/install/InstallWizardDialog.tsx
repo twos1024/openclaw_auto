@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { buildInstallWizardModel, buildPlatformGuidance } from "../../services/installWizardService";
 import type { InstallActionResult, InstallEnvironment } from "../../types/install";
 import { ModalDialog } from "../common/ModalDialog";
@@ -12,21 +13,25 @@ export interface InstallWizardDialogProps {
   serviceReady?: boolean;
 }
 
-function translateStepTitle(id: string): string {
-  if (id === "environment") return "检查环境";
-  if (id === "install") return "安装 OpenClaw";
-  if (id === "config") return "配置 API Key";
-  if (id === "service") return "启动 Gateway";
-  if (id === "dashboard") return "打开 Dashboard";
-  return id;
+function translateStepTitle(t: (key: string) => string, id: string): string {
+  const keyMap: Record<string, string> = {
+    environment: "install:wizard.steps.environment",
+    install: "install:wizard.steps.install",
+    config: "install:wizard.steps.config",
+    service: "install:wizard.steps.service",
+    dashboard: "install:wizard.steps.dashboard",
+  };
+  return t(keyMap[id] ?? id);
 }
 
-function translatePrimaryLabel(route: string, fallback: string): string {
-  if (route === "/install?wizard=1") return "开始安装";
-  if (route === "/config") return "去配置 API Key";
-  if (route === "/service") return "启动 Gateway";
-  if (route === "/dashboard") return "打开 Dashboard";
-  return fallback;
+function translatePrimaryLabel(t: (key: string) => string, route: string, fallback: string): string {
+  const keyMap: Record<string, string> = {
+    "/install?wizard=1": "install:wizard.primary.startInstall",
+    "/config": "install:wizard.primary.goConfig",
+    "/service": "install:wizard.primary.startGateway",
+    "/dashboard": "install:wizard.primary.openDashboard",
+  };
+  return t(keyMap[route] ?? fallback);
 }
 
 export function InstallWizardDialog({
@@ -37,6 +42,7 @@ export function InstallWizardDialog({
   configReady = false,
   serviceReady = false,
 }: InstallWizardDialogProps): JSX.Element | null {
+  const { t } = useTranslation(["install"]);
   if (!open) return null;
 
   const model = buildInstallWizardModel({ environment, installResult, configReady, serviceReady });
@@ -47,13 +53,13 @@ export function InstallWizardDialog({
 
   return (
     <ModalDialog
-      title="OpenClaw 安装向导"
+      title={t("install:wizard.title")}
       open={open}
       onClose={onClose}
       footer={
         <>
           <span style={{ fontSize: 13, color: "#64748b" }}>
-            {currentStep ? `现在先做：${translateStepTitle(currentStep.id)}` : "准备开始安装"}
+            {currentStep ? t("install:wizard.currentStep", { step: translateStepTitle(t, currentStep.id) }) : t("install:wizard.ready")}
           </span>
           <Link
             to={model.primaryRoute}
@@ -67,7 +73,7 @@ export function InstallWizardDialog({
               fontWeight: 700,
             }}
           >
-            {translatePrimaryLabel(model.primaryRoute, model.primaryLabel)}
+            {translatePrimaryLabel(t, model.primaryRoute, model.primaryLabel)}
           </Link>
         </>
       }
@@ -86,7 +92,7 @@ export function InstallWizardDialog({
         <p style={{ margin: 0, color: "#475569" }}>{model.summary}</p>
         {currentStep ? (
           <p style={{ margin: 0, fontSize: 13, color: "#64748b" }}>
-            现在只需要完成这一件事：{translateStepTitle(currentStep.id)}
+            {t("install:wizard.nowOnly", { step: translateStepTitle(t, currentStep.id) })}
           </p>
         ) : null}
       </section>
@@ -102,10 +108,8 @@ export function InstallWizardDialog({
         }}
       >
         <div>
-          <h3 style={{ margin: 0 }}>按这个顺序走就行</h3>
-          <p style={{ margin: "6px 0 0", color: "#64748b" }}>
-            这不是诊断页，只保留新手需要的安装路径。
-          </p>
+          <h3 style={{ margin: 0 }}>{t("install:wizard.sequence.title")}</h3>
+          <p style={{ margin: "6px 0 0", color: "#64748b" }}>{t("install:wizard.sequence.description")}</p>
         </div>
 
         <div style={{ display: "grid", gap: 8 }}>
@@ -125,8 +129,8 @@ export function InstallWizardDialog({
                 }}
               >
                 <strong style={{ color: "#0f172a" }}>
-                  {index + 1}. {translateStepTitle(step.id)}
-                  {done ? " - 已完成" : active ? " - 现在做" : ""}
+                  {index + 1}. {translateStepTitle(t, step.id)}
+                  {done ? ` - ${t("install:wizard.tags.done")}` : active ? ` - ${t("install:wizard.tags.current")}` : ""}
                 </strong>
                 <p style={{ margin: 0, color: "#475569", fontSize: 14 }}>{step.description}</p>
               </div>
@@ -145,13 +149,11 @@ export function InstallWizardDialog({
           gap: 8,
         }}
       >
-        <h3 style={{ margin: 0 }}>装完以后怎么继续</h3>
-        <p style={{ margin: 0, color: "#475569" }}>
-          1. 保存 Provider 配置，填好 API Key。2. 启动 Gateway。3. 打开 Dashboard 开始使用。
-        </p>
+        <h3 style={{ margin: 0 }}>{t("install:wizard.after.title")}</h3>
+        <p style={{ margin: 0, color: "#475569" }}>{t("install:wizard.after.description")}</p>
         {nextStep ? (
           <p style={{ margin: 0, fontSize: 13, color: "#64748b" }}>
-            完成当前步骤后，下一步是：{translateStepTitle(nextStep.id)}
+            {t("install:wizard.nextStep", { step: translateStepTitle(t, nextStep.id) })}
           </p>
         ) : null}
         <div
@@ -163,10 +165,8 @@ export function InstallWizardDialog({
           }}
         >
           <div>
-            <h3 style={{ margin: 0 }}>按你的系统看这一张</h3>
-            <p style={{ margin: "6px 0 0", color: "#64748b" }}>
-              三个平台共用同一条安装路径，但命令、权限和排障重点不同。
-            </p>
+            <h3 style={{ margin: 0 }}>{t("install:wizard.platform.title")}</h3>
+            <p style={{ margin: "6px 0 0", color: "#64748b" }}>{t("install:wizard.platform.description")}</p>
           </div>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 10 }}>
             {platformCards.map((card) => (
@@ -195,16 +195,16 @@ export function InstallWizardDialog({
                         color: "#1d4ed8",
                       }}
                     >
-                      当前系统
+                      {t("install:wizard.platform.current")}
                     </span>
                   ) : null}
                 </div>
                 <p style={{ margin: 0, color: "#475569" }}>
-                  <strong>安装方式：</strong>
+                  <strong>{t("install:wizard.platform.installMethod")}：</strong>
                   {card.installSource}
                 </p>
                 <p style={{ margin: 0, color: "#475569" }}>
-                  <strong>路径提示：</strong>
+                  <strong>{t("install:wizard.platform.pathHint")}：</strong>
                   {card.pathHint}
                 </p>
                 <p style={{ margin: 0, color: "#64748b", fontSize: 13 }}>{card.troubleshooting}</p>

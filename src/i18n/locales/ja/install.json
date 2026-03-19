@@ -1,0 +1,172 @@
+{
+  "page": {
+    "hero": {
+      "title": "OpenClaw をインストール",
+      "description": "まずインストールを完了し、次に API Key を入力して、最後に Gateway を起動します。新規導入に必要な流れを一画面にまとめています。",
+      "meta": "Platform: {{platform}} / {{architecture}}",
+      "action": "インストーラーを開く"
+    },
+    "nextStep": {
+      "fixRuntime": {
+        "title": "先に実行環境を修正",
+        "description": "現在はローカルインストールを実行できるデスクトップ環境ではありません。先にデスクトップランタイムへ切り替えてください。",
+        "actionLabel": "設定を開く"
+      },
+      "ready": {
+        "title": "すぐに利用できます",
+        "description": "OpenClaw はインストールされ、起動も完了しています。Dashboard を開いてください。",
+        "actionLabel": "Dashboard を開く"
+      },
+      "service": {
+        "title": "次の手順: Gateway を起動",
+        "description": "API Key は保存済みです。Gateway を起動すれば利用を開始できます。",
+        "actionLabel": "Gateway を起動"
+      },
+      "config": {
+        "title": "インストール完了",
+        "description": "次にやることは API Key を設定して保存することです。",
+        "actionLabel": "API Key を設定"
+      },
+      "env": {
+        "title": "npm を先に用意",
+        "description": "先に Node.js / npm をインストールしてから、ここに戻って環境を更新してください。",
+        "actionLabel": "環境を更新"
+      },
+      "start": {
+        "title": "インストールを開始",
+        "description": "ウィザードを開いて案内に従えば、OpenClaw のインストールを完了できます。",
+        "actionLabel": "ここでインストーラーを開く"
+      }
+    },
+    "banners": {
+      "envError": {
+        "title": "環境チェックに失敗しました",
+        "suggestionPrefix": "提案: "
+      },
+      "order": {
+        "title": "インストール順序",
+        "description": "まず OpenClaw をインストールし、Config で API Key を入力して保存し、Service で Gateway を起動します。"
+      }
+    },
+    "runbook": {
+      "title": "現在の手順",
+      "description": "一度に一手順だけに集中してください。インストール、設定、サービスを同時に進めないでください。"
+    }
+  },
+  "environment": {
+    "title": "インストール準備",
+    "description": "インストールを始める前に、ローカル環境と OpenClaw の検出状態を確認します。",
+    "pills": {
+      "npmReady": "npm Ready",
+      "npmMissing": "npm Missing",
+      "openclawInstalled": "OpenClaw Installed",
+      "openclawMissing": "OpenClaw Missing"
+    },
+    "labels": {
+      "platform": "Platform",
+      "homeDir": "Home Dir",
+      "configPath": "Config Path",
+      "npmVersion": "npm Version",
+      "openclawPath": "OpenClaw Path",
+      "openclawVersion": "OpenClaw Version"
+    }
+  },
+  "actions": {
+    "refreshing": "Refreshing...",
+    "refreshEnvironment": "Refresh environment",
+    "installing": "Installing...",
+    "install": "Install OpenClaw",
+    "openLogs": "Open Logs"
+  },
+  "status": {
+    "desktopRuntimeRequired": "Desktop Runtime Required",
+    "desktopBridgeRequired": "Desktop Bridge Required",
+    "npmRequired": "npm Required",
+    "previewMode": "ブラウザのプレビュー モードではインストールが無効です。ClawDesk デスクトップアプリまたは `npm run tauri:dev` を使ってローカルインストールしてください。",
+    "runtimeUnavailable": "デスクトップのコマンドブリッジが利用できないため、インストールは無効です。まず Tauri ランタイム統合を修正してください。",
+    "npmMissing": "npm が検出されないため、インストールは無効です。Node.js / npm を先に導入して、環境チェックを更新してください。",
+    "installHint": "\"インストールを開始\" をクリックすると、バックグラウンドでインストールが進みます。完了すると結果が表示されます。"
+  },
+  "issue": {
+    "title": "インストールで問題が発生しました",
+    "suggestionPrefix": "提案: ",
+    "kinds": {
+      "missing-npm": "Node.js / npm が不足しています",
+      "permission-denied": "権限がありません",
+      "network-failure": "ネットワーク接続に失敗しました",
+      "command-timeout": "インストールがタイムアウトしました",
+      "binary-not-found": "OpenClaw の実行ファイルが見つかりません",
+      "gateway-install-failed": "Gateway サービスの登録が完了していません",
+      "unknown": "インストールで問題が発生しました"
+    }
+  },
+  "phase": {
+    "title": "インストール手順",
+    "status": {
+      "success": "完了",
+      "warning": "要確認",
+      "failure": "失敗",
+      "pending": "待機中",
+      "running": "進行中"
+    }
+  },
+  "progress": {
+    "ariaLabel": "インストール進捗"
+  },
+  "result": {
+    "nextConfig": "次へ: API Key を設定",
+    "viewLogs": "詳細ログを確認",
+    "titleSuccess": "インストール完了",
+    "titleWarning": "インストールはほぼ完了しました",
+    "titleFailure": "インストールで問題が発生しました",
+    "hintSuccess": "OpenClaw は準備完了です。次に API Key を入力すればサービスを起動できます。",
+    "hintWarning": "コアコンポーネントは正常にインストールされました。まず API Key を入力し、その後は Service ページで残りの手順を進めてください。",
+    "hintFailure": "インストール中に問題が発生しました。ログを確認し、修正してから再度インストールしてください。"
+  },
+  "wizard": {
+    "title": "OpenClaw インストールウィザード",
+    "currentStep": "まずはこれを行います: {{step}}",
+    "ready": "インストールの準備ができました",
+    "nowOnly": "今はこの手順だけを完了してください: {{step}}",
+    "nextStep": "この手順の次は: {{step}}",
+    "sequence": {
+      "title": "この順番で進めればOKです",
+      "description": "これは診断ページではありません。新規導入に必要なインストール手順だけを残しています。"
+    },
+    "after": {
+      "title": "インストール後の進め方",
+      "description": "1. Provider 設定を保存して API Key を入力します。2. Gateway を起動します。3. Dashboard を開いて使い始めます。"
+    },
+    "platform": {
+      "title": "お使いのシステムに合わせて確認",
+      "description": "3 つのプラットフォームは同じ流れですが、コマンド、権限、トラブルシュートの重点が異なります。",
+      "current": "現在のシステム",
+      "installMethod": "インストール方法",
+      "pathHint": "パスのヒント"
+    },
+    "steps": {
+      "environment": "環境を確認",
+      "install": "OpenClaw をインストール",
+      "config": "API Key を設定",
+      "service": "Gateway を起動",
+      "dashboard": "Dashboard を開く"
+    },
+    "primary": {
+      "startInstall": "インストールを開始",
+      "goConfig": "API Key の設定へ進む",
+      "startGateway": "Gateway を起動",
+      "openDashboard": "Dashboard を開く"
+    },
+    "tags": {
+      "done": "完了",
+      "current": "今やる"
+    }
+  },
+  "platform": {
+    "title": "Platform Guidance",
+    "description": "Windows、macOS、Linux では同じ製品フローですが、コマンドパス、権限モデル、トラブルシュートの重点が異なります。",
+    "current": "Current",
+    "install": "Install:",
+    "pathHint": "Path Hint:"
+  }
+}
