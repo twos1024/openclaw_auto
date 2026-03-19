@@ -116,10 +116,12 @@ export function useGatewayControl(pollMs = 5000): UseGatewayControlResult {
         setIsInitializing(false);
       }
 
-      setIsPolling(true);
-      pollTimer = window.setInterval(() => {
-        void refreshStatus();
-      }, pollMs);
+      if (!unmountedRef.current) {
+        setIsPolling(true);
+        pollTimer = window.setInterval(() => {
+          void refreshStatus();
+        }, pollMs);
+      }
     };
 
     void initialize();

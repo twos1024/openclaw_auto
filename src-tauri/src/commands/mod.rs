@@ -1,8 +1,10 @@
+pub mod admin;
 pub mod config;
 pub mod connectivity;
 pub mod env;
 pub mod gateway;
 pub mod install;
+pub mod instance;
 pub mod logs;
 pub mod overview;
 pub mod runbook;
