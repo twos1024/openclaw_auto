@@ -119,14 +119,12 @@
 ### `src-tauri/src/commands`
 
 - 仅做 IPC 入参与返回封装，不放业务逻辑。
-- 当前已存在 `agent.rs` + `instance.rs`（兼容期共存）。
+- `agent.rs` 为现行 Agent IPC 入口；`instance.rs` 已于 v2.1.0 删除。
 
 ### `src-tauri/src/services`
 
 - 业务逻辑、状态转换、shell 调用、解析和错误映射。
-- 兼容层：
-  - `agent_service.rs` 复用 `instance_service.rs`
-  - `instance_service.rs` 做旧字段映射（如 `apimart <-> openclaw`）
+- `instance_service.rs` 已于 v2.1.0 完全移除，`agent_service.rs` 为唯一 Agent 域实现。
 
 ### `src-tauri/src/adapters`
 
@@ -143,9 +141,9 @@
   - 创建向导：`CreateAgentWizard`
   - IPC 命令：`list/create/update/start/stop/delete_agent`
 - 待补齐：
-  - 真正独立的 `agent_service`（摆脱 `instance_service` 复用）
-  - 数据模型彻底去 `Instance` 残留
+  - 数据模型彻底去 `Instance` 残留（字段命名对齐）
   - 与 provider/channel 的真实关联字段落盘
+- v2.1.0 已完成：`instance_service` 复用层已删除，`agent_service` 独立运行
 
 ## 5.2 Channel 域
 
