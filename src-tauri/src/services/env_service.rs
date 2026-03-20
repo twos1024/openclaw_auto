@@ -118,7 +118,9 @@ pub async fn detect_env() -> Result<DetectEnvData, AppError> {
 
 async fn detect_env_uncached() -> Result<DetectEnvData, AppError> {
     let node_args = vec!["--version".to_string()];
-    let node_output = run_command("node", &node_args, NODE_VERSION_TIMEOUT_MS).await.ok();
+    let node_output = run_command("node", &node_args, NODE_VERSION_TIMEOUT_MS)
+        .await
+        .ok();
     let node_version = node_output.as_ref().and_then(|out| {
         if out.exit_code == Some(0) {
             out.stdout
@@ -149,8 +151,9 @@ async fn detect_env_uncached() -> Result<DetectEnvData, AppError> {
         });
 
     let npm_args = vec!["--version".to_string()];
-    let npm_output =
-        run_command(openclaw::npm_program(), &npm_args, NPM_VERSION_TIMEOUT_MS).await.ok();
+    let npm_output = run_command(openclaw::npm_program(), &npm_args, NPM_VERSION_TIMEOUT_MS)
+        .await
+        .ok();
     let npm_version = npm_output.as_ref().and_then(|out| {
         if out.exit_code == Some(0) {
             out.stdout
@@ -192,7 +195,9 @@ async fn detect_env_uncached() -> Result<DetectEnvData, AppError> {
         let program = openclaw_path
             .clone()
             .unwrap_or_else(|| "openclaw".to_string());
-        run_command(&program, &args, OPENCLAW_VERSION_TIMEOUT_MS).await.ok()
+        run_command(&program, &args, OPENCLAW_VERSION_TIMEOUT_MS)
+            .await
+            .ok()
     } else {
         None
     };

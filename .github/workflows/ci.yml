@@ -46,4 +46,4 @@ jobs:
 
       - name: Rust unit tests
         working-directory: src-tauri
-        run: cargo test --lib
+        run: cargo test --bins

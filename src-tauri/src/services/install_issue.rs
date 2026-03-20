@@ -380,8 +380,7 @@ mod tests {
             "os_error": "spawn powershell ENOENT",
         }));
 
-        let issue =
-            classify_install_error("prerequisite", "powershell install.ps1", &error);
+        let issue = classify_install_error("prerequisite", "powershell install.ps1", &error);
 
         assert_eq!(issue.stage, "prerequisite");
         assert_eq!(issue.failure_kind, "missing-installer-prerequisite");
@@ -401,11 +400,7 @@ mod tests {
 
     #[test]
     fn classifies_network_failure_install_output() {
-        let output = shell_output(
-            "curl: (6) Could not resolve host: openclaw.ai",
-            "",
-            Some(1),
-        );
+        let output = shell_output("curl: (6) Could not resolve host: openclaw.ai", "", Some(1));
 
         let issue = classify_install_output("install-cli", "bash install-cli.sh", &output);
 

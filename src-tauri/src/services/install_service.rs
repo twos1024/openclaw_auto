@@ -42,22 +42,23 @@ pub async fn install_openclaw() -> Result<InstallOpenClawData, AppError> {
     );
 
     let (install_program, install_args, install_step) = build_official_install_command();
-    let install_output = match run_command(&install_program, &install_args, INSTALL_TIMEOUT_MS).await {
-        Ok(output) => output,
-        Err(error) => {
-            write_install_error_to_log(install_step, &error);
-            write_phase_event_to_install_log(
-                "install-cli",
-                "failure",
-                "OpenClaw CLI install command could not be started successfully.",
-            );
-            return Err(install_error_from_error(
-                "install-cli",
-                install_step,
-                &error,
-            ));
-        }
-    };
+    let install_output =
+        match run_command(&install_program, &install_args, INSTALL_TIMEOUT_MS).await {
+            Ok(output) => output,
+            Err(error) => {
+                write_install_error_to_log(install_step, &error);
+                write_phase_event_to_install_log(
+                    "install-cli",
+                    "failure",
+                    "OpenClaw CLI install command could not be started successfully.",
+                );
+                return Err(install_error_from_error(
+                    "install-cli",
+                    install_step,
+                    &error,
+                ));
+            }
+        };
     write_shell_output_to_install_log(install_step, &install_output);
 
     if install_output.exit_code.unwrap_or(1) != 0 {
@@ -223,11 +224,7 @@ fn build_official_install_command() -> (String, Vec<String>, &'static str) {
 
     // macOS/Linux/WSL: use the official local-prefix installer (no root required).
     // This avoids relying on system Node/npm and produces a deterministic wrapper at <prefix>/bin/openclaw.
-    let mut args = vec![
-        "--version".to_string(),
-        version,
-        "--json".to_string(),
-    ];
+    let mut args = vec!["--version".to_string(), version, "--json".to_string()];
     if no_onboard {
         args.insert(0, "--no-onboard".to_string());
     } else {

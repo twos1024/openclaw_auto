@@ -7,8 +7,8 @@ use serde_json::{json, Value};
 use tokio::fs;
 
 use crate::adapters::file_ops;
-use crate::adapters::shell::run_command;
 use crate::adapters::platform;
+use crate::adapters::shell::run_command;
 use crate::models::error::{AppError, ErrorCode};
 use crate::services::env_service;
 
@@ -249,7 +249,9 @@ fn parse_json5_or_json(raw: &str, path: &Path) -> Result<Value, AppError> {
 fn looks_like_legacy_simplified_config(content: &Value) -> bool {
     content
         .as_object()
-        .map(|m| m.contains_key("providerType") || m.contains_key("baseUrl") || m.contains_key("apiKey"))
+        .map(|m| {
+            m.contains_key("providerType") || m.contains_key("baseUrl") || m.contains_key("apiKey")
+        })
         .unwrap_or(false)
 }
 
@@ -323,10 +325,7 @@ fn to_simplified_config_view(parsed: &Value) -> Option<Value> {
         "_providerId".to_string(),
         Value::String(provider_id.to_string()),
     );
-    out.insert(
-        "_modelRef".to_string(),
-        Value::String(primary.to_string()),
-    );
+    out.insert("_modelRef".to_string(), Value::String(primary.to_string()));
 
     Some(Value::Object(out))
 }
@@ -351,7 +350,10 @@ fn read_string_path(value: &Value, path: &[&str]) -> Option<String> {
     cur.as_str().map(|s| s.to_string())
 }
 
-async fn merge_simplified_into_official(resolved: &Path, simplified: &Value) -> Result<Value, AppError> {
+async fn merge_simplified_into_official(
+    resolved: &Path,
+    simplified: &Value,
+) -> Result<Value, AppError> {
     let existing = if resolved.exists() {
         let raw = fs::read_to_string(resolved)
             .await
@@ -366,7 +368,11 @@ async fn merge_simplified_into_official(resolved: &Path, simplified: &Value) -> 
         .and_then(|v| v.as_str())
         .unwrap_or("openai-compatible");
 
-    let model = simplified.get("model").and_then(|v| v.as_str()).unwrap_or("").trim();
+    let model = simplified
+        .get("model")
+        .and_then(|v| v.as_str())
+        .unwrap_or("")
+        .trim();
     let model_id = if model.is_empty() { "default" } else { model };
 
     let temperature = simplified.get("temperature").and_then(|v| v.as_f64());
@@ -432,10 +438,7 @@ async fn merge_simplified_into_official(resolved: &Path, simplified: &Value) -> 
         provider_cfg.insert("apiKey".to_string(), Value::String(key));
     }
     if provider_id == "ollama" {
-        provider_cfg.insert(
-            "injectNumCtxForOpenAICompat".to_string(),
-            Value::Bool(true),
-        );
+        provider_cfg.insert("injectNumCtxForOpenAICompat".to_string(), Value::Bool(true));
     }
     provider_cfg.insert(
         "models".to_string(),
@@ -504,17 +507,23 @@ fn normalize_ollama_base_url(host: &str) -> String {
 }
 
 async fn validate_openclaw_config(path: &Path) -> Result<(), AppError> {
-    let openclaw = env_service::ensure_openclaw_available().await.map_err(|error| {
-        AppError::new(
-            error.code.clone(),
-            "OpenClaw CLI is required to validate the config after writing.",
-            "Install OpenClaw first, then retry saving the configuration.",
-        )
-        .with_details(error.details.unwrap_or_else(|| json!({})))
-    })?;
+    let openclaw = env_service::ensure_openclaw_available()
+        .await
+        .map_err(|error| {
+            AppError::new(
+                error.code.clone(),
+                "OpenClaw CLI is required to validate the config after writing.",
+                "Install OpenClaw first, then retry saving the configuration.",
+            )
+            .with_details(error.details.unwrap_or_else(|| json!({})))
+        })?;
 
     let config_path = path.to_string_lossy().to_string();
-    let validate_args = vec!["config".to_string(), "validate".to_string(), "--json".to_string()];
+    let validate_args = vec![
+        "config".to_string(),
+        "validate".to_string(),
+        "--json".to_string(),
+    ];
 
     // The official CLI reads OPENCLAW_CONFIG_PATH; set it via the shell wrapper so we can validate
     // non-default paths without modifying adapter APIs.
@@ -616,8 +625,17 @@ mod tests {
 
     #[test]
     fn normalizes_ollama_base_url_to_v1() {
-        assert_eq!(&normalize_ollama_base_url("http://127.0.0.1:11434"), "http://127.0.0.1:11434/v1");
-        assert_eq!(&normalize_ollama_base_url("http://127.0.0.1:11434/v1"), "http://127.0.0.1:11434/v1");
-        assert_eq!(&normalize_ollama_base_url("http://127.0.0.1:11434/v1/"), "http://127.0.0.1:11434/v1");
+        assert_eq!(
+            &normalize_ollama_base_url("http://127.0.0.1:11434"),
+            "http://127.0.0.1:11434/v1"
+        );
+        assert_eq!(
+            &normalize_ollama_base_url("http://127.0.0.1:11434/v1"),
+            "http://127.0.0.1:11434/v1"
+        );
+        assert_eq!(
+            &normalize_ollama_base_url("http://127.0.0.1:11434/v1/"),
+            "http://127.0.0.1:11434/v1"
+        );
     }
 }
