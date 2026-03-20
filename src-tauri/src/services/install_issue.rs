@@ -32,6 +32,22 @@ pub fn install_error_from_output(stage: &str, step: &str, output: &ShellOutput) 
 pub fn classify_install_error(stage: &str, step: &str, error: &AppError) -> InstallIssue {
     let haystack = collect_error_haystack(error);
 
+    if looks_like_npm_git_error(&haystack) {
+        return build_install_issue(
+            stage,
+            "npm-git-error",
+            ErrorCode::InstallCommandFailed,
+            "npm exited with code 128 — a git operation failed during package install.",
+            "Check: (1) run `git --version` to confirm git is installed and on PATH, \
+             (2) run `npm cache clean --force` to clear stale git clone directories, \
+             (3) run `git config --global url.\"https://\".insteadOf git://` to force HTTPS \
+             if the git:// port (9418) is blocked on your network.",
+            step,
+            None,
+            find_sample(&haystack),
+        );
+    }
+
     if looks_like_missing_installer_prereq(&haystack) {
         return build_install_issue(
             "prerequisite",
@@ -127,6 +143,22 @@ pub fn classify_install_output(stage: &str, step: &str, output: &ShellOutput) ->
     let sample = first_meaningful_line(&output.stderr)
         .or_else(|| first_meaningful_line(&output.stdout))
         .map(|line| truncate_sample(&line));
+
+    if looks_like_npm_git_error(&haystack) {
+        return build_install_issue(
+            stage,
+            "npm-git-error",
+            ErrorCode::InstallCommandFailed,
+            "npm exited with code 128 — a git operation failed during package install.",
+            "Check: (1) run `git --version` to confirm git is installed and on PATH, \
+             (2) run `npm cache clean --force` to clear stale git clone directories, \
+             (3) run `git config --global url.\"https://\".insteadOf git://` to force HTTPS \
+             if the git:// port (9418) is blocked on your network.",
+            step,
+            output.exit_code,
+            sample,
+        );
+    }
 
     if looks_like_permission_denied(&haystack) {
         return build_install_issue(
@@ -302,6 +334,15 @@ fn looks_like_permission_denied(haystack: &str) -> bool {
         || haystack.contains("operation not permitted")
         || haystack.contains("eacces")
         || haystack.contains("eperm")
+}
+
+fn looks_like_npm_git_error(haystack: &str) -> bool {
+    // npm propagates git's exit code 128 verbatim when a git operation fails
+    // during install (e.g. git not on PATH, git:// protocol blocked, stale cache).
+    // PowerShell wraps the resulting stderr as NativeCommandError.
+    haystack.contains("npm error code 128")
+        || haystack.contains("an unknown git error occurred")
+        || (haystack.contains("nativecommanderror") && haystack.contains("128"))
 }
 
 fn looks_like_network_failure(haystack: &str) -> bool {
