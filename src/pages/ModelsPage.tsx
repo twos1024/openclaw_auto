@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Clock, Cpu, DollarSign, RefreshCw, TrendingUp } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { NoticeBanner } from "@/components/common/NoticeBanner";
 import { gatewayFetch } from "@/lib/gateway-client";
 import { cn, formatTokens } from "@/lib/utils";
 import { serviceService } from "@/services/serviceService";
@@ -122,35 +123,45 @@ export function ModelsPage(): JSX.Element {
   const [refreshing, setRefreshing] = useState(false);
   const [timeRange, setTimeRange] = useState<"7d" | "30d" | "all">("7d");
   const [gatewayRunning, setGatewayRunning] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
-  const loadData = async (quiet = false) => {
+  const loadData = useCallback(async (quiet = false) => {
     if (quiet) {
       setRefreshing(true);
     } else {
       setLoading(true);
     }
 
-    const status = await serviceService.getGatewayStatus();
-    if (status.running) {
-      setGatewayRunning(true);
-      try {
-        const data = await gatewayFetch<UsageEntry[]>("/api/usage/recent-token-history");
-        setUsage(Array.isArray(data) ? data : []);
-      } catch {
+    setLoadError(null);
+
+    try {
+      const status = await serviceService.getGatewayStatus();
+      if (status.running) {
+        setGatewayRunning(true);
+        try {
+          const data = await gatewayFetch<UsageEntry[]>("/api/usage/recent-token-history");
+          setUsage(Array.isArray(data) ? data : []);
+        } catch (error) {
+          setUsage([]);
+          setLoadError(error instanceof Error ? error.message : t("banner.error.description"));
+        }
+      } else {
+        setGatewayRunning(false);
         setUsage([]);
       }
-    } else {
+    } catch (error) {
       setGatewayRunning(false);
       setUsage([]);
+      setLoadError(error instanceof Error ? error.message : t("banner.error.description"));
     }
 
     setLoading(false);
     setRefreshing(false);
-  };
+  }, [t]);
 
   useEffect(() => {
     void loadData();
-  }, []);
+  }, [loadData]);
 
   const now = Date.now();
   const windowMs = timeRange === "7d" ? 7 * 86400_000 : timeRange === "30d" ? 30 * 86400_000 : Infinity;
@@ -176,6 +187,16 @@ export function ModelsPage(): JSX.Element {
           <RefreshCw className={cn("h-4 w-4", refreshing && "animate-spin")} />
         </Button>
       </div>
+
+      {loadError ? (
+        <NoticeBanner title={t("banner.error.title")} tone="error">
+          <p style={{ margin: 0 }}>{loadError}</p>
+        </NoticeBanner>
+      ) : !gatewayRunning && !loading ? (
+        <NoticeBanner title={t("banner.offline.title")} tone="warning">
+          <p style={{ margin: 0 }}>{t("banner.offline.description")}</p>
+        </NoticeBanner>
+      ) : null}
 
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         <StatCard title={t("stats.totalTokens")} value={formatTokens(totalTokens)} subtitle={t("stats.records", { count: filteredEntries.length })} icon={TrendingUp} accent="blue" />

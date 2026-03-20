@@ -13,10 +13,13 @@ interface WizardForm {
   systemPrompt: string;
   modelId: string;
   modelName: string;
+  customModelId: string;
+  customModelName: string;
   channelType: string;
   apiKeyRef: string;
   baseUrl: string;
   temperature: number;
+  maxTokens: number;
 }
 
 const MODEL_OPTIONS = [
@@ -39,10 +42,13 @@ const buildDefaultForm = (defaultModelName: string): WizardForm => ({
   systemPrompt: "",
   modelId: "gpt-4o",
   modelName: defaultModelName,
+  customModelId: "",
+  customModelName: "",
   channelType: "openclaw",
   apiKeyRef: "",
   baseUrl: "",
   temperature: 0.7,
+  maxTokens: 4096,
 });
 
 function StepBar({ current }: { current: number }) {
@@ -140,8 +146,8 @@ function StepModel({
   const { t } = useTranslation("agents");
   const builtinIds = MODEL_OPTIONS.slice(0, -1);
   const isCustom = !builtinIds.includes(form.modelId as (typeof builtinIds)[number]) || form.modelId === "custom";
-  const [customModelId, setCustomModelId] = useState(() => (isCustom && form.modelId !== "custom" ? form.modelId : ""));
-  const [customModelName, setCustomModelName] = useState(() => (isCustom && form.modelName !== t("wizard.stepModel.customModelNameDefault") ? form.modelName : ""));
+  const customModelId = form.customModelId.trim();
+  const customModelName = form.customModelName.trim();
 
   return (
     <div className="space-y-3">
@@ -156,22 +162,22 @@ function StepModel({
         return (
           <button
             key={modelId}
-            type="button"
-            onClick={() => {
-              if (modelId === "custom") {
-                onChange({
-                  modelId: customModelId || "custom",
-                  modelName: customModelName || customModelId || t("wizard.stepModel.customModelNameDefault"),
-                });
-                return;
-              }
+          type="button"
+          onClick={() => {
+            if (modelId === "custom") {
+              onChange({
+                modelId: customModelId || "custom",
+                modelName: customModelName || customModelId || t("wizard.stepModel.customModelNameDefault"),
+              });
+              return;
+            }
 
-              onChange({ modelId, modelName: label });
-            }}
-            className={cn(
-              "flex w-full items-center gap-3 rounded-xl border px-3 py-2.5 text-left text-sm transition-colors",
-              selected ? "border-primary bg-primary/5 text-foreground" : "border-border bg-background text-foreground/80 hover:bg-muted/40",
-            )}
+            onChange({ modelId, modelName: label });
+          }}
+          className={cn(
+            "flex w-full items-center gap-3 rounded-xl border px-3 py-2.5 text-left text-sm transition-colors",
+            selected ? "border-primary bg-primary/5 text-foreground" : "border-border bg-background text-foreground/80 hover:bg-muted/40",
+          )}
           >
             <span className={cn("h-4 w-4 shrink-0 rounded-full border-2", selected ? "scale-110 border-primary bg-primary" : "border-muted-foreground/30")} />
             <span className={cn("font-medium", selected && "text-foreground")}>{label}</span>
@@ -183,38 +189,63 @@ function StepModel({
           <Input
             autoFocus
             placeholder={t("wizard.stepModel.customModelIdPlaceholder")}
-            value={customModelId}
+            value={form.customModelId}
             onChange={(event) => {
               const value = event.target.value;
-              setCustomModelId(value);
-              onChange({ modelId: value || "custom", modelName: customModelName || value || t("wizard.stepModel.customModelNameDefault") });
+              const normalizedValue = value.trim();
+              onChange({
+                customModelId: value,
+                modelId: normalizedValue || "custom",
+                modelName: customModelName || normalizedValue || t("wizard.stepModel.customModelNameDefault"),
+              });
             }}
           />
           <Input
             placeholder={t("wizard.stepModel.customModelNamePlaceholder")}
-            value={customModelName}
+            value={form.customModelName}
             onChange={(event) => {
               const value = event.target.value;
-              setCustomModelName(value);
-              onChange({ modelName: value || customModelId || t("wizard.stepModel.customModelNameDefault") });
+              onChange({
+                customModelName: value,
+                modelName: value.trim() || customModelId || t("wizard.stepModel.customModelNameDefault"),
+              });
             }}
           />
         </div>
       ) : null}
-      <div className="pt-2">
-        <label className="flex items-center justify-between">
-          <span className="text-sm font-medium">{t("wizard.stepModel.temperatureLabel", { value: form.temperature.toFixed(1) })}</span>
-          <span className="text-xs text-muted-foreground">{t("wizard.stepModel.temperatureHint")}</span>
+      <div className="grid gap-4 pt-2 md:grid-cols-2">
+        <div>
+          <label className="flex items-center justify-between">
+            <span className="text-sm font-medium">{t("wizard.stepModel.temperatureLabel", { value: form.temperature.toFixed(1) })}</span>
+            <span className="text-xs text-muted-foreground">{t("wizard.stepModel.temperatureHint")}</span>
+          </label>
+          <input
+            type="range"
+            min={0}
+            max={2}
+            step={0.1}
+            value={form.temperature}
+            onChange={(event) => onChange({ temperature: Number(event.target.value) })}
+            className="mt-2 w-full"
+          />
+        </div>
+        <label className="flex flex-col gap-1.5">
+          <span className="text-sm font-medium">{t("wizard.stepModel.maxTokensLabel")}</span>
+          <Input
+            type="number"
+            min={1}
+            max={200000}
+            step={1}
+            inputMode="numeric"
+            value={form.maxTokens}
+            onChange={(event) => {
+              const nextValue = Number(event.target.value);
+              const normalizedValue = Number.isFinite(nextValue) ? Math.min(200000, Math.max(1, Math.trunc(nextValue))) : 4096;
+              onChange({ maxTokens: normalizedValue });
+            }}
+          />
+          <span className="text-xs text-muted-foreground">{t("wizard.stepModel.maxTokensHint")}</span>
         </label>
-        <input
-          type="range"
-          min={0}
-          max={2}
-          step={0.1}
-          value={form.temperature}
-          onChange={(event) => onChange({ temperature: Number(event.target.value) })}
-          className="mt-2 w-full"
-        />
       </div>
     </div>
   );
@@ -290,7 +321,8 @@ export function CreateAgentWizard({ onClose }: { onClose: () => void }): JSX.Ele
 
   const onChange = (patch: Partial<WizardForm>) => setForm((current) => ({ ...current, ...patch }));
   const isLastStep = step === STEP_KEYS.length - 1;
-  const canFinish = form.apiKeyRef.trim().length > 0 || form.channelType === "openclaw";
+  const requiresEndpoint = form.channelType !== "openclaw";
+  const canFinish = !requiresEndpoint || (form.apiKeyRef.trim().length > 0 && form.baseUrl.trim().length > 0);
 
   const handleCreate = async () => {
     setSaving(true);
@@ -306,7 +338,7 @@ export function CreateAgentWizard({ onClose }: { onClose: () => void }): JSX.Ele
         apiKeyRef: form.apiKeyRef,
         baseUrl: form.baseUrl,
         temperature: form.temperature,
-        maxTokens: 4096,
+        maxTokens: form.maxTokens,
       });
 
       if (created) {

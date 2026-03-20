@@ -46,6 +46,7 @@ export const useProviderStore = create<ProviderStore>((set) => ({
       set({
         providers: result.data,
         loading: false,
+        error: null,
         lastFetchedAt: new Date().toISOString(),
       });
       return;
@@ -65,6 +66,7 @@ export const useProviderStore = create<ProviderStore>((set) => ({
     if (result.ok && result.data) {
       set((state) => ({
         providers: [result.data!, ...state.providers],
+        error: null,
         saving: false,
       }));
       return true;
@@ -87,6 +89,7 @@ export const useProviderStore = create<ProviderStore>((set) => ({
         providers: state.providers.map((provider) =>
           provider.id === result.data!.id ? result.data! : provider,
         ),
+        error: null,
         saving: false,
       }));
       return true;
@@ -134,6 +137,7 @@ export const useProviderStore = create<ProviderStore>((set) => ({
             : provider,
         ),
         validatingId: null,
+        error: null,
       }));
       return result.data.valid;
     }

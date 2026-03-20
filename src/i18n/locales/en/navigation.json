@@ -1,6 +1,7 @@
 {
   "agents": "Agents",
   "chat": "Chat",
+  "dashboard": "Dashboard",
   "models": "Models",
   "channels": "Channels",
   "providers": "Providers",
@@ -10,6 +11,7 @@
   "settings": "Settings",
   "feedback": "Feedback",
   "newChat": "New chat",
+  "setupAssistant": "Setup Assistant",
   "agentsCount": "Agents",
   "running": "Running",
   "buckets": {

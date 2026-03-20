@@ -7,6 +7,7 @@
   "actions": {
     "create": "New Channel",
     "loading": "Loading channels...",
+    "edit": "Edit",
     "connect": "Connect",
     "disconnect": "Disconnect",
     "confirmDelete": "Delete channel “{{name}}”?"
@@ -15,6 +16,10 @@
     "title": "No channels yet",
     "description": "Create a channel first, then bind providers and agents.",
     "cta": "Create your first channel"
+  },
+  "error": {
+    "title": "Could not load channels",
+    "cta": "Retry"
   },
   "status": {
     "connected": "Connected",
@@ -30,8 +35,10 @@
     "updatedAt": "Updated: {{value}}"
   },
   "dialog": {
-    "title": "Create Channel",
-    "description": "Fill in the basic channel information, then choose providers and agents to bind.",
+    "titleCreate": "Create Channel",
+    "titleEdit": "Edit Channel",
+    "descriptionCreate": "Fill in the basic channel information, then choose providers and agents to bind.",
+    "descriptionEdit": "Update the channel details, provider binding, and bound agents.",
     "fields": {
       "name": "Name",
       "type": "Channel Type",
@@ -64,11 +71,14 @@
     "actions": {
       "cancel": "Cancel",
       "create": "Create Channel",
-      "creating": "Creating..."
+      "creating": "Creating...",
+      "update": "Save Changes",
+      "updating": "Saving..."
     },
     "errors": {
       "nameRequired": "Please enter a channel name.",
-      "createFailed": "Failed to create the channel. Please try again."
+      "createFailed": "Failed to create the channel. Please try again.",
+      "updateFailed": "Failed to update the channel. Please try again."
     }
   }
 }

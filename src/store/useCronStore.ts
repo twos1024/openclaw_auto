@@ -51,6 +51,7 @@ export const useCronStore = create<CronStore>((set) => ({
       set({
         cronJobs: result.data,
         loading: false,
+        error: null,
         lastFetchedAt: new Date().toISOString(),
       });
       return;
@@ -70,6 +71,7 @@ export const useCronStore = create<CronStore>((set) => ({
     if (result.ok && result.data) {
       set((state) => ({
         cronJobs: [result.data!, ...state.cronJobs],
+        error: null,
         saving: false,
       }));
       return true;
@@ -92,6 +94,7 @@ export const useCronStore = create<CronStore>((set) => ({
         cronJobs: state.cronJobs.map((cronJob) =>
           cronJob.id === result.data!.id ? result.data! : cronJob,
         ),
+        error: null,
         saving: false,
       }));
       return true;
@@ -162,12 +165,14 @@ export const useCronStore = create<CronStore>((set) => ({
             : job,
         ),
         triggeringId: null,
+        error: null,
       }));
       void cronService.listCronJobs().then((refreshResult) => {
         if (refreshResult.ok && refreshResult.data) {
           set({
             cronJobs: refreshResult.data,
             lastFetchedAt: new Date().toISOString(),
+            error: null,
           });
         }
       });

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Bot, Play, Plus, RefreshCw, Search, Square, Trash2 } from "lucide-react";
+import { AlertTriangle, Bot, Play, Plus, RefreshCw, Search, Square, Trash2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import { useAgentStore } from "@/store/useAgentStore";
@@ -109,20 +109,41 @@ function AgentCard({ agent }: { agent: Agent }) {
   );
 }
 
-function EmptyState({ onNew }: { onNew: () => void }) {
+function EmptyState({ onNew, search }: { onNew: () => void; search?: string }) {
   const { t } = useTranslation("agents");
+  const hasSearch = Boolean(search?.trim());
   return (
     <div className="flex min-h-[400px] flex-col items-center justify-center gap-4 rounded-3xl border border-dashed border-border bg-black/[0.015] dark:bg-white/[0.015]">
       <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-black/5 dark:bg-white/5">
         <Bot className="h-8 w-8 text-muted-foreground/50" />
       </div>
       <div className="text-center">
-        <p className="font-semibold text-foreground">{t("empty.title")}</p>
-        <p className="mt-1 text-sm text-muted-foreground">{t("empty.description")}</p>
+        <p className="font-semibold text-foreground">{hasSearch ? t("empty.searchTitle", { query: search?.trim() }) : t("empty.title")}</p>
+        <p className="mt-1 text-sm text-muted-foreground">
+          {hasSearch ? t("empty.searchDescription") : t("empty.description")}
+        </p>
       </div>
       <Button onClick={onNew}>
         <Plus className="mr-1.5 h-4 w-4" />
         {t("empty.cta")}
+      </Button>
+    </div>
+  );
+}
+
+function ErrorState({ message, onRetry }: { message: string; onRetry: () => void }) {
+  const { t } = useTranslation("agents");
+  return (
+    <div className="flex min-h-[400px] flex-col items-center justify-center gap-4 rounded-3xl border border-destructive/20 bg-destructive/5 px-6 text-center">
+      <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-destructive/10">
+        <AlertTriangle className="h-8 w-8 text-destructive" />
+      </div>
+      <div className="max-w-sm">
+        <p className="font-semibold text-foreground">{t("error.title")}</p>
+        <p className="mt-1 text-sm text-muted-foreground">{message}</p>
+      </div>
+      <Button variant="outline" onClick={onRetry}>
+        {t("error.cta")}
       </Button>
     </div>
   );
@@ -140,8 +161,11 @@ export function AgentsPage(): JSX.Element {
   const [refreshing, setRefreshing] = useState(false);
   const loadAgents = async (query?: string) => {
     setRefreshing(true);
-    await fetchAgents(query);
-    setRefreshing(false);
+    try {
+      await fetchAgents(query);
+    } finally {
+      setRefreshing(false);
+    }
   };
 
   useEffect(() => {
@@ -154,6 +178,8 @@ export function AgentsPage(): JSX.Element {
     ? agents.filter((agent) => agent.displayName.toLowerCase().includes(search.toLowerCase()))
     : agents;
   const activeAgents = agents.filter((agent) => agent.status === "active").length;
+  const hasAnyAgents = agents.length > 0;
+  const showErrorState = Boolean(error) && !hasAnyAgents && !loading;
 
   return (
     <div className="flex flex-col gap-6">
@@ -184,7 +210,7 @@ export function AgentsPage(): JSX.Element {
         </Button>
       </div>
 
-      {error ? (
+      {error && hasAnyAgents ? (
         <div className="rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
           {error.message}
         </div>
@@ -192,8 +218,10 @@ export function AgentsPage(): JSX.Element {
 
       {loading && !agentsLoaded ? (
         <div className="flex items-center justify-center py-20 text-sm text-muted-foreground">{t("actions.loading")}</div>
+      ) : showErrorState ? (
+        <ErrorState message={error?.message ?? t("error.title")} onRetry={() => void loadAgents(search.trim() || undefined)} />
       ) : filteredAgents.length === 0 ? (
-        <EmptyState onNew={() => setWizardOpen(true)} />
+        <EmptyState onNew={() => setWizardOpen(true)} search={search} />
       ) : (
         <div className="grid gap-4" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))" }}>
           {filteredAgents.map((agent) => (

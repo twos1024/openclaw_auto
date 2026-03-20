@@ -19,6 +19,8 @@
   "empty": {
     "title": "まだエージェントがありません",
     "description": "まずエージェントを作成し、モデルとチャネルを割り当てます。",
+    "searchTitle": "“{{query}}” に一致するエージェントはありません",
+    "searchDescription": "別の検索語に変えるか、フィルターを解除してください。",
     "cta": "最初のエージェントを作成"
   },
   "card": {
@@ -63,7 +65,9 @@
         "qwen_max_latest": "Qwen Max Latest"
       },
       "temperatureLabel": "温度: {{value}}",
-      "temperatureHint": "値が高いほど、出力は多様になります。"
+      "temperatureHint": "値が高いほど、出力は多様になります。",
+      "maxTokensLabel": "最大トークン数",
+      "maxTokensHint": "エージェントの応答長の上限です。"
     },
     "stepChannel": {
       "description": "チャネル種別を選び、接続設定を入力します。",
@@ -96,6 +100,10 @@
     },
     "errors": {
       "createFailed": "エージェントの作成に失敗しました。もう一度お試しください。"
+    },
+    "error": {
+      "title": "エージェントを読み込めませんでした",
+      "cta": "再試行"
     }
   }
 }

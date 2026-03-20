@@ -7,6 +7,7 @@
   "actions": {
     "create": "New Job",
     "loading": "Loading cron jobs...",
+    "edit": "Edit",
     "trigger": "Run Now",
     "viewHistory": "View History",
     "hideHistory": "Hide History",
@@ -16,6 +17,10 @@
     "title": "No cron jobs yet",
     "description": "Create a cron job to run an agent automatically on a schedule.",
     "cta": "Create your first job"
+  },
+  "error": {
+    "title": "Could not load cron jobs",
+    "cta": "Retry"
   },
   "status": {
     "success": "Success",
@@ -39,8 +44,10 @@
     "noSummary": "No summary"
   },
   "dialog": {
-    "title": "Create Cron Job",
-    "description": "Fill in the job details, then bind an agent and channel to run on schedule.",
+    "titleCreate": "Create Cron Job",
+    "titleEdit": "Edit Cron Job",
+    "descriptionCreate": "Fill in the job details, then bind an agent and channel to run on schedule.",
+    "descriptionEdit": "Update the schedule, targets, template, and enabled state.",
     "defaults": {
       "schedule": "0 9 * * 1-5"
     },
@@ -65,14 +72,17 @@
     "actions": {
       "cancel": "Cancel",
       "create": "Create Job",
-      "creating": "Creating..."
+      "creating": "Creating...",
+      "update": "Save Changes",
+      "updating": "Saving..."
     },
     "errors": {
       "nameRequired": "Please enter a job name.",
       "scheduleRequired": "Please enter a schedule.",
       "agentRequired": "Please select an agent.",
       "channelRequired": "Please select a channel.",
-      "createFailed": "Failed to create the job. Please try again."
+      "createFailed": "Failed to create the job. Please try again.",
+      "updateFailed": "Failed to update the job. Please try again."
     }
   }
 }

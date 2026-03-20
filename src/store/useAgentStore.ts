@@ -52,6 +52,7 @@ export const useAgentStore = create<AgentStore>((set) => ({
         agents: result.data.agents,
         agentsLoaded: true,
         loading: false,
+        error: null,
         lastFetchedAt: new Date().toISOString(),
       });
       return;
@@ -71,6 +72,8 @@ export const useAgentStore = create<AgentStore>((set) => ({
     if (result.ok && result.data) {
       set((state) => ({
         agents: [result.data!, ...state.agents],
+        agentsLoaded: true,
+        error: null,
         saving: false,
       }));
       return true;
@@ -93,6 +96,8 @@ export const useAgentStore = create<AgentStore>((set) => ({
         agents: state.agents.map((agent) =>
           agent.id === result.data!.id ? result.data! : agent,
         ),
+        agentsLoaded: true,
+        error: null,
         saving: false,
       }));
       return true;
@@ -114,6 +119,7 @@ export const useAgentStore = create<AgentStore>((set) => ({
         agents: state.agents.map((agent) =>
           agent.id === id ? result.data! : agent,
         ),
+        agentsLoaded: true,
         error: null,
       }));
       return true;
@@ -134,6 +140,7 @@ export const useAgentStore = create<AgentStore>((set) => ({
         agents: state.agents.map((agent) =>
           agent.id === id ? result.data! : agent,
         ),
+        agentsLoaded: true,
         error: null,
       }));
       return true;
@@ -152,6 +159,7 @@ export const useAgentStore = create<AgentStore>((set) => ({
     if (result.ok) {
       set((state) => ({
         agents: state.agents.filter((agent) => agent.id !== id),
+        agentsLoaded: true,
         error: null,
       }));
       return true;

@@ -1,11 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
-import { Clock3, Play, Plus, RefreshCw, Trash2 } from "lucide-react";
+import { AlertTriangle, Clock3, Pencil, Play, Plus, RefreshCw, Trash2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import { useAgentStore } from "@/store/useAgentStore";
 import { useChannelStore } from "@/store/useChannelStore";
 import { useCronStore } from "@/store/useCronStore";
-import type { CreateCronJobPayload } from "@/types";
+import type { CreateCronJobPayload, CronJob, UpdateCronJobPayload } from "@/types";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -32,12 +32,38 @@ const buildDefaultCronForm = (defaultSchedule: string): CronFormState => ({
   enabled: true,
 });
 
-function CreateCronDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
+type CronDialogMode = "create" | "edit";
+
+function buildCronForm(job: CronJob | null, defaultSchedule: string): CronFormState {
+  return job
+    ? {
+        name: job.name,
+        schedule: job.schedule,
+        agentId: job.agentId,
+        channelId: job.channelId,
+        template: job.template,
+        enabled: job.enabled,
+      }
+    : buildDefaultCronForm(defaultSchedule);
+}
+
+function CronDialog({
+  open,
+  mode,
+  job,
+  onClose,
+}: {
+  open: boolean;
+  mode: CronDialogMode;
+  job: CronJob | null;
+  onClose: () => void;
+}) {
   const { t } = useTranslation("cron");
   const agents = useAgentStore((state) => state.agents);
   const channels = useChannelStore((state) => state.channels);
   const saving = useCronStore((state) => state.saving);
   const createCronJob = useCronStore((state) => state.createCronJob);
+  const patchCronJob = useCronStore((state) => state.patchCronJob);
   const [form, setForm] = useState<CronFormState>(() => buildDefaultCronForm(t("dialog.defaults.schedule")));
   const [error, setError] = useState<string | null>(null);
 
@@ -47,13 +73,21 @@ function CreateCronDialog({ open, onClose }: { open: boolean; onClose: () => voi
       setError(null);
       return;
     }
+    setForm(buildCronForm(job, t("dialog.defaults.schedule")));
+    setError(null);
+  }, [job, open, t]);
+
+  useEffect(() => {
+    if (!open || mode !== "create" || job) {
+      return;
+    }
     if (agents.length > 0 && !form.agentId) {
       setForm((current) => ({ ...current, agentId: agents[0].id }));
     }
     if (channels.length > 0 && !form.channelId) {
       setForm((current) => ({ ...current, channelId: channels[0].id }));
     }
-  }, [agents, channels, form.agentId, form.channelId, open, t]);
+  }, [agents, channels, form.agentId, form.channelId, job, mode, open]);
 
   if (!open) return null;
 
@@ -79,7 +113,7 @@ function CreateCronDialog({ open, onClose }: { open: boolean; onClose: () => voi
       return;
     }
 
-    const payload: CreateCronJobPayload = {
+    const payloadBase = {
       name: form.name.trim(),
       schedule: form.schedule.trim(),
       agentId: form.agentId,
@@ -88,14 +122,35 @@ function CreateCronDialog({ open, onClose }: { open: boolean; onClose: () => voi
       enabled: form.enabled,
     };
 
-    const created = await createCronJob(payload);
-    if (created) {
-      onClose();
-      return;
+    if (mode === "create") {
+      const payload: CreateCronJobPayload = payloadBase;
+      const created = await createCronJob(payload);
+      if (created) {
+        onClose();
+        return;
+      }
+    } else {
+      if (!job) {
+        setError(t("dialog.errors.updateFailed"));
+        return;
+      }
+      const payload: UpdateCronJobPayload = {
+        id: job.id,
+        ...payloadBase,
+        ...(job.enabled !== form.enabled ? { status: form.enabled ? "idle" : "disabled" } : {}),
+      };
+      const updated = await patchCronJob(payload);
+      if (updated) {
+        onClose();
+        return;
+      }
     }
 
     const latestError = useCronStore.getState().error;
-    setError(latestError?.message ?? t("dialog.errors.createFailed"));
+    setError(
+      latestError?.message ??
+        (mode === "create" ? t("dialog.errors.createFailed") : t("dialog.errors.updateFailed")),
+    );
   };
 
   return (
@@ -103,8 +158,10 @@ function CreateCronDialog({ open, onClose }: { open: boolean; onClose: () => voi
       <div className="fixed inset-0 z-40 bg-black/45" onClick={onClose} />
       <div className="fixed left-1/2 top-1/2 z-50 max-h-[88vh] w-[min(620px,95vw)] -translate-x-1/2 -translate-y-1/2 overflow-auto rounded-2xl border border-border bg-card p-5 shadow-2xl">
         <div className="mb-4">
-          <h2 className="text-lg font-semibold">{t("dialog.title")}</h2>
-          <p className="mt-1 text-sm text-muted-foreground">{t("dialog.description")}</p>
+          <h2 className="text-lg font-semibold">{mode === "create" ? t("dialog.titleCreate") : t("dialog.titleEdit")}</h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {mode === "create" ? t("dialog.descriptionCreate") : t("dialog.descriptionEdit")}
+          </p>
         </div>
 
         <div className="grid gap-3">
@@ -186,10 +243,10 @@ function CreateCronDialog({ open, onClose }: { open: boolean; onClose: () => voi
             {saving ? (
               <>
                 <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
-                {t("dialog.actions.creating")}
+                {mode === "create" ? t("dialog.actions.creating") : t("dialog.actions.updating")}
               </>
             ) : (
-              t("dialog.actions.create")
+              mode === "create" ? t("dialog.actions.create") : t("dialog.actions.update")
             )}
           </Button>
         </div>
@@ -205,6 +262,26 @@ function StatusBadge({ status }: { status: string }) {
   if (status === "running") return <Badge variant="secondary">{t("status.running")}</Badge>;
   if (status === "disabled") return <Badge variant="secondary">{t("status.disabled")}</Badge>;
   return <Badge variant="secondary">{t("status.idle")}</Badge>;
+}
+
+function ErrorState({ message, onRetry }: { message: string; onRetry: () => void }) {
+  const { t } = useTranslation("cron");
+  return (
+    <Card className="border-destructive/20 bg-destructive/5">
+      <CardHeader className="items-center text-center">
+        <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-destructive/10">
+          <AlertTriangle className="h-7 w-7 text-destructive" />
+        </div>
+        <CardTitle className="text-base">{t("error.title")}</CardTitle>
+        <CardDescription>{message}</CardDescription>
+      </CardHeader>
+      <CardContent className="flex justify-center">
+        <Button variant="outline" onClick={onRetry}>
+          {t("error.cta")}
+        </Button>
+      </CardContent>
+    </Card>
+  );
 }
 
 export function CronPage(): JSX.Element {
@@ -226,9 +303,13 @@ export function CronPage(): JSX.Element {
   const fetchAgents = useAgentStore((state) => state.fetchAgents);
 
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [dialogMode, setDialogMode] = useState<CronDialogMode>("create");
+  const [editingJob, setEditingJob] = useState<CronJob | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const [actionId, setActionId] = useState<string | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const hasCronJobs = cronJobs.length > 0;
+  const showErrorState = Boolean(error) && !hasCronJobs && !loading;
 
   useEffect(() => {
     void fetchCronJobs();
@@ -257,8 +338,11 @@ export function CronPage(): JSX.Element {
 
   const handleRefresh = async () => {
     setRefreshing(true);
-    await fetchCronJobs();
-    setRefreshing(false);
+    try {
+      await fetchCronJobs();
+    } finally {
+      setRefreshing(false);
+    }
   };
 
   const handleToggle = async (id: string, enabled: boolean) => {
@@ -279,6 +363,24 @@ export function CronPage(): JSX.Element {
     setActionId(null);
   };
 
+  const openCreateDialog = () => {
+    setEditingJob(null);
+    setDialogMode("create");
+    setDialogOpen(true);
+  };
+
+  const openEditDialog = (job: CronJob) => {
+    setEditingJob(job);
+    setDialogMode("edit");
+    setDialogOpen(true);
+  };
+
+  const closeDialog = () => {
+    setDialogOpen(false);
+    setEditingJob(null);
+    setDialogMode("create");
+  };
+
   return (
     <div className="flex flex-col gap-6">
       <div>
@@ -292,13 +394,13 @@ export function CronPage(): JSX.Element {
         <Button variant="outline" size="icon" className="h-9 w-9" onClick={() => void handleRefresh()} disabled={refreshing}>
           <RefreshCw className={cn("h-4 w-4", refreshing && "animate-spin")} />
         </Button>
-        <Button onClick={() => setDialogOpen(true)}>
+        <Button onClick={openCreateDialog}>
           <Plus className="mr-2 h-4 w-4" />
           {t("actions.create")}
         </Button>
       </div>
 
-      {error ? (
+      {error && hasCronJobs ? (
         <div className="rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
           {error.message}
         </div>
@@ -306,6 +408,8 @@ export function CronPage(): JSX.Element {
 
       {loading && cronJobs.length === 0 ? (
         <div className="py-20 text-center text-sm text-muted-foreground">{t("actions.loading")}</div>
+      ) : showErrorState ? (
+        <ErrorState message={error?.message ?? t("error.title")} onRetry={() => void handleRefresh()} />
       ) : cronJobs.length === 0 ? (
         <Card className="border-dashed">
           <CardHeader>
@@ -357,6 +461,10 @@ export function CronPage(): JSX.Element {
                       <span>{t("card.enabled")}</span>
                       <Switch checked={job.enabled} onCheckedChange={(value) => void handleToggle(job.id, value)} disabled={actionLoading} />
                     </div>
+                    <Button variant="outline" size="sm" onClick={() => openEditDialog(job)} disabled={actionLoading || isTriggering}>
+                      <Pencil className="mr-1.5 h-3.5 w-3.5" />
+                      {t("actions.edit")}
+                    </Button>
                     <Button variant="outline" size="sm" onClick={() => void handleTrigger(job.id)} disabled={isTriggering}>
                       {isTriggering ? <RefreshCw className="mr-1.5 h-3.5 w-3.5 animate-spin" /> : <Play className="mr-1.5 h-3.5 w-3.5" />}
                       {t("actions.trigger")}
@@ -414,7 +522,7 @@ export function CronPage(): JSX.Element {
         </div>
       )}
 
-      <CreateCronDialog open={dialogOpen} onClose={() => setDialogOpen(false)} />
+      <CronDialog open={dialogOpen} mode={dialogMode} job={editingJob} onClose={closeDialog} />
     </div>
   );
 }

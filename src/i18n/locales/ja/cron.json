@@ -7,6 +7,7 @@
   "actions": {
     "create": "ジョブ作成",
     "loading": "定期ジョブを読み込み中...",
+    "edit": "編集",
     "trigger": "今すぐ実行",
     "viewHistory": "履歴を表示",
     "hideHistory": "履歴を隠す",
@@ -16,6 +17,10 @@
     "title": "まだ定期ジョブがありません",
     "description": "ジョブを作成すると、スケジュールに従ってエージェントを自動実行できます。",
     "cta": "最初のジョブを作成"
+  },
+  "error": {
+    "title": "定期ジョブを読み込めませんでした",
+    "cta": "再試行"
   },
   "status": {
     "success": "成功",
@@ -39,8 +44,10 @@
     "noSummary": "要約なし"
   },
   "dialog": {
-    "title": "定期ジョブを作成",
-    "description": "ジョブ情報を入力し、エージェントとチャネルを紐づけてスケジュール実行します。",
+    "titleCreate": "定期ジョブを作成",
+    "titleEdit": "定期ジョブを編集",
+    "descriptionCreate": "ジョブ情報を入力し、エージェントとチャネルを紐づけてスケジュール実行します。",
+    "descriptionEdit": "スケジュール、対象、テンプレート、有効状態を更新します。",
     "defaults": {
       "schedule": "0 9 * * 1-5"
     },
@@ -65,14 +72,17 @@
     "actions": {
       "cancel": "キャンセル",
       "create": "ジョブ作成",
-      "creating": "作成中..."
+      "creating": "作成中...",
+      "update": "変更を保存",
+      "updating": "保存中..."
     },
     "errors": {
       "nameRequired": "ジョブ名を入力してください。",
       "scheduleRequired": "スケジュールを入力してください。",
       "agentRequired": "エージェントを選択してください。",
       "channelRequired": "チャネルを選択してください。",
-      "createFailed": "ジョブの作成に失敗しました。もう一度お試しください。"
+      "createFailed": "ジョブの作成に失敗しました。もう一度お試しください。",
+      "updateFailed": "ジョブの更新に失敗しました。もう一度お試しください。"
     }
   }
 }

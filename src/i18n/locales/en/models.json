@@ -4,6 +4,16 @@
     "descriptionRunning": "Gateway is running · reading recent model usage",
     "descriptionIdle": "Gateway is not running · start it to view model usage"
   },
+  "banner": {
+    "offline": {
+      "title": "Gateway is offline",
+      "description": "Start the gateway to read recent model usage."
+    },
+    "error": {
+      "title": "Could not load model usage",
+      "description": "Refresh after checking the gateway connection."
+    }
+  },
   "toolbar": {
     "timeRange": {
       "7d": "Last 7 days",

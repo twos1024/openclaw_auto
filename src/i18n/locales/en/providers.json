@@ -7,6 +7,7 @@
   "actions": {
     "create": "New Provider",
     "loading": "Loading providers...",
+    "edit": "Edit",
     "validate": "Validate",
     "enable": "Enable",
     "disable": "Disable",
@@ -16,6 +17,10 @@
     "title": "No providers yet",
     "description": "Create a provider first, then power channels and agents with it.",
     "cta": "Create your first provider"
+  },
+  "error": {
+    "title": "Could not load providers",
+    "cta": "Retry"
   },
   "status": {
     "ready": "Ready",
@@ -32,8 +37,10 @@
     "updatedAt": "Updated: {{value}}"
   },
   "dialog": {
-    "title": "Create Provider",
-    "description": "Fill in provider details so channels and agents can use its models.",
+    "titleCreate": "Create Provider",
+    "titleEdit": "Edit Provider",
+    "descriptionCreate": "Fill in provider details so channels and agents can use its models.",
+    "descriptionEdit": "Update provider details. Leave the API key blank to keep the existing value.",
     "fields": {
       "name": "Name",
       "vendor": "Vendor",
@@ -43,8 +50,12 @@
     "placeholders": {
       "name": "e.g. Default OpenAI Provider",
       "apiKey": "Enter an API key",
+      "apiKeyEdit": "Leave blank to keep the current API key",
       "apiKeyOllama": "Ollama does not require an API key",
       "baseUrl": "Optional, e.g. https://api.openai.com/v1"
+    },
+    "hints": {
+      "apiKeyOptional": "Only enter a new API key if you want to replace the current one."
     },
     "options": {
       "vendor": {
@@ -64,12 +75,15 @@
     "actions": {
       "cancel": "Cancel",
       "create": "Create Provider",
-      "creating": "Creating..."
+      "creating": "Creating...",
+      "update": "Save Changes",
+      "updating": "Saving..."
     },
     "errors": {
       "nameRequired": "Please enter a provider name.",
       "apiKeyRequired": "Please enter an API key.",
-      "createFailed": "Failed to create the provider. Please try again."
+      "createFailed": "Failed to create the provider. Please try again.",
+      "updateFailed": "Failed to update the provider. Please try again."
     }
   }
 }

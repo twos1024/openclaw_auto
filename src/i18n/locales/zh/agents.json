@@ -19,6 +19,8 @@
   "empty": {
     "title": "还没有智能体",
     "description": "先创建一个智能体，再为它分配模型和通道。",
+    "searchTitle": "没有匹配“{{query}}”的智能体",
+    "searchDescription": "试试其他关键词，或清空筛选条件。",
     "cta": "创建第一个智能体"
   },
   "card": {
@@ -63,7 +65,9 @@
         "qwen_max_latest": "Qwen Max Latest"
       },
       "temperatureLabel": "温度：{{value}}",
-      "temperatureHint": "数值越高，回答越发散。"
+      "temperatureHint": "数值越高，回答越发散。",
+      "maxTokensLabel": "最大 tokens",
+      "maxTokensHint": "限制智能体回复长度的上限。"
     },
     "stepChannel": {
       "description": "选择智能体接入的通道类型，并填写连接参数。",
@@ -96,6 +100,10 @@
     },
     "errors": {
       "createFailed": "创建智能体失败，请重试。"
+    },
+    "error": {
+      "title": "无法加载智能体",
+      "cta": "重试"
     }
   }
 }
