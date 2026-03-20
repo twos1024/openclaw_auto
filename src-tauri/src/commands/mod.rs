@@ -7,7 +7,6 @@ pub mod cron;
 pub mod env;
 pub mod gateway;
 pub mod install;
-pub mod instance;
 pub mod logs;
 pub mod overview;
 pub mod provider;
