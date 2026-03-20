@@ -9,7 +9,6 @@ pub mod gateway_api_service;
 pub mod gateway_service;
 pub mod install_issue;
 pub mod install_service;
-pub mod instance_service;
 pub mod log_service;
 pub mod overview_service;
 pub mod provider_service;

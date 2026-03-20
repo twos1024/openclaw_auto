@@ -40,13 +40,6 @@ fn main() {
             commands::env::detect_env,
             commands::install::install_openclaw,
             commands::install::install_openclaw_in_terminal,
-            // Legacy instance management
-            commands::instance::list_instances,
-            commands::instance::create_instance,
-            commands::instance::update_instance,
-            commands::instance::delete_instance,
-            commands::instance::start_instance,
-            commands::instance::stop_instance,
             // Connectivity
             commands::connectivity::test_connection,
             // Config
