@@ -7,6 +7,7 @@
   "actions": {
     "create": "提供元を作成",
     "loading": "提供元を読み込み中...",
+    "edit": "編集",
     "validate": "検証",
     "enable": "有効化",
     "disable": "無効化",
@@ -16,6 +17,10 @@
     "title": "まだ提供元がありません",
     "description": "まず提供元を作成し、チャネルとエージェントで利用できるようにします。",
     "cta": "最初の提供元を作成"
+  },
+  "error": {
+    "title": "提供元を読み込めませんでした",
+    "cta": "再試行"
   },
   "status": {
     "ready": "準備完了",
@@ -32,8 +37,10 @@
     "updatedAt": "更新日時: {{value}}"
   },
   "dialog": {
-    "title": "提供元を作成",
-    "description": "提供元の情報を入力し、チャネルやエージェントで利用できるようにします。",
+    "titleCreate": "提供元を作成",
+    "titleEdit": "提供元を編集",
+    "descriptionCreate": "提供元の情報を入力し、チャネルやエージェントで利用できるようにします。",
+    "descriptionEdit": "提供元情報を更新します。既存の API キーを保持するには空欄のままにしてください。",
     "fields": {
       "name": "名前",
       "vendor": "ベンダー",
@@ -43,8 +50,12 @@
     "placeholders": {
       "name": "例: 既定の OpenAI 提供元",
       "apiKey": "API キーを入力",
+      "apiKeyEdit": "空欄にすると現在の API キーを保持します",
       "apiKeyOllama": "Ollama では API キーは不要です",
       "baseUrl": "任意、例: https://api.openai.com/v1"
+    },
+    "hints": {
+      "apiKeyOptional": "現在の API キーを置き換えたい場合のみ入力してください。"
     },
     "options": {
       "vendor": {
@@ -64,12 +75,15 @@
     "actions": {
       "cancel": "キャンセル",
       "create": "提供元を作成",
-      "creating": "作成中..."
+      "creating": "作成中...",
+      "update": "変更を保存",
+      "updating": "保存中..."
     },
     "errors": {
       "nameRequired": "提供元名を入力してください。",
       "apiKeyRequired": "API キーを入力してください。",
-      "createFailed": "提供元の作成に失敗しました。もう一度お試しください。"
+      "createFailed": "提供元の作成に失敗しました。もう一度お試しください。",
+      "updateFailed": "提供元の更新に失敗しました。もう一度お試しください。"
     }
   }
 }

@@ -7,6 +7,7 @@
   "actions": {
     "create": "新建任务",
     "loading": "正在加载定时任务...",
+    "edit": "编辑",
     "trigger": "立即执行",
     "viewHistory": "查看历史",
     "hideHistory": "收起历史",
@@ -16,6 +17,10 @@
     "title": "还没有定时任务",
     "description": "创建一个定时任务，让智能体按计划自动运行。",
     "cta": "创建第一个任务"
+  },
+  "error": {
+    "title": "无法加载定时任务",
+    "cta": "重试"
   },
   "status": {
     "success": "成功",
@@ -39,8 +44,10 @@
     "noSummary": "暂无摘要"
   },
   "dialog": {
-    "title": "创建定时任务",
-    "description": "填写任务信息，绑定智能体和通道后即可按计划执行。",
+    "titleCreate": "创建定时任务",
+    "titleEdit": "编辑定时任务",
+    "descriptionCreate": "填写任务信息，绑定智能体和通道后即可按计划执行。",
+    "descriptionEdit": "更新计划、执行目标、模板和启用状态。",
     "defaults": {
       "schedule": "0 9 * * 1-5"
     },
@@ -65,14 +72,17 @@
     "actions": {
       "cancel": "取消",
       "create": "创建任务",
-      "creating": "正在创建..."
+      "creating": "正在创建...",
+      "update": "保存更改",
+      "updating": "保存中..."
     },
     "errors": {
       "nameRequired": "请输入任务名称。",
       "scheduleRequired": "请输入执行计划。",
       "agentRequired": "请选择智能体。",
       "channelRequired": "请选择通道。",
-      "createFailed": "创建任务失败，请重试。"
+      "createFailed": "创建任务失败，请重试。",
+      "updateFailed": "更新任务失败，请重试。"
     }
   }
 }

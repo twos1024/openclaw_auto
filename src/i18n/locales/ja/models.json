@@ -4,6 +4,16 @@
     "descriptionRunning": "Gateway 実行中 · 最近のモデル使用量を読み込んでいます",
     "descriptionIdle": "Gateway が起動していません · 起動するとモデル使用量を確認できます"
   },
+  "banner": {
+    "offline": {
+      "title": "Gateway が起動していません",
+      "description": "Gateway を起動すると最近のモデル使用量を読み込めます。"
+    },
+    "error": {
+      "title": "モデル使用量を読み込めませんでした",
+      "description": "Gateway 接続を確認してから再試行してください。"
+    }
+  },
   "toolbar": {
     "timeRange": {
       "7d": "直近 7 日",

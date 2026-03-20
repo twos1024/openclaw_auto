@@ -7,6 +7,7 @@
   "actions": {
     "create": "新建提供方",
     "loading": "正在加载提供方...",
+    "edit": "编辑",
     "validate": "校验",
     "enable": "启用",
     "disable": "停用",
@@ -16,6 +17,10 @@
     "title": "还没有提供方",
     "description": "先创建一个提供方，再为通道和智能体提供模型能力。",
     "cta": "创建第一个提供方"
+  },
+  "error": {
+    "title": "无法加载提供方",
+    "cta": "重试"
   },
   "status": {
     "ready": "就绪",
@@ -32,8 +37,10 @@
     "updatedAt": "更新时间：{{value}}"
   },
   "dialog": {
-    "title": "创建提供方",
-    "description": "填写提供方信息，以便后续为通道和智能体提供模型。",
+    "titleCreate": "创建提供方",
+    "titleEdit": "编辑提供方",
+    "descriptionCreate": "填写提供方信息，以便后续为通道和智能体提供模型。",
+    "descriptionEdit": "更新提供方信息。若要保留现有 API Key，请保持为空。",
     "fields": {
       "name": "名称",
       "vendor": "厂商",
@@ -43,8 +50,12 @@
     "placeholders": {
       "name": "例如：默认 OpenAI 提供方",
       "apiKey": "请输入 API Key",
+      "apiKeyEdit": "留空以保留当前 API Key",
       "apiKeyOllama": "Ollama 无需 API Key",
       "baseUrl": "可选，例如：https://api.openai.com/v1"
+    },
+    "hints": {
+      "apiKeyOptional": "只有在想替换当前 API Key 时才需要填写。"
     },
     "options": {
       "vendor": {
@@ -64,12 +75,15 @@
     "actions": {
       "cancel": "取消",
       "create": "创建提供方",
-      "creating": "正在创建..."
+      "creating": "正在创建...",
+      "update": "保存更改",
+      "updating": "保存中..."
     },
     "errors": {
       "nameRequired": "请输入提供方名称。",
       "apiKeyRequired": "请输入 API Key。",
-      "createFailed": "创建提供方失败，请重试。"
+      "createFailed": "创建提供方失败，请重试。",
+      "updateFailed": "更新提供方失败，请重试。"
     }
   }
 }

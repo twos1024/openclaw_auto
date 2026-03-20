@@ -4,6 +4,7 @@ import {
   BarChart2,
   Bot,
   Clock3,
+  LayoutDashboard,
   KeyRound,
   MessageCircle,
   MessageSquare,
@@ -45,6 +46,7 @@ export function Sidebar(): JSX.Element {
   const navItems = [
     { to: "/agents", label: t("navigation:agents"), icon: Bot },
     { to: "/chat", label: t("navigation:chat"), icon: MessageSquare },
+    { to: "/dashboard", label: t("navigation:dashboard"), icon: LayoutDashboard },
     { to: "/models", label: t("navigation:models"), icon: BarChart2 },
     { to: "/channels", label: t("navigation:channels"), icon: Radio },
     { to: "/providers", label: t("navigation:providers"), icon: KeyRound },

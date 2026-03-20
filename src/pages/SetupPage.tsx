@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Check, CheckCircle2, ChevronLeft, ChevronRight, Loader2, Play, RefreshCw, ShieldCheck } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -85,6 +85,25 @@ export function SetupPage(): JSX.Element {
   const configSucceeded = saveResult?.status === "success";
   const gatewaySucceeded = Boolean(gatewayStatus?.running);
 
+  const loadGatewayStatus = useCallback(
+    async (options?: { fromStart?: boolean }): Promise<GatewayStatus> => {
+      const status = await serviceService.getGatewayStatus();
+      setGatewayStatus(status);
+
+      if (status.running) {
+        setGatewayError(null);
+        if (configSucceeded) {
+          setStep("complete");
+        }
+      } else if (options?.fromStart) {
+        setGatewayError(status.statusDetail || t("gateway.errors.statusFailed"));
+      }
+
+      return status;
+    },
+    [configSucceeded, t],
+  );
+
   const currentStepIndex = stepIndex(step);
   const stepStates = useMemo(() => {
     return STEP_KEYS.map((key, index) => {
@@ -150,19 +169,19 @@ export function SetupPage(): JSX.Element {
         return;
       }
 
-      const status = await serviceService.getGatewayStatus();
-      setGatewayStatus(status);
-      if (status.running) {
-        setStep("complete");
-      } else {
-        setGatewayError(status.statusDetail || t("gateway.errors.statusFailed"));
-      }
+      await loadGatewayStatus({ fromStart: true });
     } catch (error: unknown) {
       setGatewayError(error instanceof Error ? error.message : t("gateway.errors.startFailed"));
     } finally {
       setGatewayLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (step === "gateway" || step === "complete") {
+      void loadGatewayStatus();
+    }
+  }, [loadGatewayStatus, step]);
 
   const handleOpenDashboard = async (): Promise<void> => {
     try {

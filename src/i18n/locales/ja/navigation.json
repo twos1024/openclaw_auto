@@ -1,6 +1,7 @@
 {
   "agents": "Agents",
   "chat": "チャット",
+  "dashboard": "Dashboard",
   "models": "Models",
   "channels": "Channels",
   "providers": "Providers",
@@ -10,6 +11,7 @@
   "settings": "設定",
   "feedback": "フィードバック",
   "newChat": "新しい会話",
+  "setupAssistant": "セットアップアシスタント",
   "agentsCount": "Agents",
   "running": "稼働中",
   "buckets": {

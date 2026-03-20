@@ -19,6 +19,8 @@
   "empty": {
     "title": "No agents yet",
     "description": "Create an agent first, then assign a model and channel.",
+    "searchTitle": "No agents match “{{query}}”",
+    "searchDescription": "Try a different search term or clear the filter.",
     "cta": "Create your first agent"
   },
   "card": {
@@ -63,7 +65,9 @@
         "qwen_max_latest": "Qwen Max Latest"
       },
       "temperatureLabel": "Temperature: {{value}}",
-      "temperatureHint": "Higher values make outputs more diverse."
+      "temperatureHint": "Higher values make outputs more diverse.",
+      "maxTokensLabel": "Max tokens",
+      "maxTokensHint": "Upper bound for the agent's response length."
     },
     "stepChannel": {
       "description": "Choose a channel type and fill in the connection settings.",
@@ -96,6 +100,10 @@
     },
     "errors": {
       "createFailed": "Failed to create the agent. Please try again."
+    },
+    "error": {
+      "title": "Could not load agents",
+      "cta": "Retry"
     }
   }
 }

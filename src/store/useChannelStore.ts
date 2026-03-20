@@ -43,6 +43,7 @@ export const useChannelStore = create<ChannelStore>((set) => ({
       set({
         channels: result.data,
         loading: false,
+        error: null,
         lastFetchedAt: new Date().toISOString(),
       });
       return;
@@ -62,6 +63,7 @@ export const useChannelStore = create<ChannelStore>((set) => ({
     if (result.ok && result.data) {
       set((state) => ({
         channels: [result.data!, ...state.channels],
+        error: null,
         saving: false,
       }));
       return true;
@@ -84,6 +86,7 @@ export const useChannelStore = create<ChannelStore>((set) => ({
         channels: state.channels.map((channel) =>
           channel.id === result.data!.id ? result.data! : channel,
         ),
+        error: null,
         saving: false,
       }));
       return true;

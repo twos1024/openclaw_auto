@@ -4,6 +4,16 @@
     "descriptionRunning": "Gateway 运行中 · 正在读取最近模型用量",
     "descriptionIdle": "Gateway 未运行 · 启动后可查看模型用量"
   },
+  "banner": {
+    "offline": {
+      "title": "Gateway 未运行",
+      "description": "启动 Gateway 后即可读取最近模型用量。"
+    },
+    "error": {
+      "title": "无法加载模型用量",
+      "description": "请在确认网关连接后重试。"
+    }
+  },
   "toolbar": {
     "timeRange": {
       "7d": "最近 7 天",

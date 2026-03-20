@@ -1,11 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link2, Plus, Radio, RefreshCw, Trash2 } from "lucide-react";
+import { AlertTriangle, Link2, Pencil, Plus, Radio, RefreshCw, Trash2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import { useAgentStore } from "@/store/useAgentStore";
 import { useChannelStore } from "@/store/useChannelStore";
 import { useProviderStore } from "@/store/useProviderStore";
-import type { ChannelType, ConnectionType, CreateChannelPayload } from "@/types";
+import type { Channel, ChannelType, ConnectionType, CreateChannelPayload, UpdateChannelPayload } from "@/types";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -34,12 +34,36 @@ const DEFAULT_FORM: ChannelFormState = {
   agentIds: [],
 };
 
-function AddChannelDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
+type ChannelDialogMode = "create" | "edit";
+
+function buildChannelForm(channel: Channel | null): ChannelFormState {
+  return {
+    name: channel?.name ?? "",
+    type: channel?.type ?? "openclaw",
+    connectionType: channel?.connectionType ?? "none",
+    description: channel?.description ?? "",
+    providerId: channel?.providerId ?? "",
+    agentIds: channel?.agentIds ?? [],
+  };
+}
+
+function ChannelDialog({
+  open,
+  mode,
+  channel,
+  onClose,
+}: {
+  open: boolean;
+  mode: ChannelDialogMode;
+  channel: Channel | null;
+  onClose: () => void;
+}) {
   const { t } = useTranslation("channels");
   const agents = useAgentStore((state) => state.agents);
   const providers = useProviderStore((state) => state.providers);
   const saving = useChannelStore((state) => state.saving);
   const createChannel = useChannelStore((state) => state.createChannel);
+  const patchChannel = useChannelStore((state) => state.patchChannel);
   const [form, setForm] = useState<ChannelFormState>(DEFAULT_FORM);
   const [error, setError] = useState<string | null>(null);
 
@@ -47,8 +71,11 @@ function AddChannelDialog({ open, onClose }: { open: boolean; onClose: () => voi
     if (!open) {
       setForm(DEFAULT_FORM);
       setError(null);
+      return;
     }
-  }, [open]);
+    setForm(buildChannelForm(channel));
+    setError(null);
+  }, [open, channel]);
 
   if (!open) return null;
 
@@ -71,23 +98,47 @@ function AddChannelDialog({ open, onClose }: { open: boolean; onClose: () => voi
       return;
     }
 
-    const payload: CreateChannelPayload = {
+    const payloadBase = {
       name: form.name.trim(),
       type: form.type,
       connectionType: form.connectionType,
       description: form.description.trim() || undefined,
-      providerId: form.providerId || undefined,
-      agentIds: form.agentIds.length > 0 ? form.agentIds : undefined,
     };
 
-    const created = await createChannel(payload);
-    if (created) {
-      onClose();
-      return;
+    if (mode === "create") {
+      const payload: CreateChannelPayload = {
+        ...payloadBase,
+        providerId: form.providerId || undefined,
+        agentIds: form.agentIds.length > 0 ? form.agentIds : undefined,
+      };
+      const created = await createChannel(payload);
+      if (created) {
+        onClose();
+        return;
+      }
+    } else {
+      if (!channel) {
+        setError(t("dialog.errors.updateFailed"));
+        return;
+      }
+      const payload: UpdateChannelPayload = {
+        id: channel.id,
+        ...payloadBase,
+        providerId: form.providerId ? form.providerId : (null as unknown as string),
+        agentIds: form.agentIds,
+      };
+      const updated = await patchChannel(payload);
+      if (updated) {
+        onClose();
+        return;
+      }
     }
 
     const latestError = useChannelStore.getState().error;
-    setError(latestError?.message ?? t("dialog.errors.createFailed"));
+    setError(
+      latestError?.message ??
+        (mode === "create" ? t("dialog.errors.createFailed") : t("dialog.errors.updateFailed")),
+    );
   };
 
   return (
@@ -95,8 +146,10 @@ function AddChannelDialog({ open, onClose }: { open: boolean; onClose: () => voi
       <div className="fixed inset-0 z-40 bg-black/45" onClick={onClose} />
       <div className="fixed left-1/2 top-1/2 z-50 max-h-[88vh] w-[min(620px,95vw)] -translate-x-1/2 -translate-y-1/2 overflow-auto rounded-2xl border border-border bg-card p-5 shadow-2xl">
         <div className="mb-4">
-          <h2 className="text-lg font-semibold">{t("dialog.title")}</h2>
-          <p className="mt-1 text-sm text-muted-foreground">{t("dialog.description")}</p>
+          <h2 className="text-lg font-semibold">{mode === "create" ? t("dialog.titleCreate") : t("dialog.titleEdit")}</h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {mode === "create" ? t("dialog.descriptionCreate") : t("dialog.descriptionEdit")}
+          </p>
         </div>
 
         <div className="grid gap-3">
@@ -205,10 +258,10 @@ function AddChannelDialog({ open, onClose }: { open: boolean; onClose: () => voi
             {saving ? (
               <>
                 <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
-                {t("dialog.actions.creating")}
+                {mode === "create" ? t("dialog.actions.creating") : t("dialog.actions.updating")}
               </>
             ) : (
-              t("dialog.actions.create")
+              mode === "create" ? t("dialog.actions.create") : t("dialog.actions.update")
             )}
           </Button>
         </div>
@@ -223,6 +276,26 @@ function StatusLabel({ status }: { status: string }) {
   if (status === "error") return <Badge variant="destructive">{t("status.error")}</Badge>;
   if (status === "idle") return <Badge variant="secondary">{t("status.idle")}</Badge>;
   return <Badge variant="secondary">{t("status.disconnected")}</Badge>;
+}
+
+function ErrorState({ message, onRetry }: { message: string; onRetry: () => void }) {
+  const { t } = useTranslation("channels");
+  return (
+    <Card className="border-destructive/20 bg-destructive/5">
+      <CardHeader className="items-center text-center">
+        <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-destructive/10">
+          <AlertTriangle className="h-7 w-7 text-destructive" />
+        </div>
+        <CardTitle className="text-base">{t("error.title")}</CardTitle>
+        <CardDescription>{message}</CardDescription>
+      </CardHeader>
+      <CardContent className="flex justify-center">
+        <Button variant="outline" onClick={onRetry}>
+          {t("error.cta")}
+        </Button>
+      </CardContent>
+    </Card>
+  );
 }
 
 export function ChannelsPage(): JSX.Element {
@@ -241,8 +314,12 @@ export function ChannelsPage(): JSX.Element {
   const fetchAgents = useAgentStore((state) => state.fetchAgents);
 
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [dialogMode, setDialogMode] = useState<ChannelDialogMode>("create");
+  const [editingChannel, setEditingChannel] = useState<Channel | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const [actionId, setActionId] = useState<string | null>(null);
+  const hasChannels = channels.length > 0;
+  const showErrorState = Boolean(error) && !hasChannels && !loading;
 
   useEffect(() => {
     void fetchChannels();
@@ -273,8 +350,11 @@ export function ChannelsPage(): JSX.Element {
 
   const handleRefresh = async () => {
     setRefreshing(true);
-    await fetchChannels();
-    setRefreshing(false);
+    try {
+      await fetchChannels();
+    } finally {
+      setRefreshing(false);
+    }
   };
 
   const handleToggleConnection = async (id: string, currentStatus: string) => {
@@ -292,6 +372,24 @@ export function ChannelsPage(): JSX.Element {
     setActionId(null);
   };
 
+  const openCreateDialog = () => {
+    setEditingChannel(null);
+    setDialogMode("create");
+    setDialogOpen(true);
+  };
+
+  const openEditDialog = (channel: Channel) => {
+    setEditingChannel(channel);
+    setDialogMode("edit");
+    setDialogOpen(true);
+  };
+
+  const closeDialog = () => {
+    setDialogOpen(false);
+    setEditingChannel(null);
+    setDialogMode("create");
+  };
+
   return (
     <div className="flex flex-col gap-6">
       <div>
@@ -305,13 +403,13 @@ export function ChannelsPage(): JSX.Element {
         <Button variant="outline" size="icon" className="h-9 w-9" onClick={() => void handleRefresh()} disabled={refreshing}>
           <RefreshCw className={cn("h-4 w-4", refreshing && "animate-spin")} />
         </Button>
-        <Button onClick={() => setDialogOpen(true)}>
+        <Button onClick={openCreateDialog}>
           <Plus className="mr-2 h-4 w-4" />
           {t("actions.create")}
         </Button>
       </div>
 
-      {error ? (
+      {error && hasChannels ? (
         <div className="rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
           {error.message}
         </div>
@@ -319,6 +417,8 @@ export function ChannelsPage(): JSX.Element {
 
       {loading && channels.length === 0 ? (
         <div className="py-20 text-center text-sm text-muted-foreground">{t("actions.loading")}</div>
+      ) : showErrorState ? (
+        <ErrorState message={error?.message ?? t("error.title")} onRetry={() => void handleRefresh()} />
       ) : channels.length === 0 ? (
         <Card className="border-dashed">
           <CardHeader>
@@ -371,6 +471,16 @@ export function ChannelsPage(): JSX.Element {
                       variant="outline"
                       size="sm"
                       className="flex-1"
+                      onClick={() => openEditDialog(channel)}
+                      disabled={actionId === channel.id}
+                    >
+                      <Pencil className="mr-1.5 h-3.5 w-3.5" />
+                      {t("actions.edit")}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="flex-1"
                       onClick={() => void handleToggleConnection(channel.id, channel.status)}
                       disabled={actionId === channel.id}
                     >
@@ -394,7 +504,7 @@ export function ChannelsPage(): JSX.Element {
         </div>
       )}
 
-      <AddChannelDialog open={dialogOpen} onClose={() => setDialogOpen(false)} />
+      <ChannelDialog open={dialogOpen} mode={dialogMode} channel={editingChannel} onClose={closeDialog} />
     </div>
   );
 }

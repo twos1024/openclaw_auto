@@ -7,6 +7,7 @@
   "actions": {
     "create": "チャネル作成",
     "loading": "チャネルを読み込み中...",
+    "edit": "編集",
     "connect": "接続",
     "disconnect": "切断",
     "confirmDelete": "チャネル「{{name}}」を削除しますか？"
@@ -15,6 +16,10 @@
     "title": "まだチャネルがありません",
     "description": "まずチャネルを作成し、提供元とエージェントを紐づけます。",
     "cta": "最初のチャネルを作成"
+  },
+  "error": {
+    "title": "チャネルを読み込めませんでした",
+    "cta": "再試行"
   },
   "status": {
     "connected": "接続済み",
@@ -30,8 +35,10 @@
     "updatedAt": "更新日時: {{value}}"
   },
   "dialog": {
-    "title": "チャネルを作成",
-    "description": "基本情報を入力し、紐づける提供元とエージェントを選択します。",
+    "titleCreate": "チャネルを作成",
+    "titleEdit": "チャネルを編集",
+    "descriptionCreate": "基本情報を入力し、紐づける提供元とエージェントを選択します。",
+    "descriptionEdit": "チャネル情報、提供元の紐づけ、エージェントの紐づけを更新します。",
     "fields": {
       "name": "名前",
       "type": "チャネル種別",
@@ -64,11 +71,14 @@
     "actions": {
       "cancel": "キャンセル",
       "create": "チャネル作成",
-      "creating": "作成中..."
+      "creating": "作成中...",
+      "update": "変更を保存",
+      "updating": "保存中..."
     },
     "errors": {
       "nameRequired": "チャネル名を入力してください。",
-      "createFailed": "チャネルの作成に失敗しました。もう一度お試しください。"
+      "createFailed": "チャネルの作成に失敗しました。もう一度お試しください。",
+      "updateFailed": "チャネルの更新に失敗しました。もう一度お試しください。"
     }
   }
 }

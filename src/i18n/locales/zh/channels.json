@@ -7,6 +7,7 @@
   "actions": {
     "create": "新建通道",
     "loading": "正在加载通道...",
+    "edit": "编辑",
     "connect": "连接",
     "disconnect": "断开",
     "confirmDelete": "确认删除通道“{{name}}”吗？"
@@ -15,6 +16,10 @@
     "title": "还没有通道",
     "description": "创建一个通道后，即可绑定提供方和智能体。",
     "cta": "创建第一个通道"
+  },
+  "error": {
+    "title": "无法加载通道",
+    "cta": "重试"
   },
   "status": {
     "connected": "已连接",
@@ -30,8 +35,10 @@
     "updatedAt": "更新时间：{{value}}"
   },
   "dialog": {
-    "title": "创建通道",
-    "description": "填写通道基础信息，并选择可绑定的提供方与智能体。",
+    "titleCreate": "创建通道",
+    "titleEdit": "编辑通道",
+    "descriptionCreate": "填写通道基础信息，并选择可绑定的提供方与智能体。",
+    "descriptionEdit": "更新通道信息、提供方绑定以及已绑定的智能体。",
     "fields": {
       "name": "名称",
       "type": "通道类型",
@@ -64,11 +71,14 @@
     "actions": {
       "cancel": "取消",
       "create": "创建通道",
-      "creating": "正在创建..."
+      "creating": "正在创建...",
+      "update": "保存更改",
+      "updating": "保存中..."
     },
     "errors": {
       "nameRequired": "请输入通道名称。",
-      "createFailed": "创建通道失败，请重试。"
+      "createFailed": "创建通道失败，请重试。",
+      "updateFailed": "更新通道失败，请重试。"
     }
   }
 }
