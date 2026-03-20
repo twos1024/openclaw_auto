@@ -232,6 +232,16 @@ const STDERR_RULES: Array<{
     code: "HTTP_404",
   },
   {
+    id: "npm_git_error",
+    pattern: /(npm error code 128|an unknown git error occurred|NativeCommandError.*128|128.*NativeCommandError)/i,
+    title: "npm 安装失败（git 错误码 128）",
+    message: "npm 在安装过程中调用 git 失败，退出码 128 表示 git fatal 错误。",
+    suggestion:
+      "请依次排查：① 运行 git --version 确认 git 已安装并在 PATH 中；② 运行 npm cache clean --force 清除缓存；③ 若网络屏蔽了 git:// 协议（9418 端口），执行 git config --global url.\"https://\".insteadOf git:// 强制走 HTTPS。",
+    severity: "high",
+    code: "E_INSTALL_COMMAND_FAILED",
+  },
+  {
     id: "network_failure",
     pattern: /(ENOTFOUND|ECONNRESET|socket hang up|registry\.npmjs\.org|network request failed|self signed certificate|proxy)/i,
     title: "网络或镜像异常",
