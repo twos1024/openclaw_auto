@@ -173,5 +173,35 @@
     "current": "現在のシステム",
     "install": "インストール方法：",
     "pathHint": "パスのヒント："
+  },
+  "phases": {
+    "prerequisite": {
+      "title": "環境チェック",
+      "pending": {
+        "detail": "Node.js、npm、ローカルインストール条件を確認するまで待機中。",
+        "suggestion": "まず環境を更新し、Node.js と npm が検出できるか確認してください。"
+      }
+    },
+    "installCli": {
+      "title": "OpenClaw CLI をインストール",
+      "pending": {
+        "detail": "OpenClaw CLI のインストール実行を待機中。",
+        "suggestion": "インストールコマンドは公式ブートストラッパーを呼び出し、必要に応じて Node.js を補完します。"
+      }
+    },
+    "installGateway": {
+      "title": "Gateway マネージドサービスをインストール",
+      "pending": {
+        "detail": "Gateway マネージドインストールの実行を待機中。",
+        "suggestion": "CLI インストール完了後、Gateway サービスのインストールに進みます。"
+      }
+    },
+    "verify": {
+      "title": "結果を確認",
+      "pending": {
+        "detail": "実行ファイルパスと次のステップを確認するまで待機中。",
+        "suggestion": "インストール完了後、実行ファイルパスが検証され、次のステップが表示されます。"
+      }
+    }
   }
 }

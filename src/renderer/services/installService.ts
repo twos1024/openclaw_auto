@@ -11,6 +11,7 @@ import type {
 } from "../types/install";
 import type { ReadLogsData } from "../types/logs";
 import { invokeCommand } from "./tauriClient";
+import i18n from "../i18n/index";
 
 interface DetectEnvPayload {
   platform?: string;
@@ -45,34 +46,35 @@ function normalizeEnvironment(raw: DetectEnvPayload): InstallEnvironment {
 }
 
 function createBasePhases(): InstallPhase[] {
+  const t = (key: string) => i18n.t(key, { ns: "install" });
   return [
     {
       id: "prerequisite",
-      title: "环境检查",
+      title: t("phases.prerequisite.title"),
       status: "pending",
-      detail: "等待检查 Node.js、npm 与本地安装条件。",
-      suggestion: "先刷新环境，确认 Node.js 和 npm 的可见性。",
+      detail: t("phases.prerequisite.pending.detail"),
+      suggestion: t("phases.prerequisite.pending.suggestion"),
     },
     {
       id: "install-cli",
-      title: "安装 OpenClaw CLI",
+      title: t("phases.installCli.title"),
       status: "pending",
-      detail: "等待执行 OpenClaw CLI 安装。",
-      suggestion: "安装命令会调用官方安装脚本，并在必要时自动补齐 Node.js。",
+      detail: t("phases.installCli.pending.detail"),
+      suggestion: t("phases.installCli.pending.suggestion"),
     },
     {
       id: "install-gateway",
-      title: "安装 Gateway 托管服务",
+      title: t("phases.installGateway.title"),
       status: "pending",
-      detail: "等待执行 Gateway managed install。",
-      suggestion: "CLI 安装完成后会继续尝试安装 Gateway 服务。",
+      detail: t("phases.installGateway.pending.detail"),
+      suggestion: t("phases.installGateway.pending.suggestion"),
     },
     {
       id: "verify",
-      title: "结果验证",
+      title: t("phases.verify.title"),
       status: "pending",
-      detail: "等待确认可执行路径与后续操作。",
-      suggestion: "安装完成后会校验可执行路径并给出下一步建议。",
+      detail: t("phases.verify.pending.detail"),
+      suggestion: t("phases.verify.pending.suggestion"),
     },
   ];
 }

@@ -127,8 +127,7 @@ export async function installOpenclawWithTerminal(): Promise<TerminalInstallData
 // ---- helpers ----
 
 function buildOfficialInstallCommand(): { program: string; args: string[]; step: string } {
-  const noOnboard = (process.env["OPENCLAW_NO_ONBOARD"] ?? "").trim() !== "0"
-    ? true : false;
+  const noOnboard = (process.env["OPENCLAW_NO_ONBOARD"] ?? "").trim() === "1";
   const version = (process.env["OPENCLAW_VERSION"] ?? "").trim() || "latest";
 
   if (process.platform === "win32") {

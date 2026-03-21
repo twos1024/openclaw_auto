@@ -173,5 +173,35 @@
     "current": "Current",
     "install": "Install:",
     "pathHint": "Path Hint:"
+  },
+  "phases": {
+    "prerequisite": {
+      "title": "Environment check",
+      "pending": {
+        "detail": "Waiting to check Node.js, npm, and local install prerequisites.",
+        "suggestion": "Refresh the environment first to confirm Node.js and npm visibility."
+      }
+    },
+    "installCli": {
+      "title": "Install OpenClaw CLI",
+      "pending": {
+        "detail": "Waiting to run the OpenClaw CLI install.",
+        "suggestion": "The install command will call the official bootstrapper and fill in missing Node.js if needed."
+      }
+    },
+    "installGateway": {
+      "title": "Install Gateway managed service",
+      "pending": {
+        "detail": "Waiting to run the Gateway managed install.",
+        "suggestion": "After the CLI install finishes, it will continue to install the Gateway service."
+      }
+    },
+    "verify": {
+      "title": "Verify result",
+      "pending": {
+        "detail": "Waiting to confirm the executable path and next steps.",
+        "suggestion": "After the install completes, the executable path will be verified and next steps shown."
+      }
+    }
   }
 }
