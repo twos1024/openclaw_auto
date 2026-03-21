@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { buildInstallWizardModel, buildPlatformGuidance } from "../../src/services/installWizardService";
-import type { InstallActionResult, InstallEnvironment } from "../../src/types/install";
+import { buildInstallWizardModel, buildPlatformGuidance } from "../../src/renderer/services/installWizardService";
+import type { InstallActionResult, InstallEnvironment } from "../../src/renderer/types/install";
 
 const baseEnvironment: InstallEnvironment = {
   platform: "windows",

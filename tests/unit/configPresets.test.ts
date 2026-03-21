@@ -3,8 +3,8 @@ import {
   applyOpenAiCompatiblePreset,
   inferOpenAiCompatiblePresetId,
   openAiCompatiblePresets,
-} from "../../src/services/configPresets";
-import { defaultConfigValues, type ConfigFormValues } from "../../src/types/config";
+} from "../../src/renderer/services/configPresets";
+import { defaultConfigValues, type ConfigFormValues } from "../../src/renderer/types/config";
 
 function createFixture(overrides: Partial<ConfigFormValues> = {}): ConfigFormValues {
   return {

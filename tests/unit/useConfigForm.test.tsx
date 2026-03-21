@@ -3,14 +3,14 @@ import React from "react";
 import { act } from "react";
 import { createRoot } from "react-dom/client";
 import { afterAll, afterEach, describe, expect, it, vi } from "vitest";
-import { useConfigForm, type UseConfigFormResult } from "../../src/hooks/useConfigForm";
-import { defaultConfigValues } from "../../src/types/config";
+import { useConfigForm, type UseConfigFormResult } from "../../src/renderer/hooks/useConfigForm";
+import { defaultConfigValues } from "../../src/renderer/types/config";
 
 const mockReadConfig = vi.hoisted(() => vi.fn());
 const mockSaveConfig = vi.hoisted(() => vi.fn());
 const mockTestConnection = vi.hoisted(() => vi.fn());
 
-vi.mock("../../src/services/configService", () => ({
+vi.mock("../../src/renderer/services/configService", () => ({
   configService: {
     readConfig: mockReadConfig,
     saveConfig: mockSaveConfig,

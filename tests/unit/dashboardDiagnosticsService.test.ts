@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { buildDashboardDiagnosticsModel } from "../../src/services/dashboardDiagnosticsService";
-import type { DashboardProbeResult } from "../../src/types/dashboard";
-import type { ServiceActionResult } from "../../src/services/serviceService";
+import { buildDashboardDiagnosticsModel } from "../../src/renderer/services/dashboardDiagnosticsService";
+import type { DashboardProbeResult } from "../../src/renderer/types/dashboard";
+import type { ServiceActionResult } from "../../src/renderer/services/serviceService";
 
 const reachableProbe: DashboardProbeResult = {
   address: "http://127.0.0.1:18789",

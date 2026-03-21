@@ -13,17 +13,17 @@ function createInvokeMock(handlers: Record<string, InvokeHandler>) {
     return handler(payload);
   });
 
-  Object.defineProperty(window, "__TAURI__", {
+  Object.defineProperty(window, "api", {
     configurable: true,
     writable: true,
-    value: { core: { invoke } },
+    value: { invoke, on: vi.fn(), removeListener: vi.fn() },
   });
 
   return invoke;
 }
 
 async function loadServiceService() {
-  const module = await import("../../src/services/serviceService");
+  const module = await import("../../src/renderer/services/serviceService");
   return module.serviceService;
 }
 
@@ -41,7 +41,12 @@ describe("serviceService integration", () => {
   beforeEach(() => {
     vi.resetModules();
     vi.restoreAllMocks();
-    Object.defineProperty(window, "__TAURI__", {
+    Object.defineProperty(window, "api", {
+      configurable: true,
+      writable: true,
+      value: undefined,
+    });
+    Object.defineProperty(window, "electron", {
       configurable: true,
       writable: true,
       value: undefined,

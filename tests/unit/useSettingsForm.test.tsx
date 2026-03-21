@@ -3,12 +3,12 @@ import React from "react";
 import { act } from "react";
 import { createRoot } from "react-dom/client";
 import { afterAll, afterEach, describe, expect, it, vi } from "vitest";
-import { useSettingsForm, type UseSettingsFormResult } from "../../src/hooks/useSettingsForm";
+import { useSettingsForm, type UseSettingsFormResult } from "../../src/renderer/hooks/useSettingsForm";
 
 const mockReadSettings = vi.hoisted(() => vi.fn());
 const mockSaveSettings = vi.hoisted(() => vi.fn());
 
-vi.mock("../../src/services/settingsService", () => ({
+vi.mock("../../src/renderer/services/settingsService", () => ({
   settingsService: {
     readSettings: mockReadSettings,
     saveSettings: mockSaveSettings,

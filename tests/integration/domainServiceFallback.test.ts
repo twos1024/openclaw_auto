@@ -1,17 +1,17 @@
 /* @vitest-environment jsdom */
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { channelService } from "../../src/services/channelService";
-import { cronService } from "../../src/services/cronService";
-import { providerService } from "../../src/services/providerService";
-import { gatewayFetch } from "../../src/lib/gateway-client";
-import { invokeCommand } from "../../src/services/tauriClient";
+import { channelService } from "../../src/renderer/services/channelService";
+import { cronService } from "../../src/renderer/services/cronService";
+import { providerService } from "../../src/renderer/services/providerService";
+import { gatewayFetch } from "../../src/renderer/lib/gateway-client";
+import { invokeCommand } from "../../src/renderer/services/tauriClient";
 
-vi.mock("../../src/lib/gateway-client", () => ({
+vi.mock("../../src/renderer/lib/gateway-client", () => ({
   gatewayFetch: vi.fn(),
 }));
 
-vi.mock("../../src/services/tauriClient", () => ({
+vi.mock("../../src/renderer/services/tauriClient", () => ({
   invokeCommand: vi.fn(),
 }));
 

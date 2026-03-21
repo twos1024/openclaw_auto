@@ -4,8 +4,8 @@ import { act } from "react";
 import { createRoot } from "react-dom/client";
 import { MemoryRouter } from "react-router-dom";
 import { afterAll, afterEach, describe, expect, it, vi } from "vitest";
-import { SetupAssistantDialog } from "../../src/components/dialogs/SetupAssistantDialog";
-import type { RunbookModel } from "../../src/types/workspace";
+import { SetupAssistantDialog } from "../../src/renderer/components/dialogs/SetupAssistantDialog";
+import type { RunbookModel } from "../../src/renderer/types/workspace";
 
 const mockUseSetupAssistant = vi.hoisted(() => vi.fn());
 const translationMap = vi.hoisted(
@@ -21,7 +21,7 @@ const translationMap = vi.hoisted(
   }),
 );
 
-vi.mock("../../src/hooks/useSetupAssistant", () => ({
+vi.mock("../../src/renderer/hooks/useSetupAssistant", () => ({
   useSetupAssistant: mockUseSetupAssistant,
 }));
 

@@ -4,18 +4,18 @@ import { act } from "react";
 import { createRoot } from "react-dom/client";
 import { MemoryRouter } from "react-router-dom";
 import { afterAll, afterEach, describe, expect, it, vi } from "vitest";
-import { OverviewPage } from "../../src/pages/OverviewPage";
+import { OverviewPage } from "../../src/renderer/pages/OverviewPage";
 
 const mockGetOverviewStatus = vi.hoisted(() => vi.fn());
 const mockOpenDashboard = vi.hoisted(() => vi.fn());
 
-vi.mock("../../src/services/statusService", () => ({
+vi.mock("../../src/renderer/services/statusService", () => ({
   statusService: {
     getOverviewStatus: mockGetOverviewStatus,
   },
 }));
 
-vi.mock("../../src/services/serviceService", () => ({
+vi.mock("../../src/renderer/services/serviceService", () => ({
   serviceService: {
     openDashboard: mockOpenDashboard,
   },

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { inferDashboardEmbedPhase } from "../../src/services/dashboardEmbedState";
+import { inferDashboardEmbedPhase } from "../../src/renderer/services/dashboardEmbedState";
 
 describe("dashboardEmbedState", () => {
   it("treats about:blank after load as an embed-blocked state", () => {

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { defaultConfigValues, type ConfigFormValues } from "../../src/types/config";
-import { hasValidationError, validateConfigForm } from "../../src/utils/validators";
+import { defaultConfigValues, type ConfigFormValues } from "../../src/renderer/types/config";
+import { hasValidationError, validateConfigForm } from "../../src/renderer/utils/validators";
 
 function createOpenAiFixture(overrides: Partial<ConfigFormValues> = {}): ConfigFormValues {
   return {

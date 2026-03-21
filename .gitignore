@@ -1,15 +1,15 @@
 node_modules/
 dist/
+dist-main/
+dist-preload/
+release/
+out/
 test-results/
 .playwright/
 .playwright-cli/
 
-src-tauri/target/
-src-tauri/gen/
-
 tmp-*.log
 build-*.log
-tauri-smoke.*
 
 .DS_Store
 Thumbs.db

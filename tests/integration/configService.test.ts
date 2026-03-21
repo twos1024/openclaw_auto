@@ -1,8 +1,8 @@
 /* @vitest-environment jsdom */
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { configService } from "../../src/services/configService";
-import { defaultConfigValues, type ConfigFormValues } from "../../src/types/config";
+import { configService } from "../../src/renderer/services/configService";
+import { defaultConfigValues, type ConfigFormValues } from "../../src/renderer/types/config";
 
 type InvokeHandler = (payload?: Record<string, unknown>) => unknown | Promise<unknown>;
 
@@ -15,10 +15,10 @@ function createInvokeMock(handlers: Record<string, InvokeHandler>) {
     return handler(payload);
   });
 
-  Object.defineProperty(window, "__TAURI__", {
+  Object.defineProperty(window, "api", {
     configurable: true,
     writable: true,
-    value: { core: { invoke } },
+    value: { invoke, on: vi.fn(), removeListener: vi.fn() },
   });
 
   return invoke;
@@ -41,7 +41,12 @@ function createOpenAiFixture(overrides: Partial<ConfigFormValues> = {}): ConfigF
 describe("configService integration", () => {
   beforeEach(() => {
     vi.restoreAllMocks();
-    Object.defineProperty(window, "__TAURI__", {
+    Object.defineProperty(window, "api", {
+      configurable: true,
+      writable: true,
+      value: undefined,
+    });
+    Object.defineProperty(window, "electron", {
       configurable: true,
       writable: true,
       value: undefined,

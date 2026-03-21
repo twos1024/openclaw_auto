@@ -1,7 +1,7 @@
 /* @vitest-environment jsdom */
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { settingsService } from "../../src/services/settingsService";
+import { settingsService } from "../../src/renderer/services/settingsService";
 
 type InvokeHandler = (payload?: Record<string, unknown>) => unknown | Promise<unknown>;
 
@@ -14,10 +14,10 @@ function createInvokeMock(handlers: Record<string, InvokeHandler>) {
     return handler(payload);
   });
 
-  Object.defineProperty(window, "__TAURI__", {
+  Object.defineProperty(window, "api", {
     configurable: true,
     writable: true,
-    value: { core: { invoke } },
+    value: { invoke, on: vi.fn(), removeListener: vi.fn() },
   });
 
   return invoke;
@@ -26,22 +26,12 @@ function createInvokeMock(handlers: Record<string, InvokeHandler>) {
 describe("settingsService integration", () => {
   beforeEach(() => {
     vi.restoreAllMocks();
-    Object.defineProperty(window, "__TAURI__", {
+    Object.defineProperty(window, "api", {
       configurable: true,
       writable: true,
       value: undefined,
     });
-    Object.defineProperty(window, "__TAURI_INTERNALS__", {
-      configurable: true,
-      writable: true,
-      value: undefined,
-    });
-    Object.defineProperty(window, "isTauri", {
-      configurable: true,
-      writable: true,
-      value: undefined,
-    });
-    Object.defineProperty(globalThis, "isTauri", {
+    Object.defineProperty(window, "electron", {
       configurable: true,
       writable: true,
       value: undefined,
@@ -96,23 +86,17 @@ describe("settingsService integration", () => {
   });
 
   it("surfaces desktop runtime bridge failures without pretending to be browser preview", async () => {
-    Object.defineProperty(window, "isTauri", {
+    Object.defineProperty(window, "electron", {
       configurable: true,
       writable: true,
-      value: true,
-    });
-    Object.defineProperty(globalThis, "isTauri", {
-      configurable: true,
-      writable: true,
-      value: true,
+      value: { platform: "win32", versions: {} },
     });
 
     const result = await settingsService.readSettings();
 
     expect(result.issue).toMatchObject({
-      code: "E_TAURI_UNAVAILABLE",
+      code: "E_IPC_UNAVAILABLE",
     });
-    expect(result.issue?.message).toContain("桌面窗口");
     expect(result.issue?.message).not.toContain("浏览器预览模式");
   });
 });

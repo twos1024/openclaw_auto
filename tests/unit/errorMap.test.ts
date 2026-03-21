@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { extractErrorSummaries, mapErrorCode, mapStderr } from "../../src/utils/errorMap";
+import { extractErrorSummaries, mapErrorCode, mapStderr } from "../../src/renderer/utils/errorMap";
 
 describe("errorMap", () => {
   it("maps config corruption error code to readable Chinese hint", () => {

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
-import type { InstallActionResult, InstallEnvironment } from "../../src/types/install";
-import { buildInstallProgressModel, buildInstallingPhases } from "../../src/services/installProgress";
-import { parseInstallTelemetry } from "../../src/services/installTelemetry";
+import type { InstallActionResult, InstallEnvironment } from "../../src/renderer/types/install";
+import { buildInstallProgressModel, buildInstallingPhases } from "../../src/renderer/services/installProgress";
+import { parseInstallTelemetry } from "../../src/renderer/services/installTelemetry";
 
 const readyEnvironment: InstallEnvironment = {
   platform: "windows",

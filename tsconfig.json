@@ -17,8 +17,9 @@
     "jsx": "react-jsx",
     "types": ["vite/client"],
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/renderer/*"],
+      "@shared/*": ["./src/shared/*"]
     }
   },
-  "include": ["src", "tests", "playwright.config.ts", "vitest.config.ts"]
+  "include": ["src/renderer", "src/shared", "tests", "playwright.config.ts", "vitest.config.ts"]
 }

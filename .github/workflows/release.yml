@@ -23,10 +23,7 @@ jobs:
           node-version: "20"
           cache: npm
 
-      - name: Setup Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
-
-      - name: Install frontend dependencies
+      - name: Install dependencies
         run: npm ci
 
       - name: Lint
@@ -45,18 +42,15 @@ jobs:
         platform:
           - name: windows
             os: windows-latest
-            bundle: nsis
-            artifact_paths: src-tauri/target/release/bundle/nsis/*.exe
+            artifact_paths: release/*.exe
           - name: macos
             os: macos-latest
-            bundle: dmg
-            artifact_paths: src-tauri/target/release/bundle/dmg/*.dmg
+            artifact_paths: release/*.dmg
           - name: linux
             os: ubuntu-22.04
-            bundle: deb,appimage
             artifact_paths: |
-              src-tauri/target/release/bundle/deb/*.deb
-              src-tauri/target/release/bundle/appimage/*.AppImage
+              release/*.AppImage
+              release/*.deb
 
     steps:
       - name: Checkout
@@ -68,40 +62,42 @@ jobs:
           node-version: "20"
           cache: npm
 
-      - name: Setup Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
-
       - name: Install Linux system dependencies
         if: matrix.platform.os == 'ubuntu-22.04'
         run: |
           sudo apt-get update
           sudo apt-get install -y \
             build-essential \
-            curl \
-            file \
-            libayatana-appindicator3-dev \
-            librsvg2-dev \
-            libssl-dev \
-            libwebkit2gtk-4.1-dev \
-            libxdo-dev \
-            patchelf \
-            wget
+            libgtk-3-dev \
+            libnotify-dev \
+            libgconf-2-4 \
+            libnss3 \
+            libxss1 \
+            libasound2 \
+            libxtst6 \
+            xauth \
+            xvfb
 
-      - name: Install frontend dependencies
+      - name: Install dependencies
         run: npm ci
 
-      - name: Build Tauri app
-        uses: tauri-apps/tauri-action@v0
+      - name: Build Electron app
+        run: npm run package
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
         with:
-          projectPath: .
-          tagName: ${{ github.ref_name }}
-          releaseName: ClawDesk ${{ github.ref_name }}
-          releaseBody: Automated release build for ClawDesk.
-          releaseDraft: false
+          tag_name: ${{ github.ref_name }}
+          name: ClawDesk ${{ github.ref_name }}
+          body: Automated release build for ClawDesk.
+          draft: false
           prerelease: false
-          args: --bundles ${{ matrix.platform.bundle }}
+          files: ${{ matrix.platform.artifact_paths }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload bundle artifact
         uses: actions/upload-artifact@v7

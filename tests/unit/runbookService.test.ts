@@ -1,8 +1,8 @@
 /* @vitest-environment jsdom */
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { runbookService } from "../../src/services/runbookService";
-import type { RunbookModel } from "../../src/types/workspace";
+import { runbookService } from "../../src/renderer/services/runbookService";
+import type { RunbookModel } from "../../src/renderer/types/workspace";
 
 type InvokeHandler = (payload?: Record<string, unknown>) => unknown | Promise<unknown>;
 
@@ -15,10 +15,10 @@ function createInvokeMock(handlers: Record<string, InvokeHandler>) {
     return handler(payload);
   });
 
-  Object.defineProperty(window, "__TAURI__", {
+  Object.defineProperty(window, "api", {
     configurable: true,
     writable: true,
-    value: { core: { invoke } },
+    value: { invoke, on: vi.fn(), removeListener: vi.fn() },
   });
 
   return invoke;
@@ -91,22 +91,12 @@ function createRunbookModel(overrides?: Partial<RunbookModel>): RunbookModel {
 describe("runbookService", () => {
   beforeEach(() => {
     vi.restoreAllMocks();
-    Object.defineProperty(window, "__TAURI__", {
+    Object.defineProperty(window, "api", {
       configurable: true,
       writable: true,
       value: undefined,
     });
-    Object.defineProperty(window, "__TAURI_INTERNALS__", {
-      configurable: true,
-      writable: true,
-      value: undefined,
-    });
-    Object.defineProperty(window, "isTauri", {
-      configurable: true,
-      writable: true,
-      value: undefined,
-    });
-    Object.defineProperty(globalThis, "isTauri", {
+    Object.defineProperty(window, "electron", {
       configurable: true,
       writable: true,
       value: undefined,
@@ -147,15 +137,10 @@ describe("runbookService", () => {
   });
 
   it("builds a runtime recovery runbook when desktop shell is present without invoke bridge", async () => {
-    Object.defineProperty(window, "isTauri", {
+    Object.defineProperty(window, "electron", {
       configurable: true,
       writable: true,
-      value: true,
-    });
-    Object.defineProperty(globalThis, "isTauri", {
-      configurable: true,
-      writable: true,
-      value: true,
+      value: { platform: "win32", versions: {} },
     });
 
     const result = await runbookService.getRunbookModel();

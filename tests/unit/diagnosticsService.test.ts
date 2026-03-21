@@ -3,8 +3,8 @@ import {
   buildDiagnosticSummaryText,
   buildDiagnosticsDownloadName,
   buildExportFeedback,
-} from "../../src/services/diagnosticsService";
-import type { DiagnosticSummary } from "../../src/types/logs";
+} from "../../src/renderer/services/diagnosticsService";
+import type { DiagnosticSummary } from "../../src/renderer/types/logs";
 
 const summaryFixture: DiagnosticSummary = {
   generatedAt: "2026-03-16T08:00:00.000Z",

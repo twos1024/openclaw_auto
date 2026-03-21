@@ -1,7 +1,7 @@
 /* @vitest-environment jsdom */
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { statusService } from "../../src/services/statusService";
+import { statusService } from "../../src/renderer/services/statusService";
 
 type InvokeHandler = (payload?: Record<string, unknown>) => unknown | Promise<unknown>;
 
@@ -14,10 +14,10 @@ function createInvokeMock(handlers: Record<string, InvokeHandler>) {
     return handler(payload);
   });
 
-  Object.defineProperty(window, "__TAURI__", {
+  Object.defineProperty(window, "api", {
     configurable: true,
     writable: true,
-    value: { core: { invoke } },
+    value: { invoke, on: vi.fn(), removeListener: vi.fn() },
   });
 
   return invoke;
@@ -26,22 +26,12 @@ function createInvokeMock(handlers: Record<string, InvokeHandler>) {
 describe("statusService integration", () => {
   beforeEach(() => {
     vi.restoreAllMocks();
-    Object.defineProperty(window, "__TAURI__", {
+    Object.defineProperty(window, "api", {
       configurable: true,
       writable: true,
       value: undefined,
     });
-    Object.defineProperty(window, "__TAURI_INTERNALS__", {
-      configurable: true,
-      writable: true,
-      value: undefined,
-    });
-    Object.defineProperty(window, "isTauri", {
-      configurable: true,
-      writable: true,
-      value: undefined,
-    });
-    Object.defineProperty(globalThis, "isTauri", {
+    Object.defineProperty(window, "electron", {
       configurable: true,
       writable: true,
       value: undefined,
@@ -297,15 +287,10 @@ describe("statusService integration", () => {
   });
 
   it("builds a runtime-unavailable overview when desktop shell is present without invoke bridge", async () => {
-    Object.defineProperty(window, "isTauri", {
+    Object.defineProperty(window, "electron", {
       configurable: true,
       writable: true,
-      value: true,
-    });
-    Object.defineProperty(globalThis, "isTauri", {
-      configurable: true,
-      writable: true,
-      value: true,
+      value: { platform: "win32", versions: {} },
     });
 
     const result = await statusService.getOverviewStatus();
@@ -322,7 +307,7 @@ describe("statusService integration", () => {
     expect(data.runtime.level).toBe("offline");
     expect(data.runtime.meta).toEqual(
       expect.arrayContaining([
-        expect.objectContaining({ label: "Mode", value: "tauri-runtime-unavailable" }),
+        expect.objectContaining({ label: "Mode", value: "electron-runtime-unavailable" }),
         expect.objectContaining({ label: "Invoke Bridge", value: "missing" }),
       ]),
     );
