@@ -2,6 +2,19 @@
 
 All notable changes to ClawDesk (OpenClaw Manager) will be documented in this file.
 
+## [2.7.0] — 2026-03-22
+
+### Fixed
+
+- **Windows memory exhaustion on gateway startup**: Spawning multiple `openclaw.cmd` processes on Windows each started a full `node.exe` instance consuming up to 1.4 GB heap. Fixed by capping spawned Node.js heap at 256 MB via `NODE_OPTIONS=--max-old-space-size=256` on all `run_command` invocations.
+- **Orphan `node.exe` processes after app close**: On Windows, `kill_on_drop` only terminated the direct child (`cmd.exe`) while grandchildren (`node.exe`) survived. Added a PID registry (`ACTIVE_CHILD_PIDS`) that tracks all spawned processes and kills their full process trees via `kill_all_active_children()` on the `WindowEvent::Destroyed` event.
+- **Redundant status polling in SettingsPage**: `GatewayCard` previously registered its own independent 5-second `setInterval` in addition to the shared `useGatewayControl` hook, doubling the number of status-check processes. Refactored to delegate entirely to the shared hook.
+- **Repeated PATH filesystem I/O**: `normalized_path_env()` was re-scanning the filesystem on every `run_command` call. Added a `OnceLock`-backed cache (`NORMALIZED_PATH_ENV`) on Windows so the path is resolved once per process lifetime.
+
+### Changed
+
+- **Status cache TTLs increased**: `DETECT_ENV_CACHE_TTL_MS` raised from 2 s → 30 s; `GATEWAY_STATUS_CACHE_TTL_MS` raised from 2 s → 5 s (Rust and TypeScript); reduces IPC chatter and process spawning frequency.
+
 ## [2.6.0] — 2026-03-22
 
 ### Refactored
