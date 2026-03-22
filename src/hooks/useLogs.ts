@@ -13,7 +13,7 @@ import {
   type DiagnosticsExportFormat,
 } from "../services/diagnosticsService";
 import { settingsService } from "../services/settingsService";
-import { getHostDiagnostics, invokeCommand } from "../services/hostClient";
+import { getRuntimeDiagnostics, invokeCommand } from "../services/tauriClient";
 import { extractErrorSummaries, mapErrorCode, mapStderr } from "../utils/errorMap";
 
 export interface UseLogsResult {
@@ -128,7 +128,7 @@ export function useLogs(initialSource: LogSource = "gateway"): UseLogsResult {
     setExportFeedback(null);
     setBundleFeedback(null);
 
-    const runtime = getHostDiagnostics();
+    const runtime = getRuntimeDiagnostics();
     if (runtime.mode === "browser-preview") {
       setRawLines([]);
       setLoadError("当前运行在浏览器预览模式，无法读取本地日志文件。");
@@ -137,9 +137,9 @@ export function useLogs(initialSource: LogSource = "gateway"): UseLogsResult {
       return;
     }
 
-    if (runtime.mode === "host-runtime-unavailable") {
+    if (runtime.mode === "tauri-runtime-unavailable") {
       setRawLines([]);
-      setLoadError("当前已进入桌面窗口，但宿主命令桥不可用，无法读取本地日志文件。");
+      setLoadError("当前已进入桌面窗口，但 Tauri 命令桥不可用，无法读取本地日志文件。");
       setLastUpdatedAt(new Date().toISOString());
       setIsLoading(false);
       return;
@@ -201,8 +201,8 @@ export function useLogs(initialSource: LogSource = "gateway"): UseLogsResult {
       setFeedback(null);
 
       const text = buildDiagnosticSummaryText(diagnosticSummary, visibleLines);
-      const runtime = getHostDiagnostics();
-      if (runtime.mode === "browser-preview" || runtime.mode === "host-runtime-unavailable") {
+      const runtime = getRuntimeDiagnostics();
+      if (runtime.mode === "browser-preview" || runtime.mode === "tauri-runtime-unavailable") {
         const filename = buildDiagnosticsDownloadName(source, "text");
         downloadTextFile(filename, text);
         setFeedback(
@@ -210,7 +210,7 @@ export function useLogs(initialSource: LogSource = "gateway"): UseLogsResult {
             ? format === "bundle"
               ? `当前为预览模式，已回退导出文本摘要 ${filename}`
               : `诊断信息已导出：${filename}`
-            : `桌面宿主命令桥不可用，已回退导出文本摘要 ${filename}`,
+            : `桌面命令桥不可用，已回退导出文本摘要 ${filename}`,
         );
         setLoading(false);
         return;

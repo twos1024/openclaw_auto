@@ -105,7 +105,7 @@ export function DashboardPage(): JSX.Element {
   };
 
   return (
-    <div className="grid gap-4">
+    <div style={{ display: "grid", gap: 16 }}>
       <DashboardToolbar
         address={address}
         statusDetail={status?.statusDetail ?? t("toolbar.statusWaiting")}
@@ -136,24 +136,51 @@ export function DashboardPage(): JSX.Element {
           onPhaseChange={setEmbedPhase}
         />
       ) : (
-        <section className="grid gap-3.5 rounded-2xl border border-border bg-card p-5">
-          <h3 className="m-0 text-base font-semibold">{t("unavailable.title")}</h3>
-          <p className="m-0 text-sm text-muted-foreground">
-            {status?.suggestion ?? t("unavailable.description")}
+        <section
+          style={{
+            border: "1px solid #e2e8f0",
+            borderRadius: 16,
+            background: "#ffffff",
+            padding: 20,
+            display: "grid",
+            gap: 14,
+          }}
+        >
+          <h3 style={{ margin: 0 }}>{t("unavailable.title")}</h3>
+          <p style={{ margin: 0, color: "#475569" }}>
+            {status?.suggestion ??
+              t("unavailable.description")}
           </p>
-          <div className="flex flex-wrap gap-2.5">
+          <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
             <button
               type="button"
               onClick={() => void startGateway()}
               disabled={loadingByAction.start}
-              className="rounded-lg bg-teal-700 px-3.5 py-2.5 text-sm font-bold text-white disabled:cursor-not-allowed disabled:opacity-70"
+              style={{
+                border: "none",
+                borderRadius: 8,
+                background: "#0f766e",
+                color: "#ffffff",
+                padding: "10px 14px",
+                fontWeight: 700,
+                cursor: loadingByAction.start ? "not-allowed" : "pointer",
+                opacity: loadingByAction.start ? 0.7 : 1,
+              }}
             >
               {loadingByAction.start ? t("unavailable.actions.starting") : t("unavailable.actions.start")}
             </button>
             <button
               type="button"
               onClick={openSetupAssistant}
-              className="rounded-lg border border-border bg-card px-3.5 py-2.5 text-sm font-bold text-foreground"
+              style={{
+                border: "1px solid #cbd5e1",
+                borderRadius: 8,
+                background: "#ffffff",
+                color: "#0f172a",
+                padding: "10px 14px",
+                fontWeight: 700,
+                cursor: "pointer",
+              }}
             >
               {t("unavailable.actions.setupAssistant")}
             </button>

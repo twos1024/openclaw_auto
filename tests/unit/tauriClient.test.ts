@@ -2,16 +2,30 @@
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { getRuntimeDiagnostics, invokeCommand, isTauriRuntime } from "../../src/services/tauriClient";
-import {
-  resetHostBridgeGlobals,
-  simulateHostRuntimeAvailable,
-  simulateHostRuntimeUnavailable,
-} from "../helpers/hostBridgeMock";
 
 describe("tauriClient runtime detection", () => {
   beforeEach(() => {
     vi.restoreAllMocks();
-    resetHostBridgeGlobals();
+    Object.defineProperty(window, "__TAURI__", {
+      configurable: true,
+      writable: true,
+      value: undefined,
+    });
+    Object.defineProperty(window, "__TAURI_INTERNALS__", {
+      configurable: true,
+      writable: true,
+      value: undefined,
+    });
+    Object.defineProperty(window, "isTauri", {
+      configurable: true,
+      writable: true,
+      value: undefined,
+    });
+    Object.defineProperty(globalThis, "isTauri", {
+      configurable: true,
+      writable: true,
+      value: undefined,
+    });
   });
 
   it("returns browser-preview when neither shell nor invoke bridge is available", async () => {
@@ -29,8 +43,22 @@ describe("tauriClient runtime detection", () => {
   });
 
   it("returns tauri-runtime-available when official invoke bridge is present", async () => {
-    simulateHostRuntimeAvailable({
-      detect_env: async () => ({ success: true, data: { ok: true } }),
+    Object.defineProperty(window, "isTauri", {
+      configurable: true,
+      writable: true,
+      value: true,
+    });
+    Object.defineProperty(globalThis, "isTauri", {
+      configurable: true,
+      writable: true,
+      value: true,
+    });
+    Object.defineProperty(window, "__TAURI_INTERNALS__", {
+      configurable: true,
+      writable: true,
+      value: {
+        invoke: vi.fn(async () => ({ success: true, data: { ok: true } })),
+      },
     });
 
     const runtime = getRuntimeDiagnostics();
@@ -48,7 +76,16 @@ describe("tauriClient runtime detection", () => {
   });
 
   it("returns tauri-runtime-unavailable when shell is detected but invoke bridge is missing", async () => {
-    simulateHostRuntimeUnavailable();
+    Object.defineProperty(window, "isTauri", {
+      configurable: true,
+      writable: true,
+      value: true,
+    });
+    Object.defineProperty(globalThis, "isTauri", {
+      configurable: true,
+      writable: true,
+      value: true,
+    });
 
     const runtime = getRuntimeDiagnostics();
     const result = await invokeCommand("detect_env");
@@ -60,6 +97,6 @@ describe("tauriClient runtime detection", () => {
       bridgeSource: "none",
     });
     expect(isTauriRuntime()).toBe(false);
-    expect(result.error?.code).toBe("E_HOST_UNAVAILABLE");
+    expect(result.error?.code).toBe("E_TAURI_UNAVAILABLE");
   });
 });

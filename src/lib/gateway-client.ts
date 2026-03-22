@@ -2,7 +2,7 @@
  * Gateway HTTP client — calls the openclaw gateway REST API directly.
  * The gateway runs on localhost at the port reported by get_gateway_status.
  */
-import { invokeCommand } from "@/services/hostClient";
+import { invokeCommand } from "@/services/tauriClient";
 
 interface CachedUrl {
   url: string;
