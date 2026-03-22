@@ -62,7 +62,7 @@
 | UI 框架 | React 18 + TS | 已使用 | 可继续，后续评估 React 19 |
 | 构建 | Vite 5 | 已使用 | 保持 |
 | 状态管理 | Zustand 分域 Store | 已拆分骨架 | 按领域继续补齐副作用层 |
-| 样式系统 | Tailwind v4 + 语义 CSS 变量 | 已有变量体系 | 持续去硬编码色值 |
+| 样式系统 | Tailwind v4 + 语义 CSS 变量 | 已有变量体系 | 已完成：全部组件使用 Tailwind 类 + `dark:` 变体，无内联样式 |
 | 组件原语 | 轻量 shadcn/Radix | 仅部分接入 | 按弹窗、tabs、tooltip 逐步收敛 |
 | 国际化 | i18next + react-i18next | 骨架已接入 | 下一步全页面替换硬编码文案 |
 | 前后端通信 | IPC + HTTP/SSE 双通道 | 已具备 | 严格按职责边界执行 |
@@ -106,8 +106,14 @@
 ### `src/services` 与 `src/lib`
 
 - `services/tauriClient.ts`: 运行时检测、invoke 封装、统一错误信封
+- `services/configService.ts`: 配置 I/O 编排（读取、保存、连接测试）
+- `services/configParser.ts`: 配置解析纯函数（从 configService 提取，提高可测试性）
+- `services/installService.ts`: 安装流程 I/O 编排
+- `services/installPhases.ts`: 安装阶段构建纯函数（从 installService 提取）
+- `services/installIssues.ts`: 安装问题分类与规范化纯函数（从 installService 提取）
 - `lib/gateway-client.ts`: Gateway 地址缓存、HTTP 请求、SSE 建联
 - 约束：页面禁止绕过这两层直接访问底层 transport
+- 设计原则：服务层拆分为 I/O 编排与纯逻辑两部分，纯逻辑可独立单元测试
 
 ### `src/types`
 
@@ -206,11 +212,20 @@
 
 ## 7. 当前差距与技术债
 
-1. 术语债：文档和代码仍有 `Instance/APIMart` 残留（尤其 System SPEC 与 Rust service）。
-2. 架构债：`agent_service` 仍是 wrapper，尚未形成独立域服务。
-3. 产品债：`channels/providers/cron/setup` 仍是占位页，缺业务闭环。
-4. 国际化债：仅骨架与少量 key，页面文案仍大量硬编码中文。
-5. 测试债：新增域还没有覆盖 unit/integration/e2e 的完整矩阵。
+**已解决：**
+
+- ~~术语债~~：Instance/APIMart 已在 v2.1.0 全面清理。
+- ~~产品债~~：channels/providers/cron 页面已在 v2.0.0 完成闭环。
+- ~~国际化债~~：全部页面文案已 i18n 化（20×3=60 个翻译文件）。
+- ~~样式债~~：内联样式已全部替换为 Tailwind CSS 工具类，支持暗色主题。
+- ~~服务层债~~：configService 和 installService 已提取纯函数模块，提高可测试性。
+
+**仍存在：**
+
+1. 架构债：`agent_service` 尚未形成完全独立的域服务（仍依赖 CLI wrapper）。
+2. 测试债：Agent/Channel/Provider/Cron 领域的前端测试覆盖仍需加强。
+3. 性能债：长时间操作（安装、日志导出）缺少 AbortController 取消机制。
+4. 跨平台 CI 债：大部分 CI 在 Linux 跑，Windows/macOS 构建可能静默失败。
 
 ---
 

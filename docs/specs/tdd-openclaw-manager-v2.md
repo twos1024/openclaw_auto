@@ -12,7 +12,7 @@
 |------|------|---------|------|
 | G1 | 对齐 ClawX 功能集 | Agent / Channel / Provider / Cron / Skills 五大领域覆盖 | ✅ 完成 |
 | G2 | 去除 APIMart | 代码中不再出现 `apimart` 字面量，渠道改为 Provider 模型 | ✅ 完成 |
-| G3 | 暗色/亮色/跟随系统 | 全部组件使用 CSS 变量，无硬编码颜色 | ✅ 完成（含 ConfigPage/StatusBadge 修复） |
+| G3 | 暗色/亮色/跟随系统 | 全部组件使用 CSS 变量，无硬编码颜色 | ✅ 完成（含 ConfigPage/StatusBadge 修复 + NoticeBanner/PageHero/HomeEntryPage 内联样式清理） |
 | G4 | 国际化 | 中/英/日三语，所有用户可见字符串走 i18n | ✅ 完成（20×3=60 翻译文件） |
 | G5 | 首次启动引导 | Setup Wizard（欢迎→运行时→Provider→安装→完成） | ✅ 完成 |
 | G6 | 打包体积 ≤ 5 MB | NSIS 安装包 ≤ 5 MB | ⏳ 待验证 |

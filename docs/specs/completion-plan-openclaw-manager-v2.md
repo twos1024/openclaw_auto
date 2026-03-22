@@ -177,6 +177,13 @@ Agent 数据应统一包含：
 - 假成功、假空列表、时间戳 ID fallback。
 - 没有实际调用点的兼容代码。
 
+**已完成的清理：**
+
+- ✅ 服务层大文件拆分（configService 453→240 行，installService 470→90 行）。
+- ✅ 纯逻辑提取为独立模块（configParser, installPhases, installIssues），可独立单测。
+- ✅ UI 层内联样式全部替换为 Tailwind 工具类，统一暗色主题支持。
+- ✅ HomeEntryPage 复用 Button 组件，消除原生 `<button>` 样式不一致。
+
 ## 7. 推荐实施顺序
 
 1. 先收口 Agent 服务层错误语义。

@@ -12,12 +12,14 @@ ClawDesk 是 OpenClaw 的本地桌面控制台，基于 `Tauri v2 + React + Vite
 - 在桌面内嵌 OpenClaw Dashboard，并提供加载失败 / 超时 / iframe 阻断诊断
 - 查看安装 / 启动 / Gateway 日志
 - 导出诊断摘要和 ZIP 诊断包
-- 管理 ClawDesk 自身设置
+- 管理 Agent、Channel、Provider、Cron 等领域实体
+- 管理 ClawDesk 自身设置（主题、语言、轮询间隔等）
 - 在 Overview 页聚合展示当前健康状态和推荐下一步动作
 
 ## 当前页面
 
 - `OverviewPage`: 聚合健康状态、推荐下一步动作、支持直接打开 Dashboard
+- `HomeEntryPage`: 首页入口、自动运行 launch check、blocker 引导、深链到具体步骤
 - `DashboardPage`: 内嵌 Dashboard、外部打开、页面加载诊断、平台排障提示
 - `InstallPage`: 环境检查、安装阶段时间线、安装结果提示、Install Wizard、平台安装指导
 - `ConfigPage`: OpenAI-compatible / Ollama 配置、校验、测试连接、自动备份后保存
@@ -25,6 +27,10 @@ ClawDesk 是 OpenClaw 的本地桌面控制台，基于 `Tauri v2 + React + Vite
 - `LogsPage`: 日志查看、关键字过滤、错误摘要、导出文本诊断、导出 ZIP 诊断包
 - `SettingsPage`: 诊断目录、日志行数限制、Gateway 轮询间隔、安装源偏好、运行时诊断
 - `RunbookPage`: 汇总 launch check、当前 blocker、恢复步骤和工作流上下文
+- `AgentsPage`: Agent 列表与创建向导
+- `ChannelsPage`: Channel 管理与状态展示
+- `ProvidersPage`: Provider 管理与 API Key 校验
+- `CronPage`: Cron 定时任务管理
 
 全局对话框：
 
@@ -35,23 +41,51 @@ ClawDesk 是 OpenClaw 的本地桌面控制台，基于 `Tauri v2 + React + Vite
 
 ```text
 src/
-  components/
-  hooks/
-  pages/
-  services/
-  types/
-  utils/
+  components/           # React UI 组件（按功能域分组）
+    agents/             # Agent 创建向导
+    common/             # 通用组件（ErrorBoundary, LoadingSpinner, NoticeBanner, PageHero 等）
+    config/             # 配置表单（OpenAI, Ollama）
+    dashboard/          # Dashboard 内嵌与诊断
+    dialogs/            # 全局对话框（SetupAssistant）
+    install/            # 安装向导与进度
+    layout/             # 应用壳层（AppShell, Sidebar, 路由守卫）
+    logs/               # 日志查看器与错误摘要
+    navigation/         # 导航组件
+    overview/           # 概览页组件
+    runbook/            # Runbook 组件
+    service/            # Gateway 服务控制
+    ui/                 # 基础 UI 组件库（基于 Radix）
+  hooks/                # 自定义 React Hooks
+  i18n/                 # i18next 国际化（中/英/日）
+  lib/                  # 工具函数（utils, preferences, constants, gateway-client）
+  pages/                # 页面组件（19 个路由）
+  services/             # 业务逻辑层
+    tauriClient.ts      # Tauri 后端桥接（运行时检测、invoke 封装）
+    configService.ts    # 配置读写与连接测试
+    configParser.ts     # 配置解析纯函数（从 configService 提取）
+    installService.ts   # 安装流程编排
+    installPhases.ts    # 安装阶段构建纯函数（从 installService 提取）
+    installIssues.ts    # 安装问题规范化纯函数（从 installService 提取）
+    ...                 # statusService, serviceService, diagnosticsService 等
+  store/                # Zustand 状态管理（7 个领域 Store）
+  types/                # TypeScript 类型定义（16 个类型文件）
+  utils/                # 校验器、错误映射
+  router.tsx            # React Router 路由配置（Hash 模式）
+  AppRuntime.tsx        # 应用初始化、主题/语言设置
+  main.tsx              # 入口文件
 src-tauri/
   src/
-    adapters/
-    commands/
-    models/
-    services/
+    adapters/           # 平台抽象（shell, platform, file_ops）
+    commands/           # Tauri IPC 命令处理（20+ 命令）
+    models/             # 错误类型、CommandResult 封装
+    services/           # 业务逻辑（config, gateway, connectivity 等）
 tests/
-  unit/
-  integration/
-  e2e/
-docs/specs/
+  unit/                 # Vitest 单元测试
+  integration/          # 集成测试（Mock Tauri Bridge）
+  e2e/                  # Playwright 端到端测试
+docs/
+  specs/                # 产品与技术规格文档
+  release-notes/        # 版本发布说明
 ```
 
 ## 本地环境要求
@@ -135,20 +169,11 @@ npm run tauri:build
 
 ## 构建产物
 
-在当前 Windows 本地环境里，`npm run tauri:build` 已验证通过，产物位于：
+`npm run tauri:build` 产物位于：
 
-- `src-tauri/target/release/bundle/msi/ClawDesk_0.6.0_x64_en-US.msi`
-- `src-tauri/target/release/bundle/nsis/ClawDesk_0.6.0_x64-setup.exe`
-
-可执行文件位于：
-
-- `src-tauri/target/release/clawdesk.exe`
-
-额外已验证：
-
-- `ClawDesk_0.6.0_x64-setup.exe` 可静默安装到临时目录
-- 安装后的 `clawdesk.exe` 可成功启动
-- 静默卸载与目录清理可完成
+- `src-tauri/target/release/bundle/nsis/ClawDesk_{version}_x64-setup.exe`（Windows NSIS）
+- `src-tauri/target/release/bundle/msi/ClawDesk_{version}_x64_en-US.msi`（Windows MSI）
+- `src-tauri/target/release/clawdesk.exe`（可执行文件）
 
 GitHub Actions release 现已覆盖：
 
@@ -158,11 +183,11 @@ GitHub Actions release 现已覆盖：
 
 ## 测试覆盖
 
-当前测试分层如下：
+当前测试分层如下（22 个测试文件，97 个用例）：
 
-- `tests/unit`: 校验器、错误映射、诊断导出 helper
-- `tests/integration`: `configService`、`installService`、`settingsService`、`statusService`
-- `tests/e2e`: 安装流程、日志导出、设置保存、服务启动 / 端口冲突
+- `tests/unit`: 校验器、错误映射、诊断导出 helper、Store 测试、运行时检测
+- `tests/integration`: `configService`、`installService`、`serviceService`、`settingsService`、`statusService`、领域服务 fallback
+- `tests/e2e`: 安装流程、日志导出、设置保存、服务启动 / 端口冲突、Dashboard 加载
 - Rust 单元测试: 诊断包 manifest、配置脱敏
 
 ## 诊断导出
@@ -211,15 +236,18 @@ ZIP 诊断包当前包含：
 - Linux runner 会自动安装 Tauri 官方文档要求的系统依赖
 - 上传 `src-tauri/target/release/bundle/**` 作为产物
 
-## 重要实现约束
+## 架构约束
 
 - 前端页面不直接调用底层 `invoke`，统一通过 `services` 层
+- 服务层拆分为 I/O 编排（`*Service.ts`）与纯逻辑（`*Parser.ts` / `*Phases.ts` / `*Issues.ts`），提高可测试性
 - Rust 命令返回统一 `CommandResult<T>`
 - 外部命令调用带超时、stdout/stderr/exit code
 - 配置保存前自动备份
 - 错误统一映射为 `error code + message + suggestion`
 - 平台差异收敛在 `src-tauri/src/adapters`
 - macOS / Linux 的桌面运行时会自动补充常见 PATH 目录，降低 GUI 环境找不到 `npm` / `openclaw` 的概率
+- UI 组件统一使用 Tailwind CSS 工具类，不使用内联样式，全面支持暗色主题（`dark:` 变体）
+- 所有用户可见文本走 i18n（react-i18next），支持中/英/日三语
 
 ## 已验证命令
 
