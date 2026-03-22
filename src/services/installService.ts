@@ -5,7 +5,7 @@ import type {
   InstallOpenClawData,
 } from "../types/install";
 import type { ReadLogsData } from "../types/logs";
-import { invokeCommand } from "./tauriClient";
+import { invokeCommand } from "./hostClient";
 import { toFailureResult, toSuccessResult } from "./installPhases";
 
 // Re-export for consumers that imported buildInstallPhasesPreview from here

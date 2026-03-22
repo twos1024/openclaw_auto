@@ -1,4 +1,4 @@
-import type { CommandResult, RuntimeDiagnostics } from "../../types/api";
+import type { CommandResult, HostDiagnostics } from "../../types/api";
 import type {
   HealthLevel,
   OverviewAction,
@@ -11,7 +11,7 @@ import { APP_VERSION, type ConfigReadData, type DetectEnvData, type GatewayStatu
 
 const installWizardRoute = "/install?wizard=1";
 
-function formatBridgeSource(source: RuntimeDiagnostics["bridgeSource"]): string {
+function formatBridgeSource(source: HostDiagnostics["bridgeSource"]): string {
   if (source === "official-api") return "official API bridge";
   if (source === "global-fallback") return "global fallback bridge";
   return "missing";
@@ -57,16 +57,16 @@ function buildSection(
   };
 }
 
-function runtimeMeta(runtime: RuntimeDiagnostics): OverviewSection["meta"] {
+function runtimeMeta(runtime: HostDiagnostics): OverviewSection["meta"] {
   return [
     { label: "Mode", value: runtime.mode },
-    { label: "Tauri Shell", value: runtime.hasTauriShell ? "detected" : "not-detected" },
+    { label: "Host Shell", value: runtime.hasTauriShell ? "detected" : "not-detected" },
     { label: "Invoke Bridge", value: runtime.hasInvokeBridge ? "detected" : "missing" },
     { label: "Bridge Source", value: formatBridgeSource(runtime.bridgeSource) },
   ];
 }
 
-export function buildPreviewOverview(updatedAt: string, runtime: RuntimeDiagnostics): OverviewStatus {
+export function buildPreviewOverview(updatedAt: string, runtime: HostDiagnostics): OverviewStatus {
   const previewSections = {
     runtime: buildSection(
       "openclaw-runtime",
@@ -141,7 +141,7 @@ export function buildPreviewOverview(updatedAt: string, runtime: RuntimeDiagnost
 
 export function buildRuntimeUnavailableOverview(
   updatedAt: string,
-  runtime: RuntimeDiagnostics,
+  runtime: HostDiagnostics,
 ): OverviewStatus {
   const unavailableSections = {
     runtime: buildSection(
@@ -150,7 +150,7 @@ export function buildRuntimeUnavailableOverview(
       "/settings",
       "查看 Settings",
       "offline",
-      "已检测到桌面 shell，但 Tauri 命令桥不可用，因此当前无法访问本地 Rust 命令层。",
+      "已检测到桌面 shell，但宿主命令桥不可用，因此当前无法访问本地命令层。",
       updatedAt,
       runtimeMeta(runtime),
     ),
@@ -223,7 +223,7 @@ export function buildRuntimeUnavailableOverview(
 
 export function buildBackendUnavailableOverview(
   updatedAt: string,
-  runtime: RuntimeDiagnostics,
+  runtime: HostDiagnostics,
   message: string,
 ): OverviewStatus {
   const unavailableSections = {
@@ -307,7 +307,7 @@ export function buildBackendUnavailableOverview(
 export function buildRuntimeSection(
   envResult: CommandResult<DetectEnvData>,
   updatedAt: string,
-  runtime: RuntimeDiagnostics,
+  runtime: HostDiagnostics,
 ): OverviewSection {
   if (!envResult.success || !envResult.data) {
     return buildSection(
@@ -334,7 +334,7 @@ export function buildRuntimeSection(
     updatedAt,
     [
       { label: "Mode", value: runtime.mode },
-      { label: "Tauri Shell", value: runtime.hasTauriShell ? "detected" : "not-detected" },
+      { label: "Host Shell", value: runtime.hasTauriShell ? "detected" : "not-detected" },
       { label: "Invoke Bridge", value: runtime.hasInvokeBridge ? "detected" : "missing" },
       { label: "Bridge Source", value: formatBridgeSource(runtime.bridgeSource) },
       { label: "平台", value: envResult.data.platform ?? "unknown" },
@@ -499,7 +499,7 @@ export function buildSettingsSection(
     );
   }
 
-  if (settingsResult.issue?.code === "E_TAURI_UNAVAILABLE") {
+  if (settingsResult.issue?.code === "E_HOST_UNAVAILABLE") {
     return buildSection(
       "clawdesk-settings",
       "ClawDesk 设置",

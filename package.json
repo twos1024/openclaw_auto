@@ -12,6 +12,7 @@
     "lint:frontend": "eslint src tests --ext .ts,.tsx --max-warnings=0",
     "lint:rust": "node scripts/with-rust.mjs cargo fmt --manifest-path src-tauri/Cargo.toml --all -- --check",
     "test": "npm run test:unit",
+    "typecheck": "tsc --noEmit",
     "test:unit": "vitest run --reporter=default",
     "test:unit:watch": "vitest",
     "test:e2e": "playwright test --reporter=line",

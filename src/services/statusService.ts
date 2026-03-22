@@ -1,5 +1,5 @@
 import type { OverviewStatus, ServiceResult } from "../types/status";
-import { getRuntimeDiagnostics, invokeCommand } from "./tauriClient";
+import { getHostDiagnostics, invokeCommand } from "./hostClient";
 import {
   buildBackendUnavailableOverview,
   buildPreviewOverview,
@@ -13,7 +13,7 @@ function nowIso(): string {
 export const statusService = {
   async getOverviewStatus(): Promise<ServiceResult<OverviewStatus>> {
     const updatedAt = nowIso();
-    const runtime = getRuntimeDiagnostics();
+    const runtime = getHostDiagnostics();
     if (runtime.mode === "browser-preview") {
       return {
         ok: true,
@@ -21,7 +21,7 @@ export const statusService = {
       };
     }
 
-    if (runtime.mode === "tauri-runtime-unavailable") {
+    if (runtime.mode === "host-runtime-unavailable") {
       return {
         ok: true,
         data: buildRuntimeUnavailableOverview(updatedAt, runtime),

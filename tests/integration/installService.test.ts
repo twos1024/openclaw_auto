@@ -383,11 +383,11 @@ describe("installService integration", () => {
     const installResult = await installService.installOpenClaw();
 
     expect(envResult.ok).toBe(false);
-    expect(envResult.error?.code).toBe("E_TAURI_UNAVAILABLE");
+    expect(envResult.error?.code).toBe("E_HOST_UNAVAILABLE");
     expect(installResult.stage).toBe("prerequisite");
     expect(installResult.issue).toMatchObject({
       failureKind: "runtime-bridge-unavailable",
-      code: "E_TAURI_UNAVAILABLE",
+      code: "E_HOST_UNAVAILABLE",
       step: "initialize the Tauri command bridge",
     });
   });

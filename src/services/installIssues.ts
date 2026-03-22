@@ -127,7 +127,7 @@ export function classifyErrorStage(error?: BackendError): InstallPhaseId {
 
   const code = error?.code ?? "";
 
-  if (code === "E_PREVIEW_MODE" || code === "E_TAURI_UNAVAILABLE") {
+  if (code === "E_PREVIEW_MODE" || code === "E_HOST_UNAVAILABLE") {
     return "prerequisite";
   }
 
@@ -161,7 +161,7 @@ export function buildIssueFromError(error?: BackendError): InstallIssue | null {
     };
   }
 
-  if (error.code === "E_TAURI_UNAVAILABLE") {
+  if (error.code === "E_HOST_UNAVAILABLE") {
     return {
       stage: "prerequisite",
       failureKind: "runtime-bridge-unavailable",
