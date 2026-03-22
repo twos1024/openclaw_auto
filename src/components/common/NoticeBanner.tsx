@@ -1,12 +1,15 @@
 import type { ReactNode } from "react";
+import { cn } from "@/lib/utils";
 
 export type NoticeTone = "info" | "warning" | "error" | "success";
 
-const toneMap: Record<NoticeTone, { border: string; bg: string; text: string }> = {
-  info: { border: "#93c5fd", bg: "#eff6ff", text: "#1d4ed8" },
-  warning: { border: "#fcd34d", bg: "#fffbeb", text: "#92400e" },
-  error: { border: "#fca5a5", bg: "#fef2f2", text: "#991b1b" },
-  success: { border: "#86efac", bg: "#f0fdf4", text: "#166534" },
+const toneClasses: Record<NoticeTone, string> = {
+  info: "border-blue-300 bg-blue-50 text-blue-700 dark:border-blue-700 dark:bg-blue-950/40 dark:text-blue-300",
+  warning:
+    "border-amber-300 bg-amber-50 text-amber-800 dark:border-amber-700 dark:bg-amber-950/40 dark:text-amber-300",
+  error: "border-red-300 bg-red-50 text-red-800 dark:border-red-700 dark:bg-red-950/40 dark:text-red-300",
+  success:
+    "border-green-300 bg-green-50 text-green-800 dark:border-green-700 dark:bg-green-950/40 dark:text-green-300",
 };
 
 export interface NoticeBannerProps {
@@ -16,19 +19,8 @@ export interface NoticeBannerProps {
 }
 
 export function NoticeBanner({ title, tone, children }: NoticeBannerProps): JSX.Element {
-  const style = toneMap[tone];
   return (
-    <section
-      style={{
-        border: `1px solid ${style.border}`,
-        borderRadius: 12,
-        background: style.bg,
-        color: style.text,
-        padding: 14,
-        display: "grid",
-        gap: 8,
-      }}
-    >
+    <section className={cn("grid gap-2 rounded-xl border p-3.5", toneClasses[tone])}>
       <strong>{title}</strong>
       <div>{children}</div>
     </section>

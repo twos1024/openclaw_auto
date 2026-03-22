@@ -3,9 +3,15 @@ import { Link, Navigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { NoticeBanner } from "../components/common/NoticeBanner";
 import { PageHero } from "../components/common/PageHero";
+import { Button } from "../components/ui/button";
 import { useRunbook } from "../hooks/useRunbook";
 import { useShellActions } from "../hooks/useShellActions";
 import { OverviewPage } from "./OverviewPage";
+
+const linkPrimary =
+  "inline-block rounded-lg bg-primary px-3 py-2 text-sm font-bold text-primary-foreground no-underline hover:bg-primary/90 transition-colors";
+const linkOutline =
+  "inline-block rounded-lg border border-input bg-transparent px-3 py-2 text-sm font-bold text-foreground no-underline hover:bg-accent transition-colors";
 
 function blockerToneForLevel(level: string | undefined): "info" | "warning" | "error" | "success" {
   if (level === "offline") return "error";
@@ -44,25 +50,16 @@ export function HomeEntryPage(): JSX.Element {
 
   if (isLoading) {
     return (
-      <section
-        style={{
-          border: "1px solid #e2e8f0",
-          borderRadius: 12,
-          background: "#ffffff",
-          padding: 20,
-          display: "grid",
-          gap: 8,
-        }}
-      >
-        <strong style={{ color: "#0f172a" }}>{t("home.loading.title")}</strong>
-        <p style={{ margin: 0, color: "#475569" }}>{t("home.loading.description")}</p>
+      <section className="grid gap-2 rounded-xl border border-border bg-card p-5">
+        <strong className="text-foreground">{t("home.loading.title")}</strong>
+        <p className="m-0 text-muted-foreground">{t("home.loading.description")}</p>
       </section>
     );
   }
 
   if (model?.currentBlocker) {
     return (
-      <div style={{ display: "grid", gap: 16 }}>
+      <div className="grid gap-4">
         <PageHero
           title={t("home.entry.title")}
           description={t("home.entry.description")}
@@ -70,55 +67,20 @@ export function HomeEntryPage(): JSX.Element {
             checkedAt: new Date(model.lastCheckedAt).toLocaleString(),
           })}
           action={
-            <button
-              type="button"
-              onClick={openSetupAssistant}
-              style={{
-                border: "none",
-                borderRadius: 8,
-                background: "#0f172a",
-                color: "#ffffff",
-                padding: "10px 14px",
-                fontWeight: 700,
-                cursor: "pointer",
-              }}
-            >
+            <Button onClick={openSetupAssistant}>
               {t("home.entry.openAssistant")}
-            </button>
+            </Button>
           }
         />
 
         <NoticeBanner title={t("home.entry.noticeTitle", { step: currentStepLabel })} tone={blockerTone}>
-          <p style={{ margin: 0 }}>{t("home.entry.noticeDescription")}</p>
-          <p style={{ margin: "8px 0 0" }}>{t("home.entry.noticePrimaryHint", { step: currentStepLabel })}</p>
-          <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 12 }}>
-            <Link
-              to={model.primaryRoute}
-              style={{
-                display: "inline-block",
-                borderRadius: 8,
-                background: "#0f172a",
-                color: "#ffffff",
-                padding: "8px 12px",
-                textDecoration: "none",
-                fontWeight: 700,
-              }}
-            >
+          <p className="m-0">{t("home.entry.noticeDescription")}</p>
+          <p className="mt-2">{t("home.entry.noticePrimaryHint", { step: currentStepLabel })}</p>
+          <div className="mt-3 flex flex-wrap gap-2.5">
+            <Link to={model.primaryRoute} className={linkPrimary}>
               {t("home.entry.continue")}
             </Link>
-            <Link
-              to="/runbook"
-              style={{
-                display: "inline-block",
-                borderRadius: 8,
-                border: "1px solid #cbd5e1",
-                background: "#ffffff",
-                color: "#0f172a",
-                padding: "8px 12px",
-                textDecoration: "none",
-                fontWeight: 700,
-              }}
-            >
+            <Link to="/runbook" className={linkOutline}>
               {t("home.entry.openRunbook")}
             </Link>
           </div>
@@ -130,48 +92,16 @@ export function HomeEntryPage(): JSX.Element {
   }
 
   return (
-    <section
-      style={{
-        border: "1px solid #fecaca",
-        borderRadius: 12,
-        background: "#fef2f2",
-        padding: 20,
-        display: "grid",
-        gap: 8,
-      }}
-    >
-      <strong style={{ color: "#991b1b" }}>{t("home.error.title")}</strong>
-      <p style={{ margin: 0, color: "#7f1d1d" }}>
+    <section className="grid gap-2 rounded-xl border border-red-300 bg-red-50 p-5 dark:border-red-700 dark:bg-red-950/40">
+      <strong className="text-red-800 dark:text-red-300">{t("home.error.title")}</strong>
+      <p className="m-0 text-red-900 dark:text-red-200">
         {errorText ?? t("home.error.description")}
       </p>
-      <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-        <Link
-          to="/overview"
-          style={{
-            display: "inline-block",
-            borderRadius: 8,
-            background: "#0f172a",
-            color: "#ffffff",
-            padding: "8px 12px",
-            textDecoration: "none",
-            fontWeight: 700,
-          }}
-        >
+      <div className="flex flex-wrap gap-2.5">
+        <Link to="/overview" className={linkPrimary}>
           {t("home.actions.overview")}
         </Link>
-        <Link
-          to="/install?wizard=1"
-          style={{
-            display: "inline-block",
-            borderRadius: 8,
-            border: "1px solid #cbd5e1",
-            background: "#ffffff",
-            color: "#0f172a",
-            padding: "8px 12px",
-            textDecoration: "none",
-            fontWeight: 700,
-          }}
-        >
+        <Link to="/install?wizard=1" className={linkOutline}>
           {t("home.actions.installWizard")}
         </Link>
       </div>
