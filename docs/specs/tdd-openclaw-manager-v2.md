@@ -1,19 +1,21 @@
 # OpenClaw Manager v2.0.0 — 技术设计文档 (TDD)
 
 > 基于 ClawX 项目架构全面重构，去除 APIMart 依赖，对齐 OpenClaw 生态
+>
+> **实施状态（2026-03-22 更新）：** G1–G5 已完成，G6 待打包验证。
 
 ---
 
 ## 1. 设计目标
 
-| 编号 | 目标 | 衡量标准 |
-|------|------|---------|
-| G1 | 对齐 ClawX 功能集 | Agent / Channel / Provider / Cron / Skills 五大领域覆盖 |
-| G2 | 去除 APIMart | 代码中不再出现 `apimart` 字面量，渠道改为 Provider 模型 |
-| G3 | 暗色/亮色/跟随系统 | 全部组件使用 CSS 变量，无硬编码颜色 |
-| G4 | 国际化 | 中/英/日三语，所有用户可见字符串走 i18n |
-| G5 | 首次启动引导 | Setup Wizard（欢迎→运行时→Provider→安装→完成） |
-| G6 | 打包体积 ≤ 5 MB | NSIS 安装包 ≤ 5 MB |
+| 编号 | 目标 | 衡量标准 | 状态 |
+|------|------|---------|------|
+| G1 | 对齐 ClawX 功能集 | Agent / Channel / Provider / Cron / Skills 五大领域覆盖 | ✅ 完成 |
+| G2 | 去除 APIMart | 代码中不再出现 `apimart` 字面量，渠道改为 Provider 模型 | ✅ 完成 |
+| G3 | 暗色/亮色/跟随系统 | 全部组件使用 CSS 变量，无硬编码颜色 | ✅ 完成（含 ConfigPage/StatusBadge 修复） |
+| G4 | 国际化 | 中/英/日三语，所有用户可见字符串走 i18n | ✅ 完成（20×3=60 翻译文件） |
+| G5 | 首次启动引导 | Setup Wizard（欢迎→运行时→Provider→安装→完成） | ✅ 完成 |
+| G6 | 打包体积 ≤ 5 MB | NSIS 安装包 ≤ 5 MB | ⏳ 待验证 |
 
 ---
 
@@ -457,11 +459,11 @@ pub async fn trigger_cron_job(id: String) -> CommandResult<TriggerResult>
 | `src/store/useSkillStore.ts` | Skill 状态 |
 | `src/store/useSettingsStore.ts` | 设置 + 持久化 |
 | `src/components/agents/` | Agent 组件目录 |
-| `src/components/channels/` | Channel 组件目录 |
-| `src/components/providers/` | Provider 组件目录 |
-| `src/components/common/ErrorBoundary.tsx` | 错误边界 |
-| `src/components/common/LoadingSpinner.tsx` | 加载动画 |
-| `src/components/common/StatusBadge.tsx` | 状态标记 |
+| `src/components/channels/` | Channel 组件目录（逻辑内联于 ChannelsPage，待拆分） |
+| `src/components/providers/` | Provider 组件目录（逻辑内联于 ProvidersPage，待拆分） |
+| `src/components/common/ErrorBoundary.tsx` | ✅ 错误边界（2026-03-22 创建） |
+| `src/components/common/LoadingSpinner.tsx` | ✅ 加载动画（2026-03-22 创建） |
+| `src/components/common/StatusBadge.tsx` | ✅ 状态标记（2026-03-22 暗色模式修复） |
 | `src/i18n/` | 国际化目录 |
 | `src/types/agent.ts` | Agent 类型 |
 | `src/types/channel.ts` | Channel 类型 |
@@ -485,9 +487,9 @@ pub async fn trigger_cron_job(id: String) -> CommandResult<TriggerResult>
 | `src/components/navigation/Sidebar.tsx` | 新增导航项 |
 | `src/components/layout/AppShell.tsx` | 主题 class 同步 |
 | `src/pages/SettingsPage.tsx` | 主题/语言设置 |
-| `src/pages/ChatPage.tsx` | ContentBlock 支持、media 附件 |
-| `src/pages/SkillsPage.tsx` | 对接 ClawHub 市场 |
-| `src/lib/gateway-client.ts` | 补充 Channel/Provider/Cron API |
+| `src/pages/ChatPage.tsx` | ✅ ContentBlock 渲染 + 附件上传（2026-03-22 实现） |
+| `src/pages/SkillsPage.tsx` | 对接 ClawHub 市场（当前仅外链） |
+| `src/lib/gateway-client.ts` | ✅ 补充 channelApi/providerApi/cronApi 类型化方法（2026-03-22） |
 | `src/lib/constants.ts` | 版本号 → 2.0.0 |
 | `src-tauri/src/main.rs` | 注册新命令 |
 | `src-tauri/Cargo.toml` | 版本 → 2.0.0 |

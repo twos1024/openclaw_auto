@@ -14,6 +14,30 @@
         "openaiCompatible": "OpenAI 兼容",
         "ollama": "Ollama"
       }
+    },
+    "openai": {
+      "preset": {
+        "label": "API 预设",
+        "options": {
+          "custom": "自定义兼容接口",
+          "openai": "OpenAI",
+          "deepseek": "DeepSeek",
+          "openrouter": "OpenRouter"
+        }
+      },
+      "baseUrl": { "label": "Base URL" },
+      "apiKey": { "label": "API Key" },
+      "model": { "label": "模型" },
+      "timeout": { "label": "超时时间 (ms)" },
+      "maxTokens": { "label": "最大 Token 数" },
+      "temperature": { "label": "Temperature" }
+    },
+    "ollama": {
+      "host": { "label": "Ollama 地址" },
+      "model": { "label": "模型" },
+      "timeout": { "label": "超时时间 (ms)" },
+      "maxTokens": { "label": "最大 Token 数" },
+      "temperature": { "label": "Temperature" }
     }
   },
   "actions": {

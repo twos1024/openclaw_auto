@@ -14,6 +14,30 @@
         "openaiCompatible": "OpenAI 互換",
         "ollama": "Ollama"
       }
+    },
+    "openai": {
+      "preset": {
+        "label": "API プリセット",
+        "options": {
+          "custom": "カスタム互換エンドポイント",
+          "openai": "OpenAI",
+          "deepseek": "DeepSeek",
+          "openrouter": "OpenRouter"
+        }
+      },
+      "baseUrl": { "label": "Base URL" },
+      "apiKey": { "label": "API Key" },
+      "model": { "label": "モデル" },
+      "timeout": { "label": "タイムアウト (ms)" },
+      "maxTokens": { "label": "最大トークン数" },
+      "temperature": { "label": "Temperature" }
+    },
+    "ollama": {
+      "host": { "label": "Ollama ホスト" },
+      "model": { "label": "モデル" },
+      "timeout": { "label": "タイムアウト (ms)" },
+      "maxTokens": { "label": "最大トークン数" },
+      "temperature": { "label": "Temperature" }
     }
   },
   "actions": {

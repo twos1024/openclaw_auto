@@ -88,3 +88,49 @@ export async function createGatewaySSE(path: string): Promise<EventSource | null
   if (!base) return null;
   return new EventSource(`${base}${path}`);
 }
+
+// ─── Typed domain API helpers ───────────────────────────────────────────────
+
+// Channel API
+
+import type { Channel, CreateChannelPayload } from "@/types/channel";
+import type { Provider, CreateProviderPayload } from "@/types/provider";
+import type { CronJob, CreateCronJobPayload } from "@/types/cron";
+
+export const channelApi = {
+  list: () => gatewayFetch<Channel[]>("/api/channels"),
+  create: (payload: CreateChannelPayload) =>
+    gatewayFetch<Channel>("/api/channels", { method: "POST", body: JSON.stringify(payload) }),
+  update: (id: string, payload: Partial<CreateChannelPayload>) =>
+    gatewayFetch<Channel>(`/api/channels/${encodeURIComponent(id)}`, { method: "PUT", body: JSON.stringify(payload) }),
+  delete: (id: string) =>
+    gatewayFetch<{ success: boolean }>(`/api/channels/${encodeURIComponent(id)}`, { method: "DELETE" }),
+};
+
+// Provider API
+
+export const providerApi = {
+  list: () => gatewayFetch<Provider[]>("/api/providers"),
+  create: (payload: CreateProviderPayload) =>
+    gatewayFetch<Provider>("/api/providers", { method: "POST", body: JSON.stringify(payload) }),
+  update: (id: string, payload: Partial<CreateProviderPayload>) =>
+    gatewayFetch<Provider>(`/api/providers/${encodeURIComponent(id)}`, { method: "PUT", body: JSON.stringify(payload) }),
+  delete: (id: string) =>
+    gatewayFetch<{ success: boolean }>(`/api/providers/${encodeURIComponent(id)}`, { method: "DELETE" }),
+  validate: (id: string) =>
+    gatewayFetch<{ valid: boolean; detail?: string }>(`/api/providers/${encodeURIComponent(id)}/validate`, { method: "POST" }),
+};
+
+// Cron API
+
+export const cronApi = {
+  list: () => gatewayFetch<CronJob[]>("/api/cron/jobs"),
+  create: (payload: CreateCronJobPayload) =>
+    gatewayFetch<CronJob>("/api/cron/jobs", { method: "POST", body: JSON.stringify(payload) }),
+  update: (id: string, payload: Partial<CreateCronJobPayload>) =>
+    gatewayFetch<CronJob>(`/api/cron/jobs/${encodeURIComponent(id)}`, { method: "PUT", body: JSON.stringify(payload) }),
+  delete: (id: string) =>
+    gatewayFetch<{ success: boolean }>(`/api/cron/jobs/${encodeURIComponent(id)}`, { method: "DELETE" }),
+  trigger: (id: string) =>
+    gatewayFetch<{ triggered: boolean }>(`/api/cron/jobs/${encodeURIComponent(id)}/trigger`, { method: "POST" }),
+};
