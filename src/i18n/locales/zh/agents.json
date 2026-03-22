@@ -23,6 +23,10 @@
     "searchDescription": "试试其他关键词，或清空筛选条件。",
     "cta": "创建第一个智能体"
   },
+  "error": {
+    "title": "无法加载智能体",
+    "cta": "重试"
+  },
   "card": {
     "conversations": "{{count}} 次对话",
     "tokens": "{{value}} tokens"

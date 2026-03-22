@@ -23,6 +23,10 @@
     "searchDescription": "別の検索語に変えるか、フィルターを解除してください。",
     "cta": "最初のエージェントを作成"
   },
+  "error": {
+    "title": "エージェントを読み込めませんでした",
+    "cta": "再試行"
+  },
   "card": {
     "conversations": "会話 {{count}} 回",
     "tokens": "トークン {{value}}"

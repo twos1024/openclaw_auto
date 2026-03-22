@@ -23,6 +23,10 @@
     "searchDescription": "Try a different search term or clear the filter.",
     "cta": "Create your first agent"
   },
+  "error": {
+    "title": "Could not load agents",
+    "cta": "Retry"
+  },
   "card": {
     "conversations": "{{count}} conversations",
     "tokens": "{{value}} tokens"

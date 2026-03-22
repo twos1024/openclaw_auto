@@ -25,5 +25,77 @@
   "stepList": {
     "title": "ガイド付きフロー",
     "subtitle": "以下の順序に従って進めてください。現在のステップは、いまの blocker の連鎖を反映します。"
+  },
+  "service": {
+    "preview": {
+      "bannerHeadline": "ブラウザプレビューモード",
+      "bannerSummary": "読み取り専用プレビューです。インストール、ログ、設定、サービス制御を使うには Tauri デスクトップシェルで実行してください。",
+      "bannerActionLabel": "デスクトップ説明を見る",
+      "bannerActionDescription": "現在ブラウザプレビューモードです（{{time}}）。デスクトップシェルに切り替えてローカルインストールとサービス制御を続行してください。",
+      "headline": "次のステップ：デスクトップモードに切り替え",
+      "summary": "現在の環境ではローカルコマンドを実行できません。先に ClawDesk デスクトップを開き、インストール・設定・起動を続けてください。",
+      "blockerTitle": "デスクトップモードに切り替え",
+      "blockerDetail": "ブラウザプレビューでは UI の表示のみ可能で、インストール、API Key の書き込み、Gateway の起動はできません。",
+      "blockerActionLabel": "説明を見る",
+      "checks": {
+        "install": "プレビューモードではローカル OpenClaw CLI や npm の状態を検出しません。",
+        "config": "プレビューモードでは実際の OpenClaw 設定ファイルを読み取りません。",
+        "service": "プレビューモードではローカル Gateway の状態を検出しません。",
+        "runtime": "ブラウザプレビューでは Rust コマンドブリッジにアクセスできません。",
+        "settings": "プレビューモードでは構造のみ表示し、ローカル ClawDesk 設定は読み取りません。"
+      },
+      "steps": {
+        "install": "デスクトップモードに切り替えてから、インストールを実行してください。",
+        "config": "デスクトップモードに切り替えてから、設定ファイルの読み書きを行ってください。",
+        "service": "デスクトップモードに切り替えてから、サービスの状態を制御してください。",
+        "dashboard": "プレビューのみ利用可能で、ローカル Dashboard は開けません。"
+      },
+      "supportPrimary": "まずデスクトップランタイムへの切り替え方法を確認してから、次の手順に進んでください。",
+      "supportSettings": "現在のランタイム環境の診断情報を確認する際にここを開いてください。"
+    },
+    "runtimeUnavailable": {
+      "bannerHeadline": "デスクトップランタイムブリッジ利用不可",
+      "bannerSummary": "デスクトップウィンドウは開いていますが、フロントエンドが Tauri コマンドブリッジに接続できません。先にこの問題を修復してください。",
+      "bannerActionLabel": "ランタイムを修復",
+      "bannerActionDescription": "デスクトップウィンドウは開いていますが、コマンドブリッジが利用できません。確認時刻 {{time}}。",
+      "headline": "次のステップ：デスクトップランタイムブリッジを修復",
+      "summary": "デスクトップウィンドウは開いていますが、ローカルコマンドブリッジが切断されているため、インストール・設定・起動を続行できません。",
+      "blockerTitle": "デスクトップランタイムブリッジを修復",
+      "blockerDetail": "デスクトップ shell は検出されましたが、Tauri コマンドブリッジが利用できないため、ローカル Rust コマンドにアクセスできません。",
+      "blockerActionLabel": "ランタイムを修復",
+      "checks": {
+        "install": "コマンドブリッジが復旧するまで、インストール、CLI 検出、マネージドインストールを実行できません。",
+        "config": "コマンドブリッジが復旧するまで、ローカル OpenClaw 設定の読み書きができません。",
+        "service": "コマンドブリッジが復旧するまで、Gateway の照会や制御ができません。",
+        "settings": "コマンドブリッジが復旧するまで、ローカル ClawDesk 設定ファイルを読み取れません。"
+      },
+      "steps": {
+        "install": "ランタイムブリッジを修復してから、インストールを実行してください。",
+        "config": "ランタイムブリッジを修復してから、設定ファイルの読み書きを行ってください。",
+        "service": "ランタイムブリッジを修復してから、サービスの状態を制御してください。",
+        "dashboard": "ランタイムブリッジを修復してから、Dashboard を開いてください。"
+      },
+      "supportPrimary": "まずデスクトップコマンドブリッジを復旧させてから、以降のフローを続けてください。",
+      "supportLogs": "デスクトップランタイムの修復中に問題が発生した場合は、ここでエラーログを確認してください。",
+      "supportSettings": "ランタイム診断、ブリッジ状態、ローカルパス情報を確認します。"
+    },
+    "common": {
+      "checkInstall": "インストールチェック",
+      "checkConfig": "設定チェック",
+      "checkService": "サービスチェック",
+      "checkRuntime": "ランタイムチェック",
+      "checkSettings": "設定チェック",
+      "stepInstall": "OpenClaw をインストール",
+      "stepConfig": "API Key を設定",
+      "stepService": "Gateway を起動",
+      "stepDashboard": "OpenClaw の使用を開始",
+      "goInstall": "インストールへ",
+      "goConfig": "API Key を設定",
+      "goService": "Gateway を起動",
+      "goDashboard": "Dashboard を開く",
+      "openSettings": "設定を開く",
+      "viewLogs": "ログを見る",
+      "viewDocs": "説明を見る"
+    }
   }
 }
