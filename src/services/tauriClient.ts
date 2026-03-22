@@ -1,40 +1,138 @@
-/**
- * @compatibility-layer
- *
- * tauriClient.ts is kept as a compatibility shim for one release cycle.
- * Do NOT add new imports from this module in business code.
- * New code must import from hostClient instead.
- *
- * This module re-exports invokeCommand and getInvoke from hostClient, and
- * provides legacy-named wrappers (getRuntimeDiagnostics, isTauriRuntime,
- * createRuntimeAccessError) that map the host-agnostic HostDiagnostics back
- * to the Tauri-named RuntimeDiagnostics / RuntimeMode for backward compatibility.
- */
-export { invokeCommand, getInvoke } from "./hostClient";
+import { invoke as officialInvoke, isTauri as detectTauriShell } from "@tauri-apps/api/core";
+import type { BackendError, CommandResult, RuntimeBridgeSource, RuntimeDiagnostics } from "../types/api";
 
-import type { BackendError, RuntimeDiagnostics } from "../types/api";
-import { createHostAccessError, getHostDiagnostics, isHostRuntime } from "./hostClient";
+type InvokeFn = <T>(command: string, payload?: Record<string, unknown>) => Promise<T>;
 
-function toRuntimeMode(mode: string): RuntimeDiagnostics["mode"] {
-  if (mode === "host-runtime-available") return "tauri-runtime-available";
-  if (mode === "host-runtime-unavailable") return "tauri-runtime-unavailable";
-  return "browser-preview";
+declare global {
+  interface Window {
+    __TAURI__?: {
+      core?: {
+        invoke?: InvokeFn;
+      };
+    };
+    __TAURI_INTERNALS__?: {
+      invoke?: <T>(command: string, payload?: Record<string, unknown>) => Promise<T>;
+    };
+    isTauri?: boolean;
+  }
+}
+
+function getOfficialInvokeBridge(): InvokeFn | null {
+  return typeof window.__TAURI_INTERNALS__?.invoke === "function"
+    ? (async <T>(command: string, payload?: Record<string, unknown>) => officialInvoke<T>(command, payload))
+    : null;
+}
+
+function getGlobalFallbackInvokeBridge(): InvokeFn | null {
+  return typeof window.__TAURI__?.core?.invoke === "function" ? window.__TAURI__.core.invoke : null;
+}
+
+function getBridgeSource(
+  officialBridge: InvokeFn | null,
+  globalBridge: InvokeFn | null,
+): RuntimeBridgeSource {
+  if (officialBridge) return "official-api";
+  if (globalBridge) return "global-fallback";
+  return "none";
 }
 
 export function getRuntimeDiagnostics(): RuntimeDiagnostics {
-  const host = getHostDiagnostics();
+  const officialBridge = getOfficialInvokeBridge();
+  const globalBridge = getGlobalFallbackInvokeBridge();
+  const bridgeSource = getBridgeSource(officialBridge, globalBridge);
+  const hasInvokeBridge = bridgeSource !== "none";
+  const hasTauriShell =
+    detectTauriShell() || Boolean(window.__TAURI_INTERNALS__) || Boolean(window.__TAURI__) || window.isTauri === true;
+
+  if (hasInvokeBridge) {
+    return {
+      mode: "tauri-runtime-available",
+      hasTauriShell: true,
+      hasInvokeBridge: true,
+      bridgeSource,
+    };
+  }
+
+  if (hasTauriShell) {
+    return {
+      mode: "tauri-runtime-unavailable",
+      hasTauriShell: true,
+      hasInvokeBridge: false,
+      bridgeSource: "none",
+    };
+  }
+
   return {
-    mode: toRuntimeMode(host.mode),
-    hasTauriShell: host.hasTauriShell,
-    hasInvokeBridge: host.hasInvokeBridge,
-    bridgeSource: host.bridgeSource,
+    mode: "browser-preview",
+    hasTauriShell: false,
+    hasInvokeBridge: false,
+    bridgeSource: "none",
   };
 }
 
-export function isTauriRuntime(): boolean {
-  return isHostRuntime();
+function runtimeDiagnosticsDetails(runtime: RuntimeDiagnostics): Record<string, unknown> {
+  return {
+    runtimeMode: runtime.mode,
+    hasTauriShell: runtime.hasTauriShell,
+    hasInvokeBridge: runtime.hasInvokeBridge,
+    bridgeSource: runtime.bridgeSource,
+  };
 }
 
-export function createRuntimeAccessError(): BackendError {
-  return createHostAccessError();
+export function createRuntimeAccessError(runtime: RuntimeDiagnostics = getRuntimeDiagnostics()): BackendError {
+  if (runtime.mode === "browser-preview") {
+    return {
+      code: "E_PREVIEW_MODE",
+      message: "Local commands are unavailable in browser preview mode.",
+      suggestion: "Run ClawDesk inside the Tauri desktop shell or use the packaged desktop app.",
+      details: runtimeDiagnosticsDetails(runtime),
+    };
+  }
+
+  return {
+    code: "E_TAURI_UNAVAILABLE",
+    message: "ClawDesk is running in a desktop shell, but the Tauri command bridge is unavailable.",
+    suggestion:
+      "Relaunch or reinstall ClawDesk and verify the frontend bundles the Tauri API bridge correctly.",
+    details: runtimeDiagnosticsDetails(runtime),
+  };
+}
+
+export function getInvoke(): InvokeFn | null {
+  const officialBridge = getOfficialInvokeBridge();
+  if (officialBridge) {
+    return officialBridge;
+  }
+
+  return getGlobalFallbackInvokeBridge();
+}
+
+export function isTauriRuntime(): boolean {
+  return getRuntimeDiagnostics().mode === "tauri-runtime-available";
+}
+
+export async function invokeCommand<T>(
+  command: string,
+  payload?: Record<string, unknown>,
+): Promise<CommandResult<T>> {
+  const invoke = getInvoke();
+  if (!invoke) {
+    return {
+      success: false,
+      error: createRuntimeAccessError(),
+    };
+  }
+
+  try {
+    return await invoke<CommandResult<T>>(command, payload);
+  } catch (error: unknown) {
+    return {
+      success: false,
+      error: {
+        code: "E_INVOKE",
+        message: error instanceof Error ? error.message : `Failed to invoke command: ${command}`,
+        suggestion: "Ensure the backend command is registered and Tauri is running normally.",
+      },
+    };
+  }
 }

@@ -9,13 +9,13 @@ import {
   type WriteConfigData,
 } from "../types/config";
 import {
-  createHostAccessError,
-  getHostDiagnostics,
+  createRuntimeAccessError,
+  getRuntimeDiagnostics,
   invokeCommand,
-  isHostRuntime,
-} from "./hostClient";
+  isTauriRuntime,
+} from "./tauriClient";
 import { fromUnknownConfig, toConfigPayload } from "./configParser";
-import type { BackendError, HostDiagnostics } from "../types/api";
+import type { BackendError, RuntimeDiagnostics } from "../types/api";
 
 function stripTrailingSlash(value: string): string {
   return value.replace(/\/+$/, "");
@@ -64,7 +64,7 @@ function toConnectionTestResult(data: ConnectionTestData): ConnectionTestResult 
   };
 }
 
-function buildConfigRuntimeIssue(runtime: HostDiagnostics): BackendError {
+function buildConfigRuntimeIssue(runtime: RuntimeDiagnostics): BackendError {
   if (runtime.mode === "browser-preview") {
     return {
       code: "E_PREVIEW_MODE",
@@ -78,7 +78,7 @@ function buildConfigRuntimeIssue(runtime: HostDiagnostics): BackendError {
   }
 
   return {
-    code: "E_HOST_UNAVAILABLE",
+    code: "E_TAURI_UNAVAILABLE",
     message: "当前已进入桌面窗口，但 Tauri 命令桥不可用，无法读取本地 OpenClaw 配置。",
     suggestion: "请重启或重新安装 ClawDesk；若问题持续，请检查前端是否正确集成 Tauri API。",
     details: {
@@ -120,8 +120,8 @@ export const configService = {
       };
     }
 
-    if (result.error?.code === "E_PREVIEW_MODE" || result.error?.code === "E_HOST_UNAVAILABLE") {
-      const runtime = getHostDiagnostics();
+    if (result.error?.code === "E_PREVIEW_MODE" || result.error?.code === "E_TAURI_UNAVAILABLE") {
+      const runtime = getRuntimeDiagnostics();
       return {
         values: defaultConfigValues,
         usedDefaultValues: true,
@@ -138,9 +138,9 @@ export const configService = {
   },
 
   async testConnection(values: ConfigFormValues): Promise<ConnectionTestResult> {
-    const runtime = getHostDiagnostics();
+    const runtime = getRuntimeDiagnostics();
 
-    if (runtime.mode === "host-runtime-available") {
+    if (runtime.mode === "tauri-runtime-available") {
       try {
         const result = await invokeCommand<ConnectionTestData>("test_connection", {
           content: toConfigPayload(values),
@@ -161,9 +161,9 @@ export const configService = {
       }
     }
 
-    if (runtime.mode === "host-runtime-unavailable") {
+    if (runtime.mode === "tauri-runtime-unavailable") {
       return toActionErrorResult(
-        createHostAccessError(runtime),
+        createRuntimeAccessError(runtime),
         "Check desktop runtime initialization and retry.",
       );
     }
@@ -231,8 +231,8 @@ export const configService = {
   },
 
   async saveConfig(values: ConfigFormValues): Promise<SaveConfigResult> {
-    if (!isHostRuntime()) {
-      const runtimeError = createHostAccessError();
+    if (!isTauriRuntime()) {
+      const runtimeError = createRuntimeAccessError();
       return {
         status: runtimeError.code === "E_PREVIEW_MODE" ? "failure" : "error",
         detail: runtimeError.message,

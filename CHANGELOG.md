@@ -2,25 +2,6 @@
 
 All notable changes to ClawDesk (OpenClaw Manager) will be documented in this file.
 
-## [3.0.0] — 2026-03-22
-
-### Architecture
-
-- **Host bridge abstraction**: Introduced `src/services/hostClient.ts` as the canonical entry point for all IPC communication with the desktop runtime. All business code (services, hooks, components) now imports from `hostClient` instead of the Tauri-specific `tauriClient`. This decouples the frontend contract from any specific desktop shell technology.
-- **Host-agnostic runtime types**: Added `HostRuntimeMode`, `HostBridgeSource`, and `HostDiagnostics` types to `src/types/api.ts`. New mode values (`host-runtime-available`, `host-runtime-unavailable`, `browser-preview`) replace the old Tauri-prefixed names in all business logic.
-- **Error code renamed**: `E_TAURI_UNAVAILABLE` → `E_HOST_UNAVAILABLE` across all services, pages, and tests — removes Tauri-specific naming from the public error surface.
-- **Compatibility shim**: `tauriClient.ts` retained as a re-export shim for one release cycle, mapping host-agnostic types back to legacy Tauri-named types for backward compatibility. Will be removed in a future release.
-
-### Changed
-
-- **User-visible text**: All error messages, diagnostic labels, and i18n strings that previously said "Tauri command bridge" or "Tauri shell" now use host-neutral language ("host command bridge", "Host Shell", "desktop application").
-- **Test infrastructure**: Added `tests/helpers/hostBridgeMock.ts` with `resetHostBridgeGlobals()`, `simulateHostRuntimeAvailable()`, `simulateHostRuntimeUnavailable()`, and `simulateLegacyTauriBridge()` helpers — eliminates per-test `Object.defineProperty` boilerplate across all integration tests.
-- **CI**: Added `npm run typecheck` (tsc --noEmit) step to the CI pipeline before unit tests.
-
-### Refactored
-
-- **Dashboard components**: `DashboardFrame` and `DashboardPage` inline styles fully replaced with Tailwind CSS classes.
-
 ## [2.7.0] — 2026-03-22
 
 ### Fixed

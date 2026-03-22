@@ -1,5 +1,5 @@
 import i18n from "@/i18n";
-import type { HostDiagnostics } from "../types/api";
+import type { RuntimeDiagnostics } from "../types/api";
 import type { ServiceResult } from "../types/status";
 import type {
   RunbookModel,
@@ -7,7 +7,7 @@ import type {
   WorkspaceBannerAction,
   WorkspaceBannerModel,
 } from "../types/workspace";
-import { getHostDiagnostics, invokeCommand } from "./hostClient";
+import { getRuntimeDiagnostics, invokeCommand } from "./tauriClient";
 
 function nowIso(): string {
   return new Date().toISOString();
@@ -18,7 +18,7 @@ function t(key: string, options?: Record<string, string>): string {
 }
 
 function createBannerMeta(
-  runtime: HostDiagnostics,
+  runtime: RuntimeDiagnostics,
   platform: string,
   dashboard: string,
 ): WorkspaceBannerModel["meta"] {
@@ -28,11 +28,11 @@ function createBannerMeta(
       value:
         runtime.mode === "browser-preview"
           ? "Browser Preview"
-          : runtime.mode === "host-runtime-unavailable"
+          : runtime.mode === "tauri-runtime-unavailable"
             ? "Desktop Runtime Unavailable"
             : "Live",
     },
-    { label: "Host Shell", value: runtime.hasTauriShell ? "detected" : "not-detected" },
+    { label: "Tauri Shell", value: runtime.hasTauriShell ? "detected" : "not-detected" },
     { label: "Invoke Bridge", value: runtime.hasInvokeBridge ? "detected" : "missing" },
     {
       label: "Bridge Source",
@@ -48,7 +48,7 @@ function createBannerMeta(
   ];
 }
 
-function buildPreviewBanner(updatedAt: string, runtime: HostDiagnostics): WorkspaceBannerModel {
+function buildPreviewBanner(updatedAt: string, runtime: RuntimeDiagnostics): WorkspaceBannerModel {
   const primaryAction: WorkspaceBannerAction = {
     label: t("service.preview.bannerActionLabel"),
     route: "/runbook",
@@ -67,7 +67,7 @@ function buildPreviewBanner(updatedAt: string, runtime: HostDiagnostics): Worksp
 
 function buildRuntimeUnavailableBanner(
   updatedAt: string,
-  runtime: HostDiagnostics,
+  runtime: RuntimeDiagnostics,
 ): WorkspaceBannerModel {
   const primaryAction: WorkspaceBannerAction = {
     label: t("service.runtimeUnavailable.bannerActionLabel"),
@@ -91,7 +91,7 @@ function dedupeSupportActions(actions: RunbookSupportAction[]): RunbookSupportAc
   );
 }
 
-function buildPreviewRunbook(updatedAt: string, runtime: HostDiagnostics): RunbookModel {
+function buildPreviewRunbook(updatedAt: string, runtime: RuntimeDiagnostics): RunbookModel {
   const currentBlocker = {
     id: "preview-mode",
     title: t("service.preview.blockerTitle"),
@@ -141,7 +141,7 @@ function buildPreviewRunbook(updatedAt: string, runtime: HostDiagnostics): Runbo
   };
 }
 
-function buildRuntimeUnavailableRunbook(updatedAt: string, runtime: HostDiagnostics): RunbookModel {
+function buildRuntimeUnavailableRunbook(updatedAt: string, runtime: RuntimeDiagnostics): RunbookModel {
   const currentBlocker = {
     id: "runtime-bridge",
     title: t("service.runtimeUnavailable.blockerTitle"),
@@ -199,7 +199,7 @@ function buildRuntimeUnavailableRunbook(updatedAt: string, runtime: HostDiagnost
 
 export const runbookService = {
   async getRunbookModel(): Promise<ServiceResult<RunbookModel>> {
-    const runtime = getHostDiagnostics();
+    const runtime = getRuntimeDiagnostics();
     const updatedAt = nowIso();
 
     if (runtime.mode === "browser-preview") {
@@ -209,7 +209,7 @@ export const runbookService = {
       };
     }
 
-    if (runtime.mode === "host-runtime-unavailable") {
+    if (runtime.mode === "tauri-runtime-unavailable") {
       return {
         ok: true,
         data: buildRuntimeUnavailableRunbook(updatedAt, runtime),

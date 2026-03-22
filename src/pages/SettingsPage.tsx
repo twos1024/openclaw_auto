@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { RefreshCw, Play, Square, RotateCcw, CheckCircle2, AlertCircle, Server, Globe, Shield, Info } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { invokeCommand } from "@/services/hostClient";
+import { invokeCommand } from "@/services/tauriClient";
 import { clearGatewayUrlCache } from "@/lib/gateway-client";
 import { APP_DISPLAY } from "@/lib/constants";
 import type { AppLanguage, ThemePreference } from "@/lib/preferences";

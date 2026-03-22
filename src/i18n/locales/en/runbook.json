@@ -29,7 +29,7 @@
   "service": {
     "preview": {
       "bannerHeadline": "Browser Preview Mode",
-      "bannerSummary": "Read-only preview. Run inside the desktop shell to use install, logs, config and service control.",
+      "bannerSummary": "Read-only preview. Run inside the Tauri desktop shell to use install, logs, config and service control.",
       "bannerActionLabel": "View desktop instructions",
       "bannerActionDescription": "Currently in browser preview mode ({{time}}). Switch to the desktop shell to continue local install and service control.",
       "headline": "Next: Switch to desktop mode",
@@ -55,13 +55,13 @@
     },
     "runtimeUnavailable": {
       "bannerHeadline": "Desktop Runtime Bridge Unavailable",
-      "bannerSummary": "The desktop window is open but the frontend cannot reach the host command bridge. Fix this first — local commands and file operations are unavailable.",
+      "bannerSummary": "The desktop window is open but the frontend cannot reach the Tauri command bridge. Fix this first — local commands and file operations are unavailable.",
       "bannerActionLabel": "Fix runtime",
       "bannerActionDescription": "Desktop window is open but the command bridge is unavailable. Checked at {{time}}.",
       "headline": "Next: Fix desktop runtime bridge",
       "summary": "The desktop window is open but the local command bridge is disconnected, so install, config and startup cannot proceed.",
       "blockerTitle": "Fix desktop runtime bridge",
-      "blockerDetail": "Desktop shell detected, but the host command bridge is unavailable — local commands cannot be accessed.",
+      "blockerDetail": "Desktop shell detected, but the Tauri command bridge is unavailable — local Rust commands cannot be accessed.",
       "blockerActionLabel": "Fix runtime",
       "checks": {
         "install": "Cannot install, probe CLI or run managed install until the command bridge is restored.",

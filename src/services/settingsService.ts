@@ -7,7 +7,7 @@ import {
   type SettingsLoadResult,
   type WriteAppSettingsData,
 } from "../types/settings";
-import { getHostDiagnostics, invokeCommand } from "./hostClient";
+import { getRuntimeDiagnostics, invokeCommand } from "./tauriClient";
 
 function normalizeSettings(raw: ReadAppSettingsData["content"] | undefined): AppSettings {
   const preferredInstallSource =
@@ -77,13 +77,13 @@ export const settingsService = {
       };
     }
 
-    if (result.error?.code === "E_HOST_UNAVAILABLE") {
-      const runtime = getHostDiagnostics();
+    if (result.error?.code === "E_TAURI_UNAVAILABLE") {
+      const runtime = getRuntimeDiagnostics();
       return {
         values: defaultAppSettings,
         exists: false,
         issue: {
-          code: "E_HOST_UNAVAILABLE",
+          code: "E_TAURI_UNAVAILABLE",
           message: "当前已进入桌面窗口，但 Tauri 命令桥不可用，尚未读取本地 ClawDesk 设置。",
           suggestion: "请重启或重新安装 ClawDesk；若问题持续，请检查前端是否正确集成 Tauri API。",
           details: {

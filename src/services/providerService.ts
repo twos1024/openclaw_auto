@@ -1,6 +1,6 @@
 import { gatewayFetch } from "@/lib/gateway-client";
 import type { BackendError } from "@/types/api";
-import { invokeCommand } from "@/services/hostClient";
+import { invokeCommand } from "@/services/tauriClient";
 import type {
   CreateProviderPayload,
   Provider,

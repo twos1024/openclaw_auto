@@ -6,7 +6,7 @@ import type {
   UpdateAgentPayload,
 } from "@/types/agent";
 import type { ServiceResult } from "@/types/status";
-import { invokeCommand } from "@/services/hostClient";
+import { invokeCommand } from "@/services/tauriClient";
 import { toBackendError } from "@/services/domainErrors";
 
 interface AgentListCommandData {

@@ -47,7 +47,7 @@ export function InstallPage(): JSX.Element {
   const runtimeBlockMode =
     envError?.code === "E_PREVIEW_MODE"
       ? "preview"
-      : envError?.code === "E_HOST_UNAVAILABLE"
+      : envError?.code === "E_TAURI_UNAVAILABLE"
         ? "runtime-unavailable"
         : null;
   const visibleIssue = installResult?.issue ?? installResult?.data?.gatewayInstallIssue ?? null;

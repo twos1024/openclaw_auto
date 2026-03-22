@@ -322,7 +322,7 @@ describe("statusService integration", () => {
     expect(data.runtime.level).toBe("offline");
     expect(data.runtime.meta).toEqual(
       expect.arrayContaining([
-        expect.objectContaining({ label: "Mode", value: "host-runtime-unavailable" }),
+        expect.objectContaining({ label: "Mode", value: "tauri-runtime-unavailable" }),
         expect.objectContaining({ label: "Invoke Bridge", value: "missing" }),
       ]),
     );

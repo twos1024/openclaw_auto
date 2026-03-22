@@ -110,7 +110,7 @@ describe("settingsService integration", () => {
     const result = await settingsService.readSettings();
 
     expect(result.issue).toMatchObject({
-      code: "E_HOST_UNAVAILABLE",
+      code: "E_TAURI_UNAVAILABLE",
     });
     expect(result.issue?.message).toContain("桌面窗口");
     expect(result.issue?.message).not.toContain("浏览器预览模式");

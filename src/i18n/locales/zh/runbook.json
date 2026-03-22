@@ -29,7 +29,7 @@
   "service": {
     "preview": {
       "bannerHeadline": "浏览器预览模式",
-      "bannerSummary": "当前仅展示只读预览界面。需要在桌面应用中运行，才能使用安装、日志、配置和服务控制。",
+      "bannerSummary": "当前仅展示只读预览界面。需要在 Tauri 原生桌面壳中运行，才能使用安装、日志、配置和服务控制。",
       "bannerActionLabel": "查看桌面说明",
       "bannerActionDescription": "当前是浏览器预览模式，时间 {{time}}。需要切回桌面壳才能继续本机安装和服务控制。",
       "headline": "下一步：切换到桌面模式",
@@ -55,13 +55,13 @@
     },
     "runtimeUnavailable": {
       "bannerHeadline": "桌面运行时桥接不可用",
-      "bannerSummary": "当前已进入桌面窗口，但前端未连上宿主命令桥。这个问题应优先修复，否则本地命令和文件操作都不可用。",
+      "bannerSummary": "当前已进入桌面窗口，但前端未连上 Tauri 命令桥。这个问题应优先修复，否则本地命令和文件操作都不可用。",
       "bannerActionLabel": "修复运行时",
       "bannerActionDescription": "桌面窗口已打开，但命令桥不可用。检查时间 {{time}}。",
       "headline": "下一步：修复桌面运行时桥接",
       "summary": "当前虽然已经打开桌面窗口，但本地命令桥没连上，所以安装、配置和启动都无法继续。",
       "blockerTitle": "修复桌面运行时桥接",
-      "blockerDetail": "已检测到桌面 shell，但宿主命令桥不可用，因此当前无法访问本地命令层。",
+      "blockerDetail": "已检测到桌面 shell，但 Tauri 命令桥不可用，因此当前无法访问本地 Rust 命令层。",
       "blockerActionLabel": "修复运行时",
       "checks": {
         "install": "在桌面命令桥恢复前，无法执行本机安装、CLI 探测和 Gateway 托管安装。",

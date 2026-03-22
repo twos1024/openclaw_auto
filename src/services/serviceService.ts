@@ -1,6 +1,6 @@
 import type { BackendError } from "../types/api";
 import type { DashboardProbeResult } from "../types/dashboard";
-import { getHostDiagnostics, invokeCommand } from "./hostClient";
+import { getRuntimeDiagnostics, invokeCommand } from "./tauriClient";
 
 export type GatewayRuntimeState = "running" | "stopped" | "starting" | "stopping" | "error";
 
@@ -139,7 +139,7 @@ function buildPreviewStatus(): GatewayStatus {
     pid: null,
     lastStartedAt: null,
     statusDetail: "Gateway status is unavailable in browser preview mode.",
-    suggestion: "Run ClawDesk inside the desktop app to manage the local OpenClaw Gateway.",
+    suggestion: "Run ClawDesk inside Tauri to manage the local OpenClaw Gateway.",
     portConflictPort: null,
   };
 }
@@ -152,8 +152,8 @@ function buildUnavailableRuntimeStatus(): GatewayStatus {
     address: null,
     pid: null,
     lastStartedAt: null,
-    statusDetail: "ClawDesk is running in a desktop shell, but the host command bridge is unavailable.",
-    suggestion: "Relaunch or reinstall ClawDesk and verify the frontend bundles the host API bridge.",
+    statusDetail: "ClawDesk is running in a desktop shell, but the Tauri command bridge is unavailable.",
+    suggestion: "Relaunch or reinstall ClawDesk and verify the frontend bundles the Tauri API bridge.",
     portConflictPort: null,
   };
 }
@@ -258,19 +258,19 @@ function buildLiveErrorStatus(error?: BackendError): GatewayStatus {
 }
 
 async function invokeAction(command: string): Promise<ServiceActionResult> {
-  const runtime = getHostDiagnostics();
-  if (runtime.mode !== "host-runtime-available") {
+  const runtime = getRuntimeDiagnostics();
+  if (runtime.mode !== "tauri-runtime-available") {
     return {
       status: "error",
       detail:
         runtime.mode === "browser-preview"
           ? "Gateway controls are unavailable in browser preview mode."
-          : "Gateway controls are unavailable because the desktop host command bridge is not ready.",
+          : "Gateway controls are unavailable because the Tauri command bridge is not ready in this desktop runtime.",
       suggestion:
         runtime.mode === "browser-preview"
-          ? "Start ClawDesk in the desktop app to run local process commands."
-          : "Relaunch or reinstall ClawDesk and verify the frontend bundles the host API bridge.",
-      code: runtime.mode === "browser-preview" ? "E_PREVIEW_MODE" : "E_HOST_UNAVAILABLE",
+          ? "Start ClawDesk in Tauri to run local process commands."
+          : "Relaunch or reinstall ClawDesk and verify the frontend bundles the Tauri API bridge.",
+      code: runtime.mode === "browser-preview" ? "E_PREVIEW_MODE" : "E_TAURI_UNAVAILABLE",
     };
   }
 
@@ -288,11 +288,11 @@ async function invokeAction(command: string): Promise<ServiceActionResult> {
 
 export const serviceService = {
   async getGatewayStatus(): Promise<GatewayStatus> {
-    const runtime = getHostDiagnostics();
+    const runtime = getRuntimeDiagnostics();
     if (runtime.mode === "browser-preview") {
       return buildPreviewStatus();
     }
-    if (runtime.mode === "host-runtime-unavailable") {
+    if (runtime.mode === "tauri-runtime-unavailable") {
       return buildUnavailableRuntimeStatus();
     }
 
@@ -349,8 +349,8 @@ export const serviceService = {
       };
     }
 
-    const runtime = getHostDiagnostics();
-    if (runtime.mode !== "host-runtime-available") {
+    const runtime = getRuntimeDiagnostics();
+    if (runtime.mode !== "tauri-runtime-available") {
       return {
         address,
         reachable: false,
@@ -359,8 +359,8 @@ export const serviceService = {
         responseTimeMs: null,
         detail:
           runtime.mode === "browser-preview"
-            ? "Endpoint probe is only available in the desktop runtime."
-            : "Endpoint probe is unavailable because the desktop host command bridge is not ready.",
+            ? "Endpoint probe is only available in the Tauri runtime."
+            : "Endpoint probe is unavailable because the Tauri command bridge is not ready.",
       };
     }
 
