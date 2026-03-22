@@ -2,12 +2,12 @@ import { useEffect, useState } from "react";
 import { RefreshCw, Play, Square, RotateCcw, CheckCircle2, AlertCircle, Server, Globe, Shield, Info } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { invokeCommand } from "@/services/tauriClient";
-import { serviceService, type GatewayStatus } from "@/services/serviceService";
 import { clearGatewayUrlCache } from "@/lib/gateway-client";
 import { APP_DISPLAY } from "@/lib/constants";
 import type { AppLanguage, ThemePreference } from "@/lib/preferences";
 import { cn } from "@/lib/utils";
 import { useSettingsStore } from "@/store/useSettingsStore";
+import { useGatewayControl } from "@/hooks/useGatewayControl";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
@@ -28,59 +28,49 @@ interface AppSettings {
 
 function GatewayCard() {
   const { t } = useTranslation(["common", "settings"]);
-  const [status, setStatus] = useState<GatewayStatus | null>(null);
-  const [loading, setLoading] = useState<"start" | "stop" | "restart" | null>(null);
-  const [polling, setPolling] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
 
-  const refresh = async () => {
-    setPolling(true);
-    const next = await serviceService.getGatewayStatus();
-    setStatus(next);
-    setPolling(false);
-  };
+  // Re-use the shared gateway control hook instead of an independent
+  // polling timer.  This avoids spawning duplicate status-check processes
+  // (critical for Windows memory usage).
+  const {
+    status,
+    isRefreshing: polling,
+    loadingByAction,
+    refreshStatus,
+    startGateway: hookStart,
+    stopGateway: hookStop,
+    restartGateway: hookRestart,
+  } = useGatewayControl(5000);
+
+  const loading = loadingByAction.start ? "start" : loadingByAction.stop ? "stop" : loadingByAction.restart ? "restart" : null;
 
   const start = async () => {
-    setLoading("start");
     setActionError(null);
     clearGatewayUrlCache();
-    const result = await serviceService.startGateway();
-    if (result.status !== "success") {
+    const result = await hookStart();
+    if (result && result.status !== "success") {
       setActionError(result.detail);
     }
-    await refresh();
-    setLoading(null);
   };
 
   const stop = async () => {
-    setLoading("stop");
     setActionError(null);
     clearGatewayUrlCache();
-    const result = await serviceService.stopGateway();
-    if (result.status !== "success") {
+    const result = await hookStop();
+    if (result && result.status !== "success") {
       setActionError(result.detail);
     }
-    await refresh();
-    setLoading(null);
   };
 
   const restart = async () => {
-    setLoading("restart");
     setActionError(null);
     clearGatewayUrlCache();
-    const result = await serviceService.restartGateway();
-    if (result.status !== "success") {
+    const result = await hookRestart();
+    if (result && result.status !== "success") {
       setActionError(result.detail);
     }
-    await refresh();
-    setLoading(null);
   };
-
-  useEffect(() => {
-    void refresh();
-    const timer = window.setInterval(() => void refresh(), 5000);
-    return () => window.clearInterval(timer);
-  }, []);
 
   const isRunning = status?.running ?? false;
   const state = status?.state ?? "unknown";
@@ -112,7 +102,7 @@ function GatewayCard() {
             <Server className="h-4 w-4 text-muted-foreground" />
             <CardTitle>{t("settings:gateway.title")}</CardTitle>
           </div>
-          <Button variant="ghost" size="icon" onClick={() => void refresh()} disabled={polling} className="h-7 w-7">
+          <Button variant="ghost" size="icon" onClick={() => void refreshStatus()} disabled={polling} className="h-7 w-7">
             <RefreshCw className={cn("h-3.5 w-3.5", polling && "animate-spin")} />
           </Button>
         </div>

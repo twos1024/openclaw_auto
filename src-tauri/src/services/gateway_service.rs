@@ -14,7 +14,7 @@ use crate::services::log_service::{self, LogSource};
 
 const GATEWAY_TIMEOUT_MS: u64 = 30_000;
 const GATEWAY_STATUS_TIMEOUT_MS: u64 = 8_000;
-const GATEWAY_STATUS_CACHE_TTL_MS: u64 = 2_000;
+const GATEWAY_STATUS_CACHE_TTL_MS: u64 = 5_000;
 const DASHBOARD_PROBE_TIMEOUT_MS: u64 = 3_000;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

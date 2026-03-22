@@ -26,7 +26,7 @@ export interface ServiceActionResult {
   pid?: number | null;
 }
 
-const STATUS_CACHE_TTL_MS = 2_000;
+const STATUS_CACHE_TTL_MS = 5_000;
 let statusCache: { value: GatewayStatus; cachedAt: number } | null = null;
 let statusInFlight: Promise<GatewayStatus> | null = null;
 

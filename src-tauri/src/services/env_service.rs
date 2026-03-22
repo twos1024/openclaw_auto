@@ -61,7 +61,7 @@ impl DetectEnvCacheState {
     }
 }
 
-const DETECT_ENV_CACHE_TTL_MS: u64 = 2_000;
+const DETECT_ENV_CACHE_TTL_MS: u64 = 30_000;
 static DETECT_ENV_CACHE: OnceLock<Mutex<DetectEnvCacheState>> = OnceLock::new();
 
 fn detect_env_cache() -> &'static Mutex<DetectEnvCacheState> {
