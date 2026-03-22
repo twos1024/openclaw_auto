@@ -51,7 +51,7 @@
   },
   "install": {
     "title": "安装 OpenClaw",
-    "description": "运行官方安装脚本，然后注册本地 Gateway 服务。",
+    "description": "运行官方安装脚本完成 CLI 安装。Gateway 服务会在保存配置后于下一步安装或修复。",
     "notice": {
       "title": "官方安装与补齐",
       "description": "安装器在需要时会自动安装 Node.js / npm，你不需要手工先准备运行环境。"
@@ -74,7 +74,7 @@
   },
   "gateway": {
     "title": "启动 Gateway",
-    "description": "启动本地 Gateway 运行时，并确认它已在 loopback 上监听。",
+    "description": "确认本地 Gateway 服务已安装，然后启动运行时并验证它已在 loopback 上监听。",
     "status": {
       "running": "运行中",
       "pending": "待启动",
@@ -90,6 +90,7 @@
     },
     "actions": {
       "start": "启动 Gateway",
+      "installAndStart": "安装并启动 Gateway",
       "openDashboard": "打开 Dashboard",
       "next": "继续"
     }

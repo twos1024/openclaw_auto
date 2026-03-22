@@ -301,24 +301,52 @@ fn build_config_section(
         Ok(data) => {
             let model = read_string_field(&data.content, &["model"]);
             let provider = read_string_field(&data.content, &["providerType"]);
-            let detail = if let Some(model) = model {
-                format!("API Key 配置已保存，当前模型为 {model}。下一步可以启动 Gateway。")
+            let gateway_mode = read_string_field(&data.content, &["_gatewayMode"]);
+            let gateway_bind = read_string_field(&data.content, &["_gatewayBind"]);
+            let local_gateway_ready = matches!(gateway_mode.as_deref(), Some("local"));
+            let detail = if local_gateway_ready {
+                if let Some(model) = model.clone() {
+                    format!("API Key 配置已保存，当前模型为 {model}。下一步可以启动 Gateway。")
+                } else {
+                    "配置已加载。下一步可以启动 Gateway。".to_string()
+                }
+            } else if let Some(model) = model.clone() {
+                format!(
+                    "API Key 配置已保存，当前模型为 {model}，但本地 Gateway 仍未完成初始化。请重新保存配置或前往 Gateway 页面自动修复。"
+                )
             } else {
-                "配置已加载。下一步可以启动 Gateway。".to_string()
+                "配置已加载，但本地 Gateway 仍未完成初始化。请重新保存配置或前往 Gateway 页面自动修复。"
+                    .to_string()
             };
 
             build_section(
                 "openclaw-config",
                 "OpenClaw 配置",
                 "/config",
-                "查看配置",
-                HEALTHY,
+                if local_gateway_ready {
+                    "查看配置"
+                } else {
+                    "补全 Gateway 配置"
+                },
+                if local_gateway_ready {
+                    HEALTHY
+                } else {
+                    DEGRADED
+                },
                 detail,
                 updated_at,
                 Some(vec![
                     OverviewMeta {
                         label: "Provider".to_string(),
                         value: provider.unwrap_or_else(|| "-".to_string()),
+                    },
+                    OverviewMeta {
+                        label: "Gateway Mode".to_string(),
+                        value: gateway_mode.unwrap_or_else(|| "unset".to_string()),
+                    },
+                    OverviewMeta {
+                        label: "Gateway Bind".to_string(),
+                        value: gateway_bind.unwrap_or_else(|| "-".to_string()),
                     },
                     OverviewMeta {
                         label: "Path".to_string(),
@@ -358,6 +386,7 @@ fn build_service_section(
     match gateway_result {
         Ok(status) => {
             let running = status.running;
+            let service_loaded = status.service_loaded;
             let detail = if running {
                 if status.status_detail.trim().is_empty() {
                     if status.address.trim().is_empty() {
@@ -365,6 +394,12 @@ fn build_service_section(
                     } else {
                         format!("Gateway 正在 {} 运行。", status.address)
                     }
+                } else {
+                    status.status_detail.clone()
+                }
+            } else if service_loaded == Some(false) {
+                if status.status_detail.trim().is_empty() {
+                    "Gateway 托管服务尚未安装。".to_string()
                 } else {
                     status.status_detail.clone()
                 }
@@ -380,6 +415,8 @@ fn build_service_section(
                 "/service",
                 if running {
                     "查看运行状态"
+                } else if service_loaded == Some(false) {
+                    "安装并启动 Gateway"
                 } else {
                     "启动 Gateway"
                 },
@@ -397,6 +434,14 @@ fn build_service_section(
                             .pid
                             .map(|value| value.to_string())
                             .unwrap_or_else(|| "-".to_string()),
+                    },
+                    OverviewMeta {
+                        label: "Service".to_string(),
+                        value: match service_loaded {
+                            Some(true) => "installed".to_string(),
+                            Some(false) => "missing".to_string(),
+                            None => "unknown".to_string(),
+                        },
                     },
                 ]),
             )

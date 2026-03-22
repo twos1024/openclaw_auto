@@ -36,10 +36,10 @@ export function createBasePhases(): InstallPhase[] {
     },
     {
       id: "install-gateway",
-      title: "安装 Gateway 托管服务",
+      title: "准备 Gateway 服务",
       status: "pending",
-      detail: "等待执行 Gateway managed install。",
-      suggestion: "CLI 安装完成后会继续尝试安装 Gateway 服务。",
+      detail: "等待在保存配置后安装或修复 Gateway 托管服务。",
+      suggestion: "CLI 安装完成后，Gateway 步骤会继续准备本地服务。",
     },
     {
       id: "verify",
@@ -92,6 +92,7 @@ export function toFailureResult(error?: BackendError): InstallActionResult {
 
 export function toSuccessResult(data: InstallOpenClawData): InstallActionResult {
   let phases = createBasePhases();
+  const gatewayServiceDeferred = Boolean(data.gatewayServiceDeferred);
   const gatewayIssue =
     normalizeInstallIssue(data.gatewayInstallIssue) ??
     buildIssueFromShellOutput("install-gateway", "openclaw gateway install --json", data.serviceInstallOutput);
@@ -106,40 +107,46 @@ export function toSuccessResult(data: InstallOpenClawData): InstallActionResult 
     detail: data.executablePath
       ? `OpenClaw CLI 已安装到 ${data.executablePath}。`
       : "OpenClaw CLI 安装成功。",
-    suggestion: "继续安装 Gateway 托管服务。",
+    suggestion: "继续保存配置，再在 Gateway 步骤完成本地服务准备。",
   });
   phases = updatePhase(phases, "install-gateway", {
-    status: data.gatewayServiceInstalled ? "success" : "warning",
-    detail: data.gatewayServiceInstalled
+    status: gatewayServiceDeferred || data.gatewayServiceInstalled ? "success" : "warning",
+    detail: gatewayServiceDeferred
+      ? "Gateway 托管服务会在保存配置后，于 Gateway 步骤自动安装或修复。"
+      : data.gatewayServiceInstalled
       ? "Gateway 托管服务安装成功。"
       : gatewayIssue?.message ?? "CLI 已安装，但 Gateway 托管服务仍需要人工关注。",
-    suggestion: data.gatewayServiceInstalled
+    suggestion: gatewayServiceDeferred
+      ? "继续到配置和 Gateway 步骤，完成本地服务准备并启动 Gateway。"
+      : data.gatewayServiceInstalled
       ? "继续验证安装结果。"
       : gatewayIssue?.suggestion ?? "可前往 Service 和 Logs 页面继续排查托管服务安装问题。",
-    code: data.gatewayServiceInstalled ? undefined : gatewayIssue?.code,
+    code: gatewayServiceDeferred || data.gatewayServiceInstalled ? undefined : gatewayIssue?.code,
   });
   phases = updatePhase(phases, "verify", {
     status: data.executablePath ? "success" : "warning",
     detail: data.executablePath
       ? `已检测到可执行路径：${data.executablePath}`
       : "未返回可执行路径，请在 Logs 中确认安装结果。",
-    suggestion: data.gatewayServiceInstalled
+    suggestion: gatewayServiceDeferred || data.gatewayServiceInstalled
       ? "继续前往 Config 与 Service 页面完成配置并启动 Gateway。"
       : "先检查 Gateway 服务安装，再继续启动。",
   });
 
   return {
-    status: data.gatewayServiceInstalled ? "success" : "warning",
-    stage: data.gatewayServiceInstalled ? "verify" : "install-gateway",
-    detail: data.gatewayServiceInstalled
+    status: gatewayServiceDeferred || data.gatewayServiceInstalled ? "success" : "warning",
+    stage: gatewayServiceDeferred || data.gatewayServiceInstalled ? "verify" : "install-gateway",
+    detail: gatewayServiceDeferred
+      ? "OpenClaw CLI 安装完成。Gateway 服务会在保存配置后继续准备。"
+      : data.gatewayServiceInstalled
       ? "OpenClaw CLI 和 Gateway 托管服务安装完成。"
       : gatewayIssue?.message ?? "OpenClaw CLI 已安装，但 Gateway 托管服务还需要进一步处理。",
-    suggestion: data.gatewayServiceInstalled
+    suggestion: gatewayServiceDeferred || data.gatewayServiceInstalled
       ? "继续前往 Config 和 Service 页面完成配置并启动 Gateway。"
       : gatewayIssue?.suggestion ?? "查看安装日志并前往 Service 页面继续完成剩余步骤。",
-    code: data.gatewayServiceInstalled ? undefined : gatewayIssue?.code,
+    code: gatewayServiceDeferred || data.gatewayServiceInstalled ? undefined : gatewayIssue?.code,
     phases,
-    issue: gatewayIssue ?? undefined,
+    issue: gatewayServiceDeferred ? undefined : gatewayIssue ?? undefined,
     data,
   };
 }

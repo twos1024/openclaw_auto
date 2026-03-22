@@ -96,6 +96,30 @@ describe("installService integration", () => {
     expect(result.data?.gatewayServiceInstalled).toBe(true);
   });
 
+  it("treats deferred Gateway preparation as a successful install outcome", async () => {
+    createInvokeMock({
+      install_openclaw: async () => ({
+        success: true,
+        data: {
+          cliInstalled: true,
+          gatewayServiceInstalled: false,
+          gatewayServiceDeferred: true,
+          executablePath: "C:\\Users\\Tester\\AppData\\Roaming\\npm\\openclaw.cmd",
+          configPath: "C:\\Users\\Tester\\.openclaw\\openclaw.json",
+          notes: ["Gateway service setup is deferred until the configuration is saved."],
+        },
+      }),
+    });
+
+    const result = await installService.installOpenClaw();
+    const phase = result.phases.find((item) => item.id === "install-gateway");
+
+    expect(result.status).toBe("success");
+    expect(result.stage).toBe("verify");
+    expect(phase?.status).toBe("success");
+    expect(phase?.detail).toContain("Gateway 托管服务会在保存配置后");
+  });
+
   it("returns warning phases when Gateway managed install needs manual attention", async () => {
     createInvokeMock({
       install_openclaw: async () => ({

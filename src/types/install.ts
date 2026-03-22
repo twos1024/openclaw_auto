@@ -18,6 +18,7 @@ export interface InstallEnvironment {
 export interface InstallOpenClawData {
   cliInstalled: boolean;
   gatewayServiceInstalled: boolean;
+  gatewayServiceDeferred?: boolean;
   executablePath?: string | null;
   configPath: string;
   installOutput?: ShellCommandOutput;

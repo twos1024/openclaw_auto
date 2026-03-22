@@ -94,6 +94,8 @@ export function ServiceControlPanel({
   const { t } = useTranslation("service");
   const busy = Object.values(loadingByAction).some(Boolean) || isRefreshing;
   const isRunning = Boolean(status?.running);
+  const startLabel =
+    status?.serviceLoaded === false ? t("controls.installAndStart") : t("controls.start");
 
   return (
     <section
@@ -125,7 +127,7 @@ export function ServiceControlPanel({
           variant="neutral"
         />
         <ActionButton
-          label={t("controls.start")}
+          label={startLabel}
           loading={loadingByAction.start}
           disabled={busy || isRunning}
           onClick={onStart}

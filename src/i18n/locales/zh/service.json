@@ -1,7 +1,7 @@
 {
   "page": {
     "title": "Gateway 服务",
-    "description": "先启动 Gateway，再打开 Dashboard。",
+    "description": "先确认 Gateway 服务已安装并启动，再打开 Dashboard。",
     "polling": "轮询：{{state}}",
     "pollingOn": "开启 ({{seconds}}s)",
     "pollingOff": "关闭",
@@ -17,11 +17,12 @@
   },
   "nextStep": {
     "title": "下一步",
-    "description": "先启动 Gateway，确认运行后再打开 Dashboard。"
+    "description": "如果本地服务尚未安装，应用会先安装或修复服务，再启动 Gateway。"
   },
   "snapshot": {
     "title": "运行快照",
     "running": "运行状态：",
+    "serviceInstalled": "服务已安装：",
     "yes": "是",
     "no": "否",
     "pid": "PID:",
@@ -32,6 +33,7 @@
     "waiting": "正在等待 Gateway 状态...",
     "refresh": "刷新",
     "start": "启动 Gateway",
+    "installAndStart": "安装并启动 Gateway",
     "stop": "停止 Gateway",
     "restart": "重启 Gateway",
     "openDashboard": "打开 Dashboard",

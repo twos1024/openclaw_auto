@@ -2,6 +2,20 @@
 
 All notable changes to ClawDesk (OpenClaw Manager) will be documented in this file.
 
+## [3.1.0] — 2026-03-22
+
+### Fixed
+
+- **Windows Gateway startup OOM**: Removed the forced `NODE_OPTIONS=--max-old-space-size=256` cap from desktop-spawned OpenClaw commands so `gateway status/install/start` no longer crash under the latest CLI.
+- **Gateway startup false positives**: `start_gateway` and `restart_gateway` now verify the service reaches a real running state instead of trusting the CLI action exit code alone.
+- **Missing local Gateway defaults**: Saving or repairing config now backfills `gateway.mode=local` and `gateway.bind=loopback`, which aligns the desktop flow with current OpenClaw doctor expectations.
+
+### Changed
+
+- **Install wizard sequencing**: The install step now stops at CLI installation and clearly defers managed Gateway service setup to the later Gateway step, after API configuration is saved.
+- **Service diagnostics and guidance**: Overview, Setup, and Service pages now distinguish between "Gateway service missing" and "Gateway not running", and the primary action switches to install-and-start when the managed service is absent.
+- **Release metadata**: Synced package, Tauri, Cargo, and frontend app-version constants to `3.1.0`.
+
 ## [3.0.0] — 2026-03-22
 
 ### Added

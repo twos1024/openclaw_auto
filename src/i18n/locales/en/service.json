@@ -1,7 +1,7 @@
 {
   "page": {
     "title": "Gateway service",
-    "description": "Start Gateway first, then open the Dashboard.",
+    "description": "Make sure the Gateway service is installed and running before opening the Dashboard.",
     "polling": "Polling: {{state}}",
     "pollingOn": "On ({{seconds}}s)",
     "pollingOff": "Off",
@@ -17,11 +17,12 @@
   },
   "nextStep": {
     "title": "Next step",
-    "description": "Start Gateway first, confirm it is running, and then open the Dashboard."
+    "description": "If the local service is missing, ClawDesk will install or repair it before starting Gateway."
   },
   "snapshot": {
     "title": "Runtime snapshot",
     "running": "Running:",
+    "serviceInstalled": "Service installed:",
     "yes": "Yes",
     "no": "No",
     "pid": "PID:",
@@ -32,6 +33,7 @@
     "waiting": "Waiting for gateway status...",
     "refresh": "Refresh",
     "start": "Start Gateway",
+    "installAndStart": "Install & Start Gateway",
     "stop": "Stop Gateway",
     "restart": "Restart Gateway",
     "openDashboard": "Open Dashboard",

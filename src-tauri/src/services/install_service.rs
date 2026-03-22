@@ -6,19 +6,18 @@ use crate::adapters::shell::{self, run_command, ShellOutput};
 use crate::models::error::AppError;
 use crate::services::env_service;
 use crate::services::install_issue::{
-    classify_install_error, classify_install_output, install_error_from_error,
-    install_error_from_output, InstallIssue,
+    install_error_from_error, install_error_from_output, InstallIssue,
 };
 use crate::services::log_service::{self, LogSource};
 
 const INSTALL_TIMEOUT_MS: u64 = 10 * 60 * 1000;
-const GATEWAY_INSTALL_TIMEOUT_MS: u64 = 60 * 1000;
-
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct InstallOpenClawData {
     pub cli_installed: bool,
     pub gateway_service_installed: bool,
+    #[serde(rename = "gatewayServiceDeferred")]
+    pub gateway_setup_deferred: bool,
     pub executable_path: Option<String>,
     pub config_path: String,
     pub install_output: ShellOutput,
@@ -89,85 +88,35 @@ pub async fn install_openclaw() -> Result<InstallOpenClawData, AppError> {
         })?;
     write_phase_event_to_install_log(
         "install-gateway",
-        "running",
-        "Installing Gateway managed service.",
+        "success",
+        "Gateway managed install is deferred until configuration and first start.",
     );
-    let gateway_args = vec![
-        "gateway".to_string(),
-        "install".to_string(),
-        "--json".to_string(),
+    write_phase_event_to_install_log("verify", "running", "Validating final install result.");
+    let gateway_service_installed = false;
+    let gateway_setup_deferred = true;
+    let service_install_output = None;
+    let gateway_install_issue = None;
+    let notes = vec![
+        "Gateway service setup is deferred until the API configuration is saved.".to_string(),
+        "Use the Gateway step to install or repair the managed service after configuration."
+            .to_string(),
     ];
-    let gateway_step = "openclaw gateway install --json";
-    let gateway_command =
-        run_command(&executable_path, &gateway_args, GATEWAY_INSTALL_TIMEOUT_MS).await;
-    let (service_install_output, gateway_install_issue) = match gateway_command {
-        Ok(output) => {
-            write_shell_output_to_install_log(gateway_step, &output);
-            if output.exit_code.unwrap_or(1) == 0 {
-                write_phase_event_to_install_log(
-                    "install-gateway",
-                    "success",
-                    "Gateway managed install finished.",
-                );
-                (Some(output), None)
-            } else {
-                write_phase_event_to_install_log(
-                    "install-gateway",
-                    "failure",
-                    "Gateway managed install returned a non-zero exit code.",
-                );
-                (
-                    Some(output.clone()),
-                    Some(classify_install_output(
-                        "install-gateway",
-                        gateway_step,
-                        &output,
-                    )),
-                )
-            }
-        }
-        Err(error) => {
-            write_install_error_to_log(gateway_step, &error);
-            write_phase_event_to_install_log(
-                "install-gateway",
-                "failure",
-                "Gateway managed install command failed before completion.",
-            );
-            (
-                None,
-                Some(classify_install_error(
-                    "install-gateway",
-                    gateway_step,
-                    &error,
-                )),
-            )
-        }
-    };
-
-    let gateway_service_installed = gateway_install_issue.is_none();
-    let mut notes = Vec::new();
-    if let Some(issue) = gateway_install_issue.as_ref() {
-        notes.push(issue.message.clone());
-        notes.push(issue.suggestion.clone());
-    } else {
-        write_phase_event_to_install_log("verify", "running", "Validating final install result.");
-    }
 
     append_install_log_line(
         LogSource::Install,
         &format!(
-            "[info] {} install_openclaw completed cliInstalled=true gatewayServiceInstalled={}",
+            "[info] {} install_openclaw completed cliInstalled=true gatewayServiceInstalled={} gatewaySetupDeferred={}",
             Utc::now().to_rfc3339(),
-            gateway_service_installed
+            gateway_service_installed,
+            gateway_setup_deferred
         ),
     );
-    if gateway_service_installed {
-        write_phase_event_to_install_log("verify", "success", "Install flow completed.");
-    }
+    write_phase_event_to_install_log("verify", "success", "Install flow completed.");
 
     Ok(InstallOpenClawData {
         cli_installed: true,
         gateway_service_installed,
+        gateway_setup_deferred,
         executable_path: Some(executable_path),
         config_path: platform::default_openclaw_config_path()
             .to_string_lossy()

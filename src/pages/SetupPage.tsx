@@ -236,6 +236,8 @@ export function SetupPage(): JSX.Element {
   ];
 
   const configBusy = configLoading || isTesting || isSaving;
+  const gatewayPrimaryActionLabel =
+    gatewayStatus?.serviceLoaded === false ? t("gateway.actions.installAndStart") : t("gateway.actions.start");
 
   return (
     <div className="min-h-screen bg-background p-6 md:p-10">
@@ -481,7 +483,7 @@ export function SetupPage(): JSX.Element {
                     <div className="flex flex-wrap gap-3">
                       <Button onClick={() => void handleGatewayStart()} disabled={gatewayLoading || !configSucceeded}>
                         {gatewayLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Play className="mr-2 h-4 w-4" />}
-                        {t("gateway.actions.start")}
+                        {gatewayPrimaryActionLabel}
                       </Button>
                       <Button variant="outline" onClick={() => void handleOpenDashboard()} disabled={!gatewaySucceeded}>
                         {t("gateway.actions.openDashboard")}

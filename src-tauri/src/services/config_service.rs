@@ -123,6 +123,49 @@ pub async fn write_openclaw_config(
     })
 }
 
+pub async fn ensure_local_gateway_defaults(path: Option<String>) -> Result<Vec<String>, AppError> {
+    let resolved = resolve_path(path)?;
+    if !resolved.exists() {
+        return Err(AppError::new(
+            ErrorCode::PathNotFound,
+            "OpenClaw config file does not exist yet.",
+            "Save the provider configuration first, then retry the local Gateway setup.",
+        )
+        .with_details(json!({ "path": resolved.to_string_lossy() })));
+    }
+
+    let raw = fs::read_to_string(&resolved)
+        .await
+        .map_err(|error| map_read_error(&resolved, error))?;
+    let parsed = parse_json5_or_json(&raw, &resolved)?;
+    let mut root = parsed.as_object().cloned().unwrap_or_default();
+    let changes = ensure_local_gateway_settings(&mut root);
+    if changes.is_empty() {
+        return Ok(changes);
+    }
+
+    let backup_path = backup_file(&resolved).await?;
+    let serialized = serde_json::to_string_pretty(&Value::Object(root)).map_err(|error| {
+        AppError::new(
+            ErrorCode::InvalidInput,
+            "Provided config payload cannot be serialized.",
+            "Check the request payload and retry with valid JSON.",
+        )
+        .with_details(json!({ "serialize_error": error.to_string() }))
+    })?;
+
+    file_ops::safe_write_bytes(&resolved, serialized.as_bytes())
+        .await
+        .map_err(|error| map_write_error(&resolved, error, ErrorCode::ConfigWriteFailed))?;
+
+    if let Err(error) = validate_openclaw_config(&resolved).await {
+        let _ = fs::copy(&backup_path, &resolved).await;
+        return Err(error);
+    }
+
+    Ok(changes)
+}
+
 pub async fn backup_openclaw_config(path: Option<String>) -> Result<BackupConfigData, AppError> {
     let resolved = resolve_path(path)?;
     if !resolved.exists() {
@@ -275,6 +318,16 @@ fn to_simplified_config_view(parsed: &Value) -> Option<Value> {
     } else {
         "openai-compatible"
     };
+    let gateway_mode = read_string_path(parsed, &["gateway", "mode"]).unwrap_or_default();
+    let gateway_bind = read_string_path(parsed, &["gateway", "bind"]).unwrap_or_default();
+    let gateway_auth_mode =
+        read_string_path(parsed, &["gateway", "auth", "mode"]).unwrap_or_default();
+    let gateway_has_token = read_string_path(parsed, &["gateway", "auth", "token"])
+        .map(|value| !value.trim().is_empty())
+        .unwrap_or(false);
+    let gateway_has_password = read_string_path(parsed, &["gateway", "auth", "password"])
+        .map(|value| !value.trim().is_empty())
+        .unwrap_or(false);
 
     let base_url = read_string_path(parsed, &["models", "providers", provider_id, "baseUrl"])
         .unwrap_or_else(|| "".to_string());
@@ -326,6 +379,20 @@ fn to_simplified_config_view(parsed: &Value) -> Option<Value> {
         Value::String(provider_id.to_string()),
     );
     out.insert("_modelRef".to_string(), Value::String(primary.to_string()));
+    out.insert("_gatewayMode".to_string(), Value::String(gateway_mode));
+    out.insert("_gatewayBind".to_string(), Value::String(gateway_bind));
+    out.insert(
+        "_gatewayAuthMode".to_string(),
+        Value::String(gateway_auth_mode),
+    );
+    out.insert(
+        "_gatewayHasToken".to_string(),
+        Value::Bool(gateway_has_token),
+    );
+    out.insert(
+        "_gatewayHasPassword".to_string(),
+        Value::Bool(gateway_has_password),
+    );
 
     Some(Value::Object(out))
 }
@@ -493,8 +560,52 @@ async fn merge_simplified_into_official(
         model_entry.insert("params".to_string(), Value::Object(params));
     }
     models_map_obj.insert(model_ref, Value::Object(model_entry));
+    let _ = ensure_local_gateway_settings(&mut root);
 
     Ok(Value::Object(root))
+}
+
+fn ensure_local_gateway_settings(root: &mut serde_json::Map<String, Value>) -> Vec<String> {
+    let mut changes = Vec::new();
+    let gateway = root
+        .entry("gateway".to_string())
+        .or_insert_with(|| json!({}));
+    if !gateway.is_object() {
+        *gateway = json!({});
+        changes.push("Reset gateway config to an object.".to_string());
+    }
+    let gateway_obj = gateway.as_object_mut().expect("gateway object");
+    ensure_default_string_field(
+        gateway_obj,
+        "mode",
+        "local",
+        &mut changes,
+        "Set gateway.mode to local.",
+    );
+    ensure_default_string_field(
+        gateway_obj,
+        "bind",
+        "loopback",
+        &mut changes,
+        "Set gateway.bind to loopback.",
+    );
+    changes
+}
+
+fn ensure_default_string_field(
+    target: &mut serde_json::Map<String, Value>,
+    key: &str,
+    default_value: &str,
+    changes: &mut Vec<String>,
+    change_label: &str,
+) {
+    match target.get(key) {
+        Some(Value::String(value)) if !value.trim().is_empty() => {}
+        _ => {
+            target.insert(key.to_string(), Value::String(default_value.to_string()));
+            changes.push(change_label.to_string());
+        }
+    }
 }
 
 fn normalize_ollama_base_url(host: &str) -> String {
@@ -636,6 +747,65 @@ mod tests {
         assert_eq!(
             &normalize_ollama_base_url("http://127.0.0.1:11434/v1/"),
             "http://127.0.0.1:11434/v1"
+        );
+    }
+
+    #[test]
+    fn simplified_view_exposes_gateway_metadata() {
+        let official = json!({
+          "models": { "providers": { "custom-proxy": { "baseUrl": "https://api.example.com/v1", "apiKey": "sk-test" } } },
+          "agents": {
+            "defaults": {
+              "model": { "primary": "custom-proxy/gpt-test" },
+              "models": { "custom-proxy/gpt-test": { "params": { "temperature": 0.2, "maxTokens": 1024 } } }
+            }
+          },
+          "gateway": {
+            "mode": "local",
+            "bind": "loopback",
+            "auth": { "mode": "token", "token": "tok-test" }
+          }
+        });
+
+        let simplified = to_simplified_config_view(&official).expect("simplified view");
+        assert_eq!(simplified["_gatewayMode"], "local");
+        assert_eq!(simplified["_gatewayBind"], "loopback");
+        assert_eq!(simplified["_gatewayAuthMode"], "token");
+        assert_eq!(simplified["_gatewayHasToken"], true);
+    }
+
+    #[test]
+    fn ensures_local_gateway_defaults_without_overwriting_existing_values() {
+        let mut root = serde_json::Map::new();
+        let changes = ensure_local_gateway_settings(&mut root);
+
+        assert_eq!(
+            root.get("gateway")
+                .and_then(|value| value.get("mode"))
+                .and_then(|value| value.as_str()),
+            Some("local")
+        );
+        assert_eq!(
+            root.get("gateway")
+                .and_then(|value| value.get("bind"))
+                .and_then(|value| value.as_str()),
+            Some("loopback")
+        );
+        assert!(!changes.is_empty());
+
+        let mut existing = serde_json::Map::new();
+        existing.insert(
+            "gateway".to_string(),
+            json!({ "mode": "remote", "bind": "0.0.0.0" }),
+        );
+        let second_changes = ensure_local_gateway_settings(&mut existing);
+        assert!(second_changes.is_empty());
+        assert_eq!(
+            existing
+                .get("gateway")
+                .and_then(|value| value.get("mode"))
+                .and_then(|value| value.as_str()),
+            Some("remote")
         );
     }
 }

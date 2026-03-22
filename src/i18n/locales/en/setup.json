@@ -51,7 +51,7 @@
   },
   "install": {
     "title": "Install OpenClaw",
-    "description": "Run the official installer script, then register the local Gateway service.",
+    "description": "Run the official installer script to install the CLI. The Gateway service will be installed or repaired after the configuration is saved.",
     "notice": {
       "title": "Official bootstrap",
       "description": "The installer can automatically install Node.js / npm when needed, so you do not need to prepare the runtime manually."
@@ -74,7 +74,7 @@
   },
   "gateway": {
     "title": "Start Gateway",
-    "description": "Start the local Gateway runtime and verify that it is listening on loopback.",
+    "description": "Make sure the local Gateway service is installed, then start the runtime and verify that it is listening on loopback.",
     "status": {
       "running": "Running",
       "pending": "Pending",
@@ -90,6 +90,7 @@
     },
     "actions": {
       "start": "Start Gateway",
+      "installAndStart": "Install & Start Gateway",
       "openDashboard": "Open Dashboard",
       "next": "Continue"
     }

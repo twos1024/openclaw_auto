@@ -84,15 +84,6 @@ pub async fn run_command(
         command.env("PATH", path_env);
     }
 
-    // Limit the V8 heap of spawned Node.js processes to prevent
-    // memory exhaustion on Windows, where each `openclaw.cmd` invocation
-    // starts a full `node.exe` instance.  CLI commands (status, version)
-    // need far less than the default ~1.4 GB heap.  Only set this when
-    // the caller has not already configured NODE_OPTIONS.
-    if std::env::var_os("NODE_OPTIONS").is_none() {
-        command.env("NODE_OPTIONS", "--max-old-space-size=256");
-    }
-
     let started_at = Instant::now();
     let child = command.spawn().map_err(|error| {
         AppError::new(

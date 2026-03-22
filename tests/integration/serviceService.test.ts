@@ -93,6 +93,32 @@ describe("serviceService integration", () => {
     expect(result.port).toBeNull();
   });
 
+  it("preserves service installation state from gateway status payloads", async () => {
+    const serviceService = await loadServiceService();
+    createInvokeMock({
+      get_gateway_status: async () => ({
+        success: true,
+        data: {
+          state: "stopped",
+          running: false,
+          port: 18789,
+          address: "http://127.0.0.1:18789",
+          pid: null,
+          statusDetail: "Gateway managed service is not installed yet.",
+          suggestion: "Install or repair the local Gateway managed service, then start Gateway again.",
+          portConflictPort: null,
+          serviceLoaded: false,
+        },
+      }),
+    });
+
+    const result = await serviceService.getGatewayStatus();
+
+    expect(result.running).toBe(false);
+    expect(result.serviceLoaded).toBe(false);
+    expect(result.statusDetail).toContain("not installed");
+  });
+
   it("preserves backend success detail for gateway actions", async () => {
     const serviceService = await loadServiceService();
     createInvokeMock({

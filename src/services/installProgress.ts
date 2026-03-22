@@ -26,7 +26,7 @@ interface ProgressModelArgs {
 const phaseTitles: Record<InstallPhaseId, string> = {
   prerequisite: "环境检查",
   "install-cli": "安装 OpenClaw CLI",
-  "install-gateway": "安装 Gateway 托管服务",
+  "install-gateway": "准备 Gateway 服务",
   verify: "结果验证",
 };
 
@@ -46,8 +46,8 @@ const runningSegments = [
     endMs: 6400,
     startPercent: 58,
     endPercent: 84,
-    detail: "正在尝试注册 Gateway 托管服务，失败时会以 warning 形式给出后续建议。",
-    suggestion: "如果本机服务注册受限，后续可在 Service 与 Logs 页面继续处理。",
+    detail: "正在记录 Gateway 下一步准备计划。保存 API 配置后，Gateway 步骤会安装或修复本地服务。",
+    suggestion: "安装阶段只完成 CLI，后续 Gateway 服务会在配置完成后处理。",
   },
   {
     phaseId: "verify" as const,
@@ -80,8 +80,8 @@ function createBasePhases(): InstallPhase[] {
       id: "install-gateway",
       title: phaseTitles["install-gateway"],
       status: "pending",
-      detail: "等待执行 Gateway managed install。",
-      suggestion: "CLI 安装完成后会继续尝试安装 Gateway 服务。",
+      detail: "等待在保存配置后安装或修复 Gateway 托管服务。",
+      suggestion: "CLI 安装完成后，Gateway 步骤会继续准备本地服务。",
     },
     {
       id: "verify",
@@ -246,7 +246,7 @@ export function buildInstallingPhases({ environment, elapsedMs, telemetry }: Ins
             phaseId === "install-cli"
               ? "OpenClaw CLI 安装阶段已完成。"
               : phaseId === "install-gateway"
-                ? "Gateway 托管安装阶段已完成。"
+                ? "Gateway 服务准备阶段已完成。"
                 : "安装验证阶段已完成。",
           suggestion: "继续等待后续阶段完成。",
         });
@@ -285,10 +285,10 @@ export function buildInstallingPhases({ environment, elapsedMs, telemetry }: Ins
     if (item.startMs < segment.startMs) {
       phases = updatePhase(phases, item.phaseId, {
         status: "success",
-        detail:
-          item.phaseId === "install-cli"
-            ? "OpenClaw CLI 安装步骤已提交，等待后端最终确认。"
-            : "Gateway 托管安装步骤已提交，等待后端最终确认。",
+          detail:
+            item.phaseId === "install-cli"
+              ? "OpenClaw CLI 安装步骤已提交，等待后端最终确认。"
+              : "Gateway 服务准备步骤已提交，等待后端最终确认。",
         suggestion: "继续等待安装命令完成。",
       });
     }

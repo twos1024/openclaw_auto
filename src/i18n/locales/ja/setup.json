@@ -51,7 +51,7 @@
   },
   "install": {
     "title": "OpenClaw をインストール",
-    "description": "公式インストーラーを実行し、ローカル Gateway サービスを登録します。",
+    "description": "公式インストーラーで CLI を導入します。Gateway サービスは設定保存後の次ステップでインストールまたは修復されます。",
     "notice": {
       "title": "公式ブートストラップ",
       "description": "必要に応じて Node.js / npm も自動で導入されるため、事前の手動準備は不要です。"
@@ -74,7 +74,7 @@
   },
   "gateway": {
     "title": "Gateway を起動",
-    "description": "ローカル Gateway を起動し、loopback で待ち受けていることを確認します。",
+    "description": "ローカル Gateway サービスが導入済みであることを確認してから起動し、loopback で待ち受けていることを確認します。",
     "status": {
       "running": "実行中",
       "pending": "待機中",
@@ -90,6 +90,7 @@
     },
     "actions": {
       "start": "Gateway を起動",
+      "installAndStart": "Gateway を導入して起動",
       "openDashboard": "Dashboard を開く",
       "next": "続行"
     }

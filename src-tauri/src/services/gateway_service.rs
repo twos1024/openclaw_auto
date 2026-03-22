@@ -5,10 +5,12 @@ use serde_json::{json, Value};
 use std::sync::{Arc, OnceLock};
 use std::time::{Duration, Instant};
 use tokio::sync::{Mutex, Notify};
+use tokio::time::sleep;
 
 use crate::adapters::platform;
 use crate::adapters::shell::{run_command, ShellOutput};
 use crate::models::error::{AppError, ErrorCode};
+use crate::services::config_service;
 use crate::services::env_service;
 use crate::services::log_service::{self, LogSource};
 
@@ -16,6 +18,8 @@ const GATEWAY_TIMEOUT_MS: u64 = 30_000;
 const GATEWAY_STATUS_TIMEOUT_MS: u64 = 8_000;
 const GATEWAY_STATUS_CACHE_TTL_MS: u64 = 5_000;
 const DASHBOARD_PROBE_TIMEOUT_MS: u64 = 3_000;
+const GATEWAY_START_VERIFY_TIMEOUT_MS: u64 = 15_000;
+const GATEWAY_START_VERIFY_INTERVAL_MS: u64 = 1_000;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -29,6 +33,7 @@ pub struct GatewayStatusData {
     pub status_detail: String,
     pub suggestion: String,
     pub port_conflict_port: Option<u16>,
+    pub service_loaded: Option<bool>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -205,18 +210,29 @@ pub async fn start_gateway() -> Result<GatewayActionData, AppError> {
     invalidate_gateway_status_cache().await;
 
     let program = env_service::ensure_openclaw_available().await?;
-    let args = vec![
-        "gateway".to_string(),
-        "start".to_string(),
-        "--json".to_string(),
-    ];
-    let output = run_command(&program, &args, GATEWAY_TIMEOUT_MS).await?;
+    let config_changes = config_service::ensure_local_gateway_defaults(None).await?;
+    let mut repaired_service = ensure_gateway_service_loaded(&program).await?;
+    let mut output = run_gateway_action_command(&program, "start").await?;
     log_shell_output_best_effort(
         GatewayLogPolicy::Always,
         LogSource::Startup,
         "openclaw gateway start --json",
         &output,
     );
+
+    if output.exit_code.unwrap_or(1) != 0 {
+        if !repaired_service && output_requires_gateway_service_installation(&output) {
+            install_gateway_service(&program).await?;
+            repaired_service = true;
+            output = run_gateway_action_command(&program, "start").await?;
+            log_shell_output_best_effort(
+                GatewayLogPolicy::Always,
+                LogSource::Startup,
+                "openclaw gateway start --json",
+                &output,
+            );
+        }
+    }
 
     if output.exit_code.unwrap_or(1) != 0 {
         let error_context = detect_gateway_error_context(&output, ErrorCode::GatewayStartFailed);
@@ -229,10 +245,10 @@ pub async fn start_gateway() -> Result<GatewayActionData, AppError> {
         );
     }
 
-    let status = parse_gateway_status_output(&output);
+    let status = wait_for_gateway_running().await?;
     set_gateway_status_cache(Ok(status.clone())).await;
     Ok(GatewayActionData {
-        detail: "Gateway start command completed.".to_string(),
+        detail: build_gateway_launch_detail("start", repaired_service, !config_changes.is_empty()),
         address: Some(status.address),
         pid: status.pid,
     })
@@ -276,12 +292,7 @@ pub async fn restart_gateway() -> Result<GatewayActionData, AppError> {
     invalidate_gateway_status_cache().await;
 
     let program = env_service::ensure_openclaw_available().await?;
-    let args = vec![
-        "gateway".to_string(),
-        "restart".to_string(),
-        "--json".to_string(),
-    ];
-    let output = run_command(&program, &args, GATEWAY_TIMEOUT_MS).await?;
+    let output = run_gateway_action_command(&program, "restart").await?;
     log_shell_output_best_effort(
         GatewayLogPolicy::Always,
         LogSource::Startup,
@@ -300,10 +311,10 @@ pub async fn restart_gateway() -> Result<GatewayActionData, AppError> {
         );
     }
 
-    let status = parse_gateway_status_output(&output);
+    let status = wait_for_gateway_running().await?;
     set_gateway_status_cache(Ok(status.clone())).await;
     Ok(GatewayActionData {
-        detail: "Gateway restarted successfully.".to_string(),
+        detail: build_gateway_launch_detail("restart", false, false),
         address: Some(status.address),
         pid: status.pid,
     })
@@ -427,9 +438,12 @@ fn parse_gateway_status_output(output: &ShellOutput) -> GatewayStatusData {
         parsed.as_ref(),
         &["lastStartedAt", "startedAt", "updatedAt"],
     );
+    let service_loaded = extract_bool(parsed.as_ref(), &["loaded", "serviceLoaded"]);
     let status_detail = extract_string(parsed.as_ref(), &["statusDetail", "message", "detail"])
         .unwrap_or_else(|| {
-            if running {
+            if service_loaded == Some(false) {
+                "Gateway managed service is not installed yet.".to_string()
+            } else if running {
                 "Gateway is running.".to_string()
             } else {
                 "Gateway is not running.".to_string()
@@ -438,8 +452,11 @@ fn parse_gateway_status_output(output: &ShellOutput) -> GatewayStatusData {
     let suggestion = extract_string(parsed.as_ref(), &["suggestion"]).unwrap_or_else(|| {
         if running {
             "You can open dashboard or restart service if needed.".to_string()
+        } else if service_loaded == Some(false) {
+            "Install or repair the local Gateway managed service, then start Gateway again."
+                .to_string()
         } else {
-            "Click Start Gateway to launch OpenClaw service.".to_string()
+            "Confirm the saved API configuration, then start the local Gateway.".to_string()
         }
     });
     let state = extract_string(parsed.as_ref(), &["state", "status"]).unwrap_or_else(|| {
@@ -462,6 +479,142 @@ fn parse_gateway_status_output(output: &ShellOutput) -> GatewayStatusData {
         status_detail,
         suggestion,
         port_conflict_port,
+        service_loaded,
+    }
+}
+
+async fn ensure_gateway_service_loaded(program: &str) -> Result<bool, AppError> {
+    match query_gateway_status_uncached().await {
+        Ok(status) if status.service_loaded == Some(false) => {
+            install_gateway_service(program).await?;
+            Ok(true)
+        }
+        Ok(_) => Ok(false),
+        Err(_) => Ok(false),
+    }
+}
+
+async fn install_gateway_service(program: &str) -> Result<(), AppError> {
+    invalidate_gateway_status_cache().await;
+    let output = run_gateway_action_command(program, "install").await?;
+    log_shell_output_best_effort(
+        GatewayLogPolicy::Always,
+        LogSource::Startup,
+        "openclaw gateway install --json",
+        &output,
+    );
+
+    if output.exit_code.unwrap_or(1) != 0 {
+        let error_context = detect_gateway_error_context(&output, ErrorCode::GatewayInstallFailed);
+        return map_gateway_error(
+            error_context.code,
+            "OpenClaw Gateway managed service could not be installed.",
+            "Check local service registration permissions, startup items, and logs, then retry.",
+            error_context.conflict_port,
+            &output,
+        );
+    }
+
+    Ok(())
+}
+
+async fn wait_for_gateway_running() -> Result<GatewayStatusData, AppError> {
+    let deadline = Instant::now() + Duration::from_millis(GATEWAY_START_VERIFY_TIMEOUT_MS);
+    let mut last_status: Option<GatewayStatusData> = None;
+    let mut last_error: Option<AppError> = None;
+
+    loop {
+        match query_gateway_status_uncached().await {
+            Ok(status) => {
+                if status.running {
+                    return Ok(status);
+                }
+                last_status = Some(status);
+            }
+            Err(error) => {
+                last_error = Some(error);
+            }
+        }
+
+        if Instant::now() >= deadline {
+            break;
+        }
+
+        sleep(Duration::from_millis(GATEWAY_START_VERIFY_INTERVAL_MS)).await;
+    }
+
+    if let Some(status) = last_status {
+        return Err(AppError::new(
+            ErrorCode::GatewayStartFailed,
+            if status.status_detail.trim().is_empty() {
+                "OpenClaw Gateway failed to start."
+            } else {
+                &status.status_detail
+            },
+            if status.suggestion.trim().is_empty() {
+                "Check startup logs, configuration, and port usage, then retry."
+            } else {
+                &status.suggestion
+            },
+        )
+        .with_details(json!({
+            "port": status.port,
+            "address": status.address,
+            "pid": status.pid,
+            "lastStartedAt": status.last_started_at,
+            "statusDetail": status.status_detail,
+            "serviceLoaded": status.service_loaded,
+        })));
+    }
+
+    if let Some(error) = last_error {
+        return Err(error);
+    }
+
+    Err(AppError::new(
+        ErrorCode::GatewayStartFailed,
+        "OpenClaw Gateway failed to start.",
+        "Check startup logs, configuration, and port usage, then retry.",
+    ))
+}
+
+async fn run_gateway_action_command(program: &str, action: &str) -> Result<ShellOutput, AppError> {
+    let args = vec![
+        "gateway".to_string(),
+        action.to_string(),
+        "--json".to_string(),
+    ];
+    run_command(program, &args, GATEWAY_TIMEOUT_MS).await
+}
+
+fn build_gateway_launch_detail(
+    action: &str,
+    repaired_service: bool,
+    refreshed_config: bool,
+) -> String {
+    match (action, repaired_service, refreshed_config) {
+        ("restart", true, true) => {
+            "Gateway service was repaired, local defaults were refreshed, and the Gateway restarted successfully."
+                .to_string()
+        }
+        ("restart", true, false) => {
+            "Gateway service was repaired and the Gateway restarted successfully.".to_string()
+        }
+        ("restart", false, true) => {
+            "Gateway restarted successfully after refreshing local Gateway defaults.".to_string()
+        }
+        ("restart", false, false) => "Gateway restarted successfully.".to_string(),
+        ("start", true, true) => {
+            "Gateway service was repaired, local defaults were refreshed, and the Gateway started successfully."
+                .to_string()
+        }
+        ("start", true, false) => {
+            "Gateway service was repaired and the Gateway started successfully.".to_string()
+        }
+        ("start", false, true) => {
+            "Gateway started successfully after refreshing local Gateway defaults.".to_string()
+        }
+        _ => "Gateway started successfully.".to_string(),
     }
 }
 
@@ -582,6 +735,15 @@ fn detect_gateway_error_context(
         code: default_code,
         conflict_port: None,
     }
+}
+
+fn output_requires_gateway_service_installation(output: &ShellOutput) -> bool {
+    let haystack = format!("{}\n{}", output.stdout, output.stderr).to_ascii_lowercase();
+    haystack.contains("\"loaded\":false")
+        || haystack.contains("service not installed")
+        || haystack.contains("service is not installed")
+        || haystack.contains("install the local gateway service")
+        || haystack.contains("install-daemon")
 }
 
 fn extract_port_conflict_port(text: &str) -> Option<u16> {
@@ -749,6 +911,32 @@ mod tests {
         assert_eq!(status.state, "inactive");
         assert_eq!(status.port, 3000);
         assert_eq!(status.status_detail, "Gateway is stopped");
+    }
+
+    #[test]
+    fn derives_service_install_hint_from_status_payload() {
+        let output = shell_output(
+            r#"{
+              "service": {
+                "loaded": false,
+                "detail": "Gateway managed service is not installed yet."
+              },
+              "gateway": {
+                "running": false,
+                "port": 18789
+              }
+            }"#,
+            "",
+        );
+
+        let status = parse_gateway_status_output(&output);
+
+        assert_eq!(status.service_loaded, Some(false));
+        assert_eq!(
+            status.status_detail,
+            "Gateway managed service is not installed yet."
+        );
+        assert!(status.suggestion.contains("Install or repair"));
     }
 
     #[test]

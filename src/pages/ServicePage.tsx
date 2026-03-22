@@ -113,6 +113,14 @@ export function ServicePage(): JSX.Element {
             <strong>{t("service:snapshot.running")}</strong> {status?.running ? t("service:snapshot.yes") : t("service:snapshot.no")}
           </p>
           <p style={{ margin: 0 }}>
+            <strong>{t("service:snapshot.serviceInstalled")}</strong>{" "}
+            {status?.serviceLoaded === null
+              ? "-"
+              : status.serviceLoaded
+                ? t("service:snapshot.yes")
+                : t("service:snapshot.no")}
+          </p>
+          <p style={{ margin: 0 }}>
             <strong>{t("service:snapshot.pid")}</strong> {status?.pid ?? "-"}
           </p>
           <p style={{ margin: 0 }}>

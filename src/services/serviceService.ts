@@ -14,6 +14,7 @@ export interface GatewayStatus {
   statusDetail: string;
   suggestion: string;
   portConflictPort: number | null;
+  serviceLoaded: boolean | null;
 }
 
 export interface ServiceActionResult {
@@ -96,15 +97,28 @@ function normalizeStatusData(raw: unknown): GatewayStatus {
   const address = typeof addressValue === "string" ? addressValue : null;
   const pid = toNumber(obj.pid);
   const state = safeState(obj.state ?? (running ? "running" : "stopped"));
+  const serviceLoadedRaw = obj.serviceLoaded ?? obj.service_loaded;
+  const serviceLoaded =
+    typeof serviceLoadedRaw === "boolean"
+      ? serviceLoadedRaw
+      : serviceLoadedRaw === "true"
+        ? true
+        : serviceLoadedRaw === "false"
+          ? false
+          : null;
   const detail =
     typeof obj.statusDetail === "string"
       ? obj.statusDetail
+      : serviceLoaded === false
+        ? "Gateway managed service is not installed yet."
       : running
         ? "Gateway is running."
         : "Gateway is not running.";
   const suggestion =
     typeof obj.suggestion === "string"
       ? obj.suggestion
+      : serviceLoaded === false
+        ? "Install or repair the local Gateway service, then start Gateway again."
       : running
         ? "You can open dashboard or restart service if needed."
         : "Click Start Gateway to launch OpenClaw service.";
@@ -127,6 +141,7 @@ function normalizeStatusData(raw: unknown): GatewayStatus {
     statusDetail: detail,
     suggestion,
     portConflictPort,
+    serviceLoaded,
   };
 }
 
@@ -141,6 +156,7 @@ function buildPreviewStatus(): GatewayStatus {
     statusDetail: "Gateway status is unavailable in browser preview mode.",
     suggestion: "Run ClawDesk inside Tauri to manage the local OpenClaw Gateway.",
     portConflictPort: null,
+    serviceLoaded: null,
   };
 }
 
@@ -155,6 +171,7 @@ function buildUnavailableRuntimeStatus(): GatewayStatus {
     statusDetail: "ClawDesk is running in a desktop shell, but the Tauri command bridge is unavailable.",
     suggestion: "Relaunch or reinstall ClawDesk and verify the frontend bundles the Tauri API bridge.",
     portConflictPort: null,
+    serviceLoaded: null,
   };
 }
 
@@ -254,6 +271,12 @@ function buildLiveErrorStatus(error?: BackendError): GatewayStatus {
     statusDetail: error?.message ?? "Failed to query OpenClaw Gateway status.",
     suggestion: error?.suggestion ?? "Check whether the Gateway service is installed correctly, then retry.",
     portConflictPort: toNumber(error?.details?.portConflictPort ?? error?.details?.conflictPort ?? error?.details?.port),
+    serviceLoaded:
+      typeof error?.details?.serviceLoaded === "boolean"
+        ? error.details.serviceLoaded
+        : typeof error?.details?.service_loaded === "boolean"
+          ? error.details.service_loaded
+          : null,
   };
 }
 
