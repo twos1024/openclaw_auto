@@ -6,7 +6,6 @@ import { OllamaConfigForm } from "../components/config/OllamaConfigForm";
 import { useConfigForm } from "../hooks/useConfigForm";
 import { inferOpenAiCompatiblePresetId } from "../services/configPresets";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Select } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
