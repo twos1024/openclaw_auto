@@ -1,4 +1,6 @@
-import type { CSSProperties } from "react";
+import { useTranslation } from "react-i18next";
+import { Input } from "@/components/ui/input";
+import { cn } from "@/lib/utils";
 import type { ConfigFormErrors, ConfigFormValues } from "../../types/config";
 
 export interface OllamaConfigFormProps {
@@ -16,31 +18,19 @@ function toNumber(value: string, fallback: number): number {
 function Field(props: {
   label: string;
   error?: string;
-  children: JSX.Element;
+  children: React.ReactNode;
+  className?: string;
 }): JSX.Element {
   return (
-    <label style={{ display: "block" }}>
-      <span style={{ display: "block", marginBottom: 6, color: "#334155", fontWeight: 600 }}>
-        {props.label}
-      </span>
+    <label className={cn("block", props.className)}>
+      <span className="mb-1.5 block text-sm font-semibold text-foreground">{props.label}</span>
       {props.children}
       {props.error ? (
-        <span style={{ display: "block", marginTop: 6, fontSize: 12, color: "#b91c1c" }}>
-          {props.error}
-        </span>
+        <span className="mt-1.5 block text-xs text-destructive">{props.error}</span>
       ) : null}
     </label>
   );
 }
-
-const inputStyle: CSSProperties = {
-  width: "100%",
-  border: "1px solid #cbd5e1",
-  borderRadius: 8,
-  padding: "10px 12px",
-  fontSize: 14,
-  boxSizing: "border-box",
-};
 
 export function OllamaConfigForm({
   values,
@@ -48,72 +38,63 @@ export function OllamaConfigForm({
   disabled,
   onFieldChange,
 }: OllamaConfigFormProps): JSX.Element {
+  const { t } = useTranslation("config");
+
   return (
-    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
-      <div style={{ gridColumn: "1 / span 2" }}>
-        <Field label="Ollama Host" error={errors.ollamaHost}>
-          <input
-            type="text"
-            value={values.ollamaHost}
-            disabled={disabled}
-            onChange={(event) => onFieldChange("ollamaHost", event.target.value)}
-            placeholder="http://127.0.0.1:11434"
-            style={inputStyle}
-          />
-        </Field>
-      </div>
+    <div className="grid grid-cols-2 gap-4">
+      <Field label={t("form.ollama.host.label")} error={errors.ollamaHost} className="col-span-2">
+        <Input
+          type="text"
+          value={values.ollamaHost}
+          disabled={disabled}
+          onChange={(event) => onFieldChange("ollamaHost", event.target.value)}
+          placeholder="http://127.0.0.1:11434"
+        />
+      </Field>
 
-      <div style={{ gridColumn: "1 / span 2" }}>
-        <Field label="Model" error={errors.model}>
-          <input
-            type="text"
-            value={values.model}
-            disabled={disabled}
-            onChange={(event) => onFieldChange("model", event.target.value)}
-            placeholder="qwen2.5:7b"
-            style={inputStyle}
-          />
-        </Field>
-      </div>
+      <Field label={t("form.ollama.model.label")} error={errors.model} className="col-span-2">
+        <Input
+          type="text"
+          value={values.model}
+          disabled={disabled}
+          onChange={(event) => onFieldChange("model", event.target.value)}
+          placeholder="qwen2.5:7b"
+        />
+      </Field>
 
-      <Field label="Timeout (ms)" error={errors.timeout}>
-        <input
+      <Field label={t("form.ollama.timeout.label")} error={errors.timeout}>
+        <Input
           type="number"
           value={values.timeout}
           disabled={disabled}
           onChange={(event) => onFieldChange("timeout", toNumber(event.target.value, values.timeout))}
-          style={inputStyle}
         />
       </Field>
 
-      <Field label="Max Tokens" error={errors.maxTokens}>
-        <input
+      <Field label={t("form.ollama.maxTokens.label")} error={errors.maxTokens}>
+        <Input
           type="number"
           value={values.maxTokens}
           disabled={disabled}
           onChange={(event) =>
             onFieldChange("maxTokens", toNumber(event.target.value, values.maxTokens))
           }
-          style={inputStyle}
         />
       </Field>
 
-      <div style={{ gridColumn: "1 / span 2" }}>
-        <Field label="Temperature" error={errors.temperature}>
-          <input
-            type="number"
-            min={0}
-            max={2}
-            step={0.1}
-            value={values.temperature}
-            disabled={disabled}
-            onChange={(event) =>
-              onFieldChange("temperature", toNumber(event.target.value, values.temperature))
-            }
-            style={inputStyle}
-          />
-        </Field>
-      </div>
+      <Field label={t("form.ollama.temperature.label")} error={errors.temperature} className="col-span-2">
+        <Input
+          type="number"
+          min={0}
+          max={2}
+          step={0.1}
+          value={values.temperature}
+          disabled={disabled}
+          onChange={(event) =>
+            onFieldChange("temperature", toNumber(event.target.value, values.temperature))
+          }
+        />
+      </Field>
     </div>
   );
 }

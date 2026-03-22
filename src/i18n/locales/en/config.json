@@ -14,6 +14,30 @@
         "openaiCompatible": "OpenAI compatible",
         "ollama": "Ollama"
       }
+    },
+    "openai": {
+      "preset": {
+        "label": "API Preset",
+        "options": {
+          "custom": "Custom Compatible Endpoint",
+          "openai": "OpenAI",
+          "deepseek": "DeepSeek",
+          "openrouter": "OpenRouter"
+        }
+      },
+      "baseUrl": { "label": "Base URL" },
+      "apiKey": { "label": "API Key" },
+      "model": { "label": "Model" },
+      "timeout": { "label": "Timeout (ms)" },
+      "maxTokens": { "label": "Max Tokens" },
+      "temperature": { "label": "Temperature" }
+    },
+    "ollama": {
+      "host": { "label": "Ollama Host" },
+      "model": { "label": "Model" },
+      "timeout": { "label": "Timeout (ms)" },
+      "maxTokens": { "label": "Max Tokens" },
+      "temperature": { "label": "Temperature" }
     }
   },
   "actions": {

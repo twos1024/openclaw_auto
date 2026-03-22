@@ -5,12 +5,31 @@ import { gatewayFetch, getGatewayUrl } from "@/lib/gateway-client";
 
 export type MessageRole = "user" | "assistant" | "system" | "tool";
 
+export interface ContentBlock {
+  type: "text" | "thinking" | "tool_use" | "tool_result" | "image";
+  text?: string;
+  thinking?: string;
+  id?: string;
+  name?: string;
+  input?: unknown;
+  data?: string; // base64
+  mimeType?: string;
+}
+
+export interface AttachedFile {
+  name: string;
+  size: number;
+  mimeType: string;
+  data: string; // base64
+}
+
 export interface ChatMessage {
   id: string;
   role: MessageRole;
-  content: string;
+  content: string | ContentBlock[];
   timestamp: number;
   agentId?: string;
+  attachments?: AttachedFile[];
 }
 
 export interface ChatSession {
@@ -19,6 +38,15 @@ export interface ChatSession {
   agentId: string;
   lastActivity: number;
   messageCount: number;
+}
+
+/** Extract plain text from a ChatMessage content field. */
+export function getMessageText(content: string | ContentBlock[]): string {
+  if (typeof content === "string") return content;
+  return content
+    .filter((b) => b.type === "text")
+    .map((b) => b.text ?? "")
+    .join("\n");
 }
 
 interface StreamingTool {
@@ -51,7 +79,7 @@ interface ChatStore {
   deleteSession: (key: string) => Promise<void>;
   loadSessions: () => Promise<void>;
   loadHistory: (quiet?: boolean) => Promise<void>;
-  sendMessage: (text: string, targetAgentId?: string | null) => Promise<void>;
+  sendMessage: (text: string, targetAgentId?: string | null, attachments?: AttachedFile[]) => Promise<void>;
   abortRun: () => void;
   clearError: () => void;
   cleanupEmptySession: () => void;
@@ -141,7 +169,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
     }
   },
 
-  sendMessage: async (text, targetAgentId) => {
+  sendMessage: async (text, targetAgentId, attachments) => {
     if (get().sending) return;
     const { currentSessionKey, currentAgentId } = get();
 
@@ -151,6 +179,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
       role: "user",
       content: text,
       timestamp: Date.now() / 1000,
+      attachments: attachments?.length ? attachments : undefined,
     };
     set((s) => ({
       messages: [...s.messages, userMsg],
@@ -172,7 +201,11 @@ export const useChatStore = create<ChatStore>((set, get) => ({
       const res = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: text, agentId }),
+        body: JSON.stringify({
+          message: text,
+          agentId,
+          ...(attachments?.length ? { attachments } : {}),
+        }),
         signal: _abortController.signal,
       });
 

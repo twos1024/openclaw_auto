@@ -1,4 +1,7 @@
-import type { CSSProperties } from "react";
+import { useTranslation } from "react-i18next";
+import { Input } from "@/components/ui/input";
+import { Select } from "@/components/ui/select";
+import { cn } from "@/lib/utils";
 import type {
   ConfigFormErrors,
   ConfigFormValues,
@@ -22,31 +25,19 @@ function toNumber(value: string, fallback: number): number {
 function Field(props: {
   label: string;
   error?: string;
-  children: JSX.Element;
+  children: React.ReactNode;
+  className?: string;
 }): JSX.Element {
   return (
-    <label style={{ display: "block" }}>
-      <span style={{ display: "block", marginBottom: 6, color: "#334155", fontWeight: 600 }}>
-        {props.label}
-      </span>
+    <label className={cn("block", props.className)}>
+      <span className="mb-1.5 block text-sm font-semibold text-foreground">{props.label}</span>
       {props.children}
       {props.error ? (
-        <span style={{ display: "block", marginTop: 6, fontSize: 12, color: "#b91c1c" }}>
-          {props.error}
-        </span>
+        <span className="mt-1.5 block text-xs text-destructive">{props.error}</span>
       ) : null}
     </label>
   );
 }
-
-const inputStyle: CSSProperties = {
-  width: "100%",
-  border: "1px solid #cbd5e1",
-  borderRadius: 8,
-  padding: "10px 12px",
-  fontSize: 14,
-  boxSizing: "border-box",
-};
 
 export function OpenAIConfigForm({
   values,
@@ -56,101 +47,86 @@ export function OpenAIConfigForm({
   onFieldChange,
   onPresetChange,
 }: OpenAIConfigFormProps): JSX.Element {
+  const { t } = useTranslation("config");
+
   return (
-    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
-      <div style={{ gridColumn: "1 / span 2" }}>
-        <Field label="API Preset">
-          <select
-            value={presetId}
-            disabled={disabled}
-            onChange={(event) => onPresetChange(event.target.value as OpenAiCompatiblePresetId)}
-            style={inputStyle}
-          >
-            <option value="custom">Custom Compatible Endpoint</option>
-            <option value="openai">OpenAI</option>
-            <option value="deepseek">DeepSeek</option>
-            <option value="openrouter">OpenRouter</option>
-          </select>
-        </Field>
-      </div>
+    <div className="grid grid-cols-2 gap-4">
+      <Field label={t("form.openai.preset.label")} className="col-span-2">
+        <Select
+          value={presetId}
+          disabled={disabled}
+          onChange={(event) => onPresetChange(event.target.value as OpenAiCompatiblePresetId)}
+        >
+          <option value="custom">{t("form.openai.preset.options.custom")}</option>
+          <option value="openai">{t("form.openai.preset.options.openai")}</option>
+          <option value="deepseek">{t("form.openai.preset.options.deepseek")}</option>
+          <option value="openrouter">{t("form.openai.preset.options.openrouter")}</option>
+        </Select>
+      </Field>
 
-      <div style={{ gridColumn: "1 / span 2" }}>
-        <Field label="Base URL" error={errors.baseUrl}>
-          <input
-            type="text"
-            value={values.baseUrl}
-            disabled={disabled}
-            onChange={(event) => onFieldChange("baseUrl", event.target.value)}
-            placeholder="https://api.openai.com/v1"
-            style={inputStyle}
-          />
-        </Field>
-      </div>
+      <Field label={t("form.openai.baseUrl.label")} error={errors.baseUrl} className="col-span-2">
+        <Input
+          type="text"
+          value={values.baseUrl}
+          disabled={disabled}
+          onChange={(event) => onFieldChange("baseUrl", event.target.value)}
+          placeholder="https://api.openai.com/v1"
+        />
+      </Field>
 
-      <div style={{ gridColumn: "1 / span 2" }}>
-        <Field label="API Key" error={errors.apiKey}>
-          <input
-            type="password"
-            value={values.apiKey}
-            disabled={disabled}
-            onChange={(event) => onFieldChange("apiKey", event.target.value)}
-            placeholder="sk-..."
-            style={inputStyle}
-          />
-        </Field>
-      </div>
+      <Field label={t("form.openai.apiKey.label")} error={errors.apiKey} className="col-span-2">
+        <Input
+          type="password"
+          value={values.apiKey}
+          disabled={disabled}
+          onChange={(event) => onFieldChange("apiKey", event.target.value)}
+          placeholder="sk-..."
+        />
+      </Field>
 
-      <div style={{ gridColumn: "1 / span 2" }}>
-        <Field label="Model" error={errors.model}>
-          <input
-            type="text"
-            value={values.model}
-            disabled={disabled}
-            onChange={(event) => onFieldChange("model", event.target.value)}
-            placeholder="gpt-4o-mini"
-            style={inputStyle}
-          />
-        </Field>
-      </div>
+      <Field label={t("form.openai.model.label")} error={errors.model} className="col-span-2">
+        <Input
+          type="text"
+          value={values.model}
+          disabled={disabled}
+          onChange={(event) => onFieldChange("model", event.target.value)}
+          placeholder="gpt-4o-mini"
+        />
+      </Field>
 
-      <Field label="Timeout (ms)" error={errors.timeout}>
-        <input
+      <Field label={t("form.openai.timeout.label")} error={errors.timeout}>
+        <Input
           type="number"
           value={values.timeout}
           disabled={disabled}
           onChange={(event) => onFieldChange("timeout", toNumber(event.target.value, values.timeout))}
-          style={inputStyle}
         />
       </Field>
 
-      <Field label="Max Tokens" error={errors.maxTokens}>
-        <input
+      <Field label={t("form.openai.maxTokens.label")} error={errors.maxTokens}>
+        <Input
           type="number"
           value={values.maxTokens}
           disabled={disabled}
           onChange={(event) =>
             onFieldChange("maxTokens", toNumber(event.target.value, values.maxTokens))
           }
-          style={inputStyle}
         />
       </Field>
 
-      <div style={{ gridColumn: "1 / span 2" }}>
-        <Field label="Temperature" error={errors.temperature}>
-          <input
-            type="number"
-            min={0}
-            max={2}
-            step={0.1}
-            value={values.temperature}
-            disabled={disabled}
-            onChange={(event) =>
-              onFieldChange("temperature", toNumber(event.target.value, values.temperature))
-            }
-            style={inputStyle}
-          />
-        </Field>
-      </div>
+      <Field label={t("form.openai.temperature.label")} error={errors.temperature} className="col-span-2">
+        <Input
+          type="number"
+          min={0}
+          max={2}
+          step={0.1}
+          value={values.temperature}
+          disabled={disabled}
+          onChange={(event) =>
+            onFieldChange("temperature", toNumber(event.target.value, values.temperature))
+          }
+        />
+      </Field>
     </div>
   );
 }

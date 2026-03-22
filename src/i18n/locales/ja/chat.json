@@ -18,8 +18,13 @@
     "close": "閉じる",
     "stop": "停止"
   },
+  "blocks": {
+    "thinking": "思考中",
+    "toolUse": "ツール呼び出し：",
+    "toolResult": "ツール結果"
+  },
   "form": {
-    "attachments": "添付ファイル（近日対応）",
+    "attachments": "添付ファイルを追加",
     "placeholder": "メッセージを送信（Enter で送信、Shift+Enter で改行）",
     "placeholderDisabled": "先に Gateway を起動してください..."
   }

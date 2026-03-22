@@ -78,11 +78,11 @@ src/i18n/
 
 ### 交付物
 
-- [ ] 新依赖安装完成
-- [ ] `src/types/` 全部类型定义
-- [ ] `src/i18n/` 框架骨架
-- [ ] 零 APIMart 引用
-- [ ] `npx tsc --noEmit` 通过
+- [x] 新依赖安装完成
+- [x] `src/types/` 全部类型定义
+- [x] `src/i18n/` 框架骨架
+- [x] 零 APIMart 引用
+- [x] `npx tsc --noEmit` 通过
 
 ---
 
@@ -158,11 +158,11 @@ useAppStore (删除)
 
 ### 交付物
 
-- [ ] 所有 Instance → Agent 重命名完成
-- [ ] 8 个 Zustand Store 文件就绪
-- [ ] Rust 后端重命名 + cargo check 通过
-- [ ] 路由更新 + 新页面占位
-- [ ] `npm run build` 通过
+- [x] 所有 Instance → Agent 重命名完成
+- [x] 8 个 Zustand Store 文件就绪
+- [x] Rust 后端重命名 + cargo check 通过
+- [x] 路由更新 + 新页面占位
+- [x] `npm run build` 通过
 
 ---
 
@@ -222,9 +222,9 @@ className="bg-[hsl(var(--sidebar))]"
 
 ### 交付物
 
-- [ ] `.dark` 变量完整覆盖
-- [ ] SettingsPage 主题切换可用
-- [ ] 全部组件无硬编码颜色
+- [x] `.dark` 变量完整覆盖
+- [x] SettingsPage 主题切换可用
+- [x] 全部组件无硬编码颜色（含 ConfigPage / OpenAIConfigForm / OllamaConfigForm — 2026-03-22 修复）
 - [ ] 亮/暗截图对比验证
 
 ---
@@ -263,11 +263,11 @@ className="bg-[hsl(var(--sidebar))]"
 
 ### 交付物
 
-- [ ] ChannelsPage 完整可用
-- [ ] ProvidersPage 完整可用
-- [ ] CronPage 完整可用
-- [ ] ModelsPage 增强完成
-- [ ] 暗色模式下全部页面外观正常
+- [x] ChannelsPage 完整可用
+- [x] ProvidersPage 完整可用
+- [x] CronPage 完整可用
+- [x] ModelsPage 增强完成
+- [x] 暗色模式下全部页面外观正常
 
 ---
 
@@ -337,11 +337,11 @@ function SetupPage() {
 
 ### 交付物
 
-- [ ] 9 × 3 = 27 个翻译文件
-- [ ] 全部页面 i18n 改造完成
-- [ ] 语言切换即时生效
-- [ ] Setup Wizard 5 步流程可用
-- [ ] 首次启动自动进入 Setup
+- [x] 9 × 3 = 27 个翻译文件（实际 20 × 3 = 60 个，含 ConfigPage 表单字段 — 2026-03-22 补全）
+- [x] 全部页面 i18n 改造完成（含 OpenAIConfigForm / OllamaConfigForm — 2026-03-22 修复）
+- [x] 语言切换即时生效
+- [x] Setup Wizard 5 步流程可用
+- [x] 首次启动自动进入 Setup
 
 ---
 
@@ -395,10 +395,10 @@ npm run tauri:build
 
 ### 交付物
 
-- [ ] `cargo check` 零错误零警告
-- [ ] `npx tsc --noEmit` 通过
-- [ ] `npm run build` 成功
-- [ ] NSIS 安装包 ≤ 5 MB
+- [x] `cargo check` 零错误零警告
+- [x] `npx tsc --noEmit` 通过
+- [x] `npm run build` 成功
+- [ ] NSIS 安装包 ≤ 5 MB（待打包验证）
 - [ ] 手动冒烟测试全部页面
 
 ---
@@ -443,7 +443,42 @@ gh release create v2.0.0 \
 | openclaw CLI 命令不存在 | IPC 返回错误 | 与 v1.0 相同策略：synthesise 默认数据 |
 | 暗色模式遗漏硬编码颜色 | 视觉异常 | Phase 2 自动化 grep 审计 |
 | i18n 翻译缺失 | 显示原始 key | i18next fallback 到中文 |
-| 安装包体积膨胀 | 超出 5 MB 预算 | Tree-shaking + 检查 Radix UI bundle |
+| 安装包体积膨胀 | 超出 5 MB 预算 | Tree-shaking + 检查 Radix UI bundle + rollup-plugin-visualizer |
+
+---
+
+## 补充：组件提取 & 构建分析（2026-03-22）
+
+### 组件目录提取
+
+将 ChannelsPage / ProvidersPage / CronPage 中内联的 Dialog 和 Card 组件提取到独立目录，对齐 `src/components/agents/` 模式：
+
+```
+src/components/channels/
+├── AddChannelDialog.tsx    # Channel 创建对话框
+├── ChannelCard.tsx         # Channel 卡片（含状态标签）
+└── index.ts
+
+src/components/providers/
+├── AddProviderDialog.tsx   # Provider 创建对话框
+├── ProviderCard.tsx        # Provider 卡片（含验证/切换）
+└── index.ts
+
+src/components/cron/
+├── CreateCronDialog.tsx    # Cron 任务创建对话框
+├── CronJobCard.tsx         # Cron 任务卡片（含历史展开）
+└── index.ts
+```
+
+- [x] ChannelsPage 瘦身：401 → 131 行（-67%）
+- [x] ProvidersPage 瘦身：324 → 112 行（-65%）
+- [x] CronPage 瘦身：421 → 117 行（-72%）
+
+### 构建分析工具
+
+- [x] 安装 `rollup-plugin-visualizer` 并集成到 `vite.config.ts`
+- [x] 添加 `npm run analyze` 脚本，产出 `dist/bundle-stats.html`
+- [x] 开启 gzip/brotli 体积统计
 
 ---
 

@@ -1,22 +1,23 @@
+import { cn } from "@/lib/utils";
 import type { HealthLevel } from "../../types/status";
 import type { GuidedSetupStepStatus } from "../../types/guidedSetup";
 import type { WorkspaceBannerTone } from "../../types/workspace";
 
 type BadgeVariant = HealthLevel | GuidedSetupStepStatus | WorkspaceBannerTone;
 
-const toneMap: Record<BadgeVariant, { bg: string; border: string; text: string; label: string }> = {
-  healthy: { bg: "#f0fdf4", border: "#86efac", text: "#166534", label: "Healthy" },
-  degraded: { bg: "#fffbeb", border: "#fcd34d", text: "#92400e", label: "Degraded" },
-  offline: { bg: "#fef2f2", border: "#fca5a5", text: "#991b1b", label: "Offline" },
-  unknown: { bg: "#f8fafc", border: "#cbd5e1", text: "#475569", label: "Unknown" },
-  complete: { bg: "#f0fdf4", border: "#86efac", text: "#166534", label: "Complete" },
-  current: { bg: "#eff6ff", border: "#93c5fd", text: "#1d4ed8", label: "Current" },
-  blocked: { bg: "#f8fafc", border: "#cbd5e1", text: "#475569", label: "Blocked" },
-  ready: { bg: "#ecfeff", border: "#67e8f9", text: "#155e75", label: "Ready" },
-  info: { bg: "#eff6ff", border: "#93c5fd", text: "#1d4ed8", label: "Info" },
-  warning: { bg: "#fffbeb", border: "#fcd34d", text: "#92400e", label: "Warning" },
-  error: { bg: "#fef2f2", border: "#fca5a5", text: "#991b1b", label: "Error" },
-  success: { bg: "#f0fdf4", border: "#86efac", text: "#166534", label: "Ready" },
+const variantStyles: Record<BadgeVariant, { className: string; label: string }> = {
+  healthy:  { className: "border-green-500/30 bg-green-500/10 text-green-700 dark:text-green-400", label: "Healthy" },
+  degraded: { className: "border-amber-400/40 bg-amber-400/10 text-amber-800 dark:text-amber-300", label: "Degraded" },
+  offline:  { className: "border-destructive/30 bg-destructive/10 text-destructive", label: "Offline" },
+  unknown:  { className: "border-border bg-muted/30 text-muted-foreground", label: "Unknown" },
+  complete: { className: "border-green-500/30 bg-green-500/10 text-green-700 dark:text-green-400", label: "Complete" },
+  current:  { className: "border-primary/30 bg-primary/10 text-primary", label: "Current" },
+  blocked:  { className: "border-border bg-muted/30 text-muted-foreground", label: "Blocked" },
+  ready:    { className: "border-cyan-400/30 bg-cyan-400/10 text-cyan-700 dark:text-cyan-400", label: "Ready" },
+  info:     { className: "border-primary/30 bg-primary/10 text-primary", label: "Info" },
+  warning:  { className: "border-amber-400/40 bg-amber-400/10 text-amber-800 dark:text-amber-300", label: "Warning" },
+  error:    { className: "border-destructive/30 bg-destructive/10 text-destructive", label: "Error" },
+  success:  { className: "border-green-500/30 bg-green-500/10 text-green-700 dark:text-green-400", label: "Ready" },
 };
 
 export interface StatusBadgeProps {
@@ -25,22 +26,13 @@ export interface StatusBadgeProps {
 }
 
 export function StatusBadge({ variant, label }: StatusBadgeProps): JSX.Element {
-  const style = toneMap[variant];
+  const style = variantStyles[variant];
   return (
     <span
-      style={{
-        display: "inline-flex",
-        alignItems: "center",
-        justifyContent: "center",
-        borderRadius: 999,
-        border: `1px solid ${style.border}`,
-        background: style.bg,
-        color: style.text,
-        padding: "4px 10px",
-        fontSize: 12,
-        fontWeight: 700,
-        whiteSpace: "nowrap",
-      }}
+      className={cn(
+        "inline-flex items-center justify-center whitespace-nowrap rounded-full border px-2.5 py-0.5 text-xs font-bold",
+        style.className,
+      )}
     >
       {label ?? style.label}
     </span>

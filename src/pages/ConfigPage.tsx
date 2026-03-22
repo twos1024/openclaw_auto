@@ -1,97 +1,77 @@
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { ShieldCheck, Save, RotateCcw, Loader2 } from "lucide-react";
 import { OpenAIConfigForm } from "../components/config/OpenAIConfigForm";
 import { OllamaConfigForm } from "../components/config/OllamaConfigForm";
 import { useConfigForm } from "../hooks/useConfigForm";
 import { inferOpenAiCompatiblePresetId } from "../services/configPresets";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Select } from "@/components/ui/select";
+import { cn } from "@/lib/utils";
 import type { ConnectionTestResult, SaveConfigResult } from "../types/config";
+
+// ─── Result banner ────────────────────────────────────────────────────────────
 
 function ResultBanner(props: {
   title: string;
   result: ConnectionTestResult | SaveConfigResult;
-  nextAction?: {
-    label: string;
-    route: string;
-  };
+  nextAction?: { label: string; route: string };
 }): JSX.Element {
-  const { t } = useTranslation(["config"]);
-  const colorMap = {
-    success: {
-      border: "#86efac",
-      bg: "#f0fdf4",
-      text: "#166534",
-    },
-    failure: {
-      border: "#fcd34d",
-      bg: "#fffbeb",
-      text: "#92400e",
-    },
-    error: {
-      border: "#fca5a5",
-      bg: "#fef2f2",
-      text: "#991b1b",
-    },
-  } as const;
+  const { t } = useTranslation("config");
+  const { result } = props;
 
-  const color = colorMap[props.result.status];
+  const variantClass = {
+    success: "border-green-500/30 bg-green-500/10 text-green-700 dark:text-green-400",
+    failure: "border-amber-400/40 bg-amber-400/10 text-amber-800 dark:text-amber-300",
+    error: "border-destructive/30 bg-destructive/10 text-destructive",
+  }[result.status];
 
   return (
-    <section
-      style={{
-        border: `1px solid ${color.border}`,
-        background: color.bg,
-        color: color.text,
-        borderRadius: 10,
-        padding: 12,
-      }}
-    >
-      <strong>{props.title}</strong>
-      <p style={{ margin: "8px 0 0" }}>{props.result.detail}</p>
-      <p style={{ margin: "8px 0 0", fontSize: 13 }}>{props.result.suggestion}</p>
-      {props.result.code ? (
-        <p style={{ margin: "8px 0 0", fontSize: 12, opacity: 0.9 }}>
-          {t("config:result.code")}{props.result.code}
+    <div className={cn("rounded-xl border px-4 py-3 text-sm", variantClass)}>
+      <p className="font-semibold">{props.title}</p>
+      <p className="mt-1">{result.detail}</p>
+      {result.suggestion ? <p className="mt-1 opacity-80">{result.suggestion}</p> : null}
+      {result.code ? (
+        <p className="mt-1 text-xs opacity-70">
+          {t("result.code")}
+          {result.code}
         </p>
       ) : null}
-      {"latencyMs" in props.result && props.result.latencyMs ? (
-        <p style={{ margin: "8px 0 0", fontSize: 12, opacity: 0.9 }}>
-          {t("config:result.latency")}{props.result.latencyMs}ms
+      {"latencyMs" in result && result.latencyMs ? (
+        <p className="mt-1 text-xs opacity-70">
+          {t("result.latency")}
+          {result.latencyMs}ms
         </p>
       ) : null}
-      {"backupPath" in props.result && props.result.backupPath ? (
-        <p style={{ margin: "8px 0 0", fontSize: 12, opacity: 0.9 }}>
-          {t("config:result.backup")}{props.result.backupPath}
+      {"backupPath" in result && result.backupPath ? (
+        <p className="mt-1 text-xs opacity-70">
+          {t("result.backup")}
+          {result.backupPath}
         </p>
       ) : null}
-      {"savedPath" in props.result && props.result.savedPath ? (
-        <p style={{ margin: "8px 0 0", fontSize: 12, opacity: 0.9 }}>
-          {t("config:result.savedTo")}{props.result.savedPath}
+      {"savedPath" in result && result.savedPath ? (
+        <p className="mt-1 text-xs opacity-70">
+          {t("result.savedTo")}
+          {result.savedPath}
         </p>
       ) : null}
       {props.nextAction ? (
-        <div style={{ marginTop: 10 }}>
-          <Link
-            to={props.nextAction.route}
-            style={{
-              display: "inline-block",
-              borderRadius: 8,
-              background: "#0f172a",
-              color: "#ffffff",
-              padding: "8px 12px",
-              textDecoration: "none",
-              fontWeight: 700,
-            }}
-          >
-            {props.nextAction.label}
+        <div className="mt-3">
+          <Link to={props.nextAction.route}>
+            <Button size="sm">{props.nextAction.label}</Button>
           </Link>
         </div>
       ) : null}
-    </section>
+    </div>
   );
 }
 
+// ─── Main page ────────────────────────────────────────────────────────────────
+
 export function ConfigPage(): JSX.Element {
-  const { t } = useTranslation(["config"]);
+  const { t } = useTranslation("config");
   const {
     form,
     errors,
@@ -115,162 +95,118 @@ export function ConfigPage(): JSX.Element {
   const openAiPresetId = inferOpenAiCompatiblePresetId(form.baseUrl);
 
   return (
-    <div style={{ display: "grid", gap: 16 }}>
+    <div className="grid gap-5">
       <header>
-        <h2 style={{ marginBottom: 8 }}>{t("config:page.title")}</h2>
-        <p style={{ margin: 0, color: "#64748b" }}>{t("config:page.description")}</p>
+        <h2 className="page-heading">{t("page.title")}</h2>
+        <p className="mt-1 text-sm text-muted-foreground">{t("page.description")}</p>
       </header>
 
       {loadIssue ? (
-        <section
-          style={{
-            border: "1px solid #fcd34d",
-            borderRadius: 10,
-            background: "#fffbeb",
-            color: "#92400e",
-            padding: 12,
-          }}
-        >
-          <strong>{t("config:page.loadIssueTitle")}</strong>
-          <p style={{ margin: "8px 0 0" }}>{loadIssue.message}</p>
-          <p style={{ margin: "8px 0 0", fontSize: 13 }}>{t("config:page.suggestionPrefix")}{loadIssue.suggestion}</p>
+        <div className="rounded-xl border border-amber-400/40 bg-amber-400/10 px-4 py-3 text-sm text-amber-800 dark:text-amber-300">
+          <p className="font-semibold">{t("page.loadIssueTitle")}</p>
+          <p className="mt-1">
+            {t("page.suggestionPrefix")}
+            {loadIssue.suggestion}
+          </p>
           {loadIssue.code ? (
-            <p style={{ margin: "8px 0 0", fontSize: 12, opacity: 0.9 }}>{t("config:result.code")}{loadIssue.code}</p>
-          ) : null}
-          {usedDefaultValues ? (
-            <p style={{ margin: "8px 0 0", fontSize: 12, opacity: 0.9 }}>
-              {t("config:page.defaultValues")}
+            <p className="mt-1 text-xs opacity-80">
+              {t("result.code")}
+              {loadIssue.code}
             </p>
           ) : null}
-        </section>
+          {usedDefaultValues ? (
+            <p className="mt-1 text-xs opacity-80">{t("page.defaultValues")}</p>
+          ) : null}
+        </div>
       ) : null}
 
-      <section
-        style={{
-          border: "1px solid #e2e8f0",
-          borderRadius: 12,
-          background: "#ffffff",
-          padding: 16,
-          display: "grid",
-          gap: 14,
-        }}
-      >
-        {loadedPath ? (
-          <p style={{ margin: 0, fontSize: 13, color: "#64748b" }}>
-            {t("config:page.loadedPath")}<strong>{loadedPath}</strong>
-          </p>
-        ) : null}
+      <Card>
+        <CardHeader>
+          <CardTitle>{t("page.title")}</CardTitle>
+          {loadedPath ? (
+            <CardDescription>
+              {t("page.loadedPath")}
+              <span className="ml-1 font-mono text-foreground">{loadedPath}</span>
+            </CardDescription>
+          ) : null}
+        </CardHeader>
+        <CardContent className="grid gap-5">
+          <div className="max-w-xs">
+            <label className="block">
+              <span className="mb-1.5 block text-sm font-semibold text-foreground">
+                {t("form.provider.label")}
+              </span>
+              <Select
+                value={form.providerType}
+                disabled={isBusy}
+                onChange={(event) =>
+                  setProviderType(event.target.value as "openai-compatible" | "ollama")
+                }
+              >
+                <option value="openai-compatible">
+                  {t("form.provider.options.openaiCompatible")}
+                </option>
+                <option value="ollama">{t("form.provider.options.ollama")}</option>
+              </Select>
+            </label>
+          </div>
 
-        <label style={{ display: "block", maxWidth: 320 }}>
-          <span style={{ display: "block", marginBottom: 6, color: "#334155", fontWeight: 600 }}>
-            {t("config:form.provider.label")}
-          </span>
-          <select
-            value={form.providerType}
-            onChange={(event) =>
-              setProviderType(event.target.value as "openai-compatible" | "ollama")
-            }
-            disabled={isBusy}
-            style={{
-              width: "100%",
-              border: "1px solid #cbd5e1",
-              borderRadius: 8,
-              padding: "10px 12px",
-              fontSize: 14,
-              background: "#ffffff",
-            }}
-          >
-            <option value="openai-compatible">{t("config:form.provider.options.openaiCompatible")}</option>
-            <option value="ollama">{t("config:form.provider.options.ollama")}</option>
-          </select>
-        </label>
+          {form.providerType === "openai-compatible" ? (
+            <OpenAIConfigForm
+              values={form}
+              errors={errors}
+              disabled={isBusy}
+              presetId={openAiPresetId}
+              onFieldChange={setField}
+              onPresetChange={applyCompatiblePreset}
+            />
+          ) : (
+            <OllamaConfigForm
+              values={form}
+              errors={errors}
+              disabled={isBusy}
+              onFieldChange={setField}
+            />
+          )}
 
-        {form.providerType === "openai-compatible" ? (
-          <OpenAIConfigForm
-            values={form}
-            errors={errors}
-            disabled={isBusy}
-            presetId={openAiPresetId}
-            onFieldChange={setField}
-            onPresetChange={applyCompatiblePreset}
-          />
-        ) : (
-          <OllamaConfigForm
-            values={form}
-            errors={errors}
-            disabled={isBusy}
-            onFieldChange={setField}
-          />
-        )}
+          <div className="flex flex-wrap gap-3 border-t border-border pt-4">
+            <Button onClick={() => void testConnection()} disabled={isBusy} variant="outline">
+              {isTesting ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <ShieldCheck className="mr-2 h-4 w-4" />
+              )}
+              {isTesting ? t("actions.testing") : t("actions.testConnection")}
+            </Button>
 
-        <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-          <button
-            type="button"
-            onClick={() => void testConnection()}
-            disabled={isBusy}
-            style={{
-              border: "none",
-              background: "#1d4ed8",
-              color: "#ffffff",
-              borderRadius: 8,
-              padding: "10px 14px",
-              fontWeight: 600,
-              cursor: isBusy ? "not-allowed" : "pointer",
-              opacity: isBusy ? 0.6 : 1,
-            }}
-          >
-            {isTesting ? t("config:actions.testing") : t("config:actions.testConnection")}
-          </button>
+            <Button onClick={() => void saveConfig()} disabled={isBusy}>
+              {isSaving ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <Save className="mr-2 h-4 w-4" />
+              )}
+              {isSaving ? t("actions.saving") : t("actions.save")}
+            </Button>
 
-          <button
-            type="button"
-            onClick={() => void saveConfig()}
-            disabled={isBusy}
-            style={{
-              border: "none",
-              background: "#0f766e",
-              color: "#ffffff",
-              borderRadius: 8,
-              padding: "10px 14px",
-              fontWeight: 600,
-              cursor: isBusy ? "not-allowed" : "pointer",
-              opacity: isBusy ? 0.6 : 1,
-            }}
-          >
-            {isSaving ? t("config:actions.saving") : t("config:actions.save")}
-          </button>
+            <Button variant="ghost" onClick={resetToDefault} disabled={isBusy}>
+              <RotateCcw className="mr-2 h-4 w-4" />
+              {t("actions.reset")}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
 
-          <button
-            type="button"
-            onClick={resetToDefault}
-            disabled={isBusy}
-            style={{
-              border: "1px solid #cbd5e1",
-              background: "#ffffff",
-              color: "#0f172a",
-              borderRadius: 8,
-              padding: "10px 14px",
-              fontWeight: 600,
-              cursor: isBusy ? "not-allowed" : "pointer",
-              opacity: isBusy ? 0.6 : 1,
-            }}
-          >
-            {t("config:actions.reset")}
-          </button>
-        </div>
-      </section>
+      {testResult ? (
+        <ResultBanner title={t("result.testTitle")} result={testResult} />
+      ) : null}
 
-      {testResult ? <ResultBanner title={t("config:result.testTitle")} result={testResult} /> : null}
       {saveResult ? (
         <ResultBanner
-          title={t("config:result.saveTitle")}
+          title={t("result.saveTitle")}
           result={saveResult}
           nextAction={
             saveResult.status === "success"
-              ? {
-                  label: t("config:actions.startGateway"),
-                  route: "/service",
-                }
+              ? { label: t("actions.startGateway"), route: "/service" }
               : undefined
           }
         />
