@@ -25,5 +25,77 @@
   "stepList": {
     "title": "Guided Workflow",
     "subtitle": "Follow the ordered steps below. The active step reflects the current blocker chain."
+  },
+  "service": {
+    "preview": {
+      "bannerHeadline": "Browser Preview Mode",
+      "bannerSummary": "Read-only preview. Run inside the Tauri desktop shell to use install, logs, config and service control.",
+      "bannerActionLabel": "View desktop instructions",
+      "bannerActionDescription": "Currently in browser preview mode ({{time}}). Switch to the desktop shell to continue local install and service control.",
+      "headline": "Next: Switch to desktop mode",
+      "summary": "The current environment cannot run local commands. Open ClawDesk desktop first, then continue with install, config and startup.",
+      "blockerTitle": "Switch to desktop mode",
+      "blockerDetail": "Browser preview can only show the UI — it cannot install, write API Keys or start the Gateway.",
+      "blockerActionLabel": "View instructions",
+      "checks": {
+        "install": "Preview mode does not detect local OpenClaw CLI or npm status.",
+        "config": "Preview mode does not read the real OpenClaw config file.",
+        "service": "Preview mode does not detect local Gateway status.",
+        "runtime": "Browser preview cannot access the Rust command bridge.",
+        "settings": "Preview mode only shows the structure; it does not read local ClawDesk settings."
+      },
+      "steps": {
+        "install": "Switch to desktop mode first — install requires local execution.",
+        "config": "Switch to desktop mode first — config files need local read/write.",
+        "service": "Switch to desktop mode first — service status needs local control.",
+        "dashboard": "Only preview is available — cannot open a working local Dashboard."
+      },
+      "supportPrimary": "First confirm how to enter the desktop runtime, then continue.",
+      "supportSettings": "Come here to check the current runtime environment diagnostics."
+    },
+    "runtimeUnavailable": {
+      "bannerHeadline": "Desktop Runtime Bridge Unavailable",
+      "bannerSummary": "The desktop window is open but the frontend cannot reach the Tauri command bridge. Fix this first — local commands and file operations are unavailable.",
+      "bannerActionLabel": "Fix runtime",
+      "bannerActionDescription": "Desktop window is open but the command bridge is unavailable. Checked at {{time}}.",
+      "headline": "Next: Fix desktop runtime bridge",
+      "summary": "The desktop window is open but the local command bridge is disconnected, so install, config and startup cannot proceed.",
+      "blockerTitle": "Fix desktop runtime bridge",
+      "blockerDetail": "Desktop shell detected, but the Tauri command bridge is unavailable — local Rust commands cannot be accessed.",
+      "blockerActionLabel": "Fix runtime",
+      "checks": {
+        "install": "Cannot install, probe CLI or run managed install until the command bridge is restored.",
+        "config": "Cannot read or write local OpenClaw config until the command bridge is restored.",
+        "service": "Cannot query or control Gateway until the command bridge is restored.",
+        "settings": "Cannot read local ClawDesk settings until the command bridge is restored."
+      },
+      "steps": {
+        "install": "Fix the runtime bridge first — install requires local execution.",
+        "config": "Fix the runtime bridge first — config files need local read/write.",
+        "service": "Fix the runtime bridge first — service status needs local control.",
+        "dashboard": "Fix the runtime bridge first — then Dashboard can open normally."
+      },
+      "supportPrimary": "Restore the desktop command bridge first, then continue the workflow.",
+      "supportLogs": "If you encounter issues fixing the desktop runtime, check the error logs here.",
+      "supportSettings": "Check runtime diagnostics, bridge status and local path information."
+    },
+    "common": {
+      "checkInstall": "Install Check",
+      "checkConfig": "Config Check",
+      "checkService": "Service Check",
+      "checkRuntime": "Runtime Check",
+      "checkSettings": "Settings Check",
+      "stepInstall": "Install OpenClaw",
+      "stepConfig": "Set API Key",
+      "stepService": "Start Gateway",
+      "stepDashboard": "Start Using OpenClaw",
+      "goInstall": "Go to Install",
+      "goConfig": "Set API Key",
+      "goService": "Start Gateway",
+      "goDashboard": "Open Dashboard",
+      "openSettings": "Open Settings",
+      "viewLogs": "View Logs",
+      "viewDocs": "View Instructions"
+    }
   }
 }

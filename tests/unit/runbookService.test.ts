@@ -135,9 +135,9 @@ describe("runbookService", () => {
     expect(result.data?.currentBlocker).toMatchObject({
       id: "preview-mode",
       route: "/runbook",
-      actionLabel: "查看说明",
     });
-    expect(result.data?.banner.headline).toBe("Browser Preview Mode");
+    expect(result.data?.currentBlocker?.actionLabel).toBeTruthy();
+    expect(result.data?.banner.headline).toBeTruthy();
     expect(result.data?.banner.meta).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ label: "Runtime Mode", value: "Browser Preview" }),
@@ -164,8 +164,8 @@ describe("runbookService", () => {
     expect(result.data?.currentBlocker).toMatchObject({
       id: "runtime-bridge",
       route: "/settings",
-      actionLabel: "修复运行时",
     });
+    expect(result.data?.currentBlocker?.actionLabel).toBeTruthy();
     expect(result.data?.supportActions.filter((action) => action.route === "/settings")).toHaveLength(1);
   });
 

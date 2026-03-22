@@ -29,15 +29,7 @@ export function SetupAssistantDialog({ open, onClose }: SetupAssistantDialogProp
           <button
             type="button"
             onClick={() => void refresh()}
-            style={{
-              border: "1px solid #cbd5e1",
-              borderRadius: 8,
-              background: "#ffffff",
-              color: "#0f172a",
-              padding: "10px 14px",
-              fontWeight: 600,
-              cursor: "pointer",
-            }}
+            className="cursor-pointer rounded-lg border border-border bg-background px-3.5 py-2.5 font-semibold text-foreground hover:bg-muted"
           >
             {t("assistant.refresh")}
           </button>
@@ -45,14 +37,7 @@ export function SetupAssistantDialog({ open, onClose }: SetupAssistantDialogProp
             <Link
               to={footerAction.route}
               onClick={onClose}
-              style={{
-                borderRadius: 8,
-                background: "#0f172a",
-                color: "#ffffff",
-                padding: "10px 14px",
-                textDecoration: "none",
-                fontWeight: 700,
-              }}
+              className="inline-block rounded-lg bg-foreground px-3.5 py-2.5 font-bold text-background no-underline hover:opacity-90"
             >
               {footerAction.label}
             </Link>
@@ -60,82 +45,54 @@ export function SetupAssistantDialog({ open, onClose }: SetupAssistantDialogProp
         </>
       }
     >
-      {isLoading ? <p style={{ margin: 0, color: "#475569" }}>{t("assistant.loading")}</p> : null}
+      {isLoading ? <p className="m-0 text-muted-foreground">{t("assistant.loading")}</p> : null}
       {errorText ? (
-        <section
-          style={{
-            border: "1px solid #fca5a5",
-            borderRadius: 12,
-            background: "#fef2f2",
-            color: "#991b1b",
-            padding: 14,
-          }}
-        >
+        <section className="rounded-xl border border-red-300 bg-red-50 p-3.5 text-red-800 dark:border-red-700 dark:bg-red-950/40 dark:text-red-300">
           {errorText}
         </section>
       ) : null}
       {model ? (
         <>
-          <section
-            style={{
-              border: "1px solid #e2e8f0",
-              borderRadius: 12,
-              background: "#f8fafc",
-              padding: 16,
-              display: "grid",
-              gap: 8,
-            }}
-          >
-            <strong style={{ color: "#0f172a" }}>{model.headline}</strong>
-            <p style={{ margin: 0, color: "#475569" }}>{model.summary}</p>
+          <section className="grid gap-2 rounded-xl border border-border bg-muted/50 p-4">
+            <strong className="text-foreground">{model.headline}</strong>
+            <p className="m-0 text-muted-foreground">{model.summary}</p>
             {model.currentBlocker ? (
-              <p style={{ margin: 0, fontSize: 13, color: "#64748b" }}>
+              <p className="m-0 text-xs text-muted-foreground/80">
                 {t("assistant.currentBlocker")}
                 {model.currentBlocker.title}
               </p>
             ) : null}
-            <p style={{ margin: 0, fontSize: 12, color: "#64748b" }}>
+            <p className="m-0 text-xs text-muted-foreground/80">
               {t("assistant.checkedAt")}{new Date(model.lastCheckedAt).toLocaleString()}
             </p>
           </section>
 
           <RunbookLaunchChecks model={model} />
 
-          <div style={{ display: "grid", gap: 12 }}>
+          <div className="grid gap-3">
             {model.steps.map((step, index) => {
               const active = step.status === "current" || step.status === "ready";
               return (
                 <article
                   key={step.id}
-                  style={{
-                    border: active ? "1px solid #1d4ed8" : "1px solid #e2e8f0",
-                    borderRadius: 12,
-                    background: active ? "#eff6ff" : "#ffffff",
-                    padding: 16,
-                    display: "grid",
-                    gap: 10,
-                  }}
+                  className={`grid gap-2.5 rounded-xl border p-4 ${
+                    active
+                      ? "border-blue-700 bg-blue-50 dark:border-blue-500 dark:bg-blue-950/30"
+                      : "border-border bg-background"
+                  }`}
                 >
-                  <div style={{ display: "flex", justifyContent: "space-between", gap: 12, alignItems: "center" }}>
-                    <strong style={{ color: "#0f172a" }}>
+                  <div className="flex items-center justify-between gap-3">
+                    <strong className="text-foreground">
                       {index + 1}. {step.title}
                     </strong>
                   </div>
-                  <p style={{ margin: 0, color: "#475569" }}>{step.description}</p>
+                  <p className="m-0 text-muted-foreground">{step.description}</p>
                   {step.status === "current" || step.status === "ready" ? (
                     <div>
                       <Link
                         to={step.route}
                         onClick={onClose}
-                        style={{
-                          borderRadius: 8,
-                          padding: "8px 12px",
-                          textDecoration: "none",
-                          fontWeight: 700,
-                          color: "#ffffff",
-                          background: "#0f172a",
-                          display: "inline-block",
-                        }}
+                        className="inline-block rounded-lg bg-foreground px-3 py-2 font-bold text-background no-underline hover:opacity-90"
                       >
                         {step.actionLabel}
                       </Link>

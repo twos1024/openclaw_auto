@@ -25,5 +25,77 @@
   "stepList": {
     "title": "引导流程",
     "subtitle": "按顺序完成下面的步骤，当前高亮项就是此刻的阻塞链。"
+  },
+  "service": {
+    "preview": {
+      "bannerHeadline": "浏览器预览模式",
+      "bannerSummary": "当前仅展示只读预览界面。需要在 Tauri 原生桌面壳中运行，才能使用安装、日志、配置和服务控制。",
+      "bannerActionLabel": "查看桌面说明",
+      "bannerActionDescription": "当前是浏览器预览模式，时间 {{time}}。需要切回桌面壳才能继续本机安装和服务控制。",
+      "headline": "下一步：切换到桌面模式",
+      "summary": "当前不是可执行本机命令的桌面环境。先进入桌面版 ClawDesk，再继续安装、配置和启动。",
+      "blockerTitle": "切换到桌面模式",
+      "blockerDetail": "浏览器预览只能看界面，不能执行安装、写入 API Key 或启动 Gateway。",
+      "blockerActionLabel": "查看说明",
+      "checks": {
+        "install": "预览模式不会检测本机 OpenClaw CLI 与 npm 安装状态。",
+        "config": "预览模式不会读取真实 OpenClaw 配置文件。",
+        "service": "预览模式不会检测本地 Gateway 运行状态。",
+        "runtime": "浏览器预览模式下无法访问 Rust 命令桥接。",
+        "settings": "预览模式仅展示结构，不会读取本地 ClawDesk 设置。"
+      },
+      "steps": {
+        "install": "先切换到桌面模式，安装步骤才可执行。",
+        "config": "先切换到桌面模式，配置文件才可读写。",
+        "service": "先切换到桌面模式，服务状态才可控制。",
+        "dashboard": "当前只能预览界面，不能打开可用的本地 Dashboard。"
+      },
+      "supportPrimary": "先确认如何进入桌面运行时，再继续后面的步骤。",
+      "supportSettings": "需要确认当前运行环境时，再来这里看诊断信息。"
+    },
+    "runtimeUnavailable": {
+      "bannerHeadline": "桌面运行时桥接不可用",
+      "bannerSummary": "当前已进入桌面窗口，但前端未连上 Tauri 命令桥。这个问题应优先修复，否则本地命令和文件操作都不可用。",
+      "bannerActionLabel": "修复运行时",
+      "bannerActionDescription": "桌面窗口已打开，但命令桥不可用。检查时间 {{time}}。",
+      "headline": "下一步：修复桌面运行时桥接",
+      "summary": "当前虽然已经打开桌面窗口，但本地命令桥没连上，所以安装、配置和启动都无法继续。",
+      "blockerTitle": "修复桌面运行时桥接",
+      "blockerDetail": "已检测到桌面 shell，但 Tauri 命令桥不可用，因此当前无法访问本地 Rust 命令层。",
+      "blockerActionLabel": "修复运行时",
+      "checks": {
+        "install": "在桌面命令桥恢复前，无法执行本机安装、CLI 探测和 Gateway 托管安装。",
+        "config": "在桌面命令桥恢复前，无法读取或写入本地 OpenClaw 配置。",
+        "service": "在桌面命令桥恢复前，无法查询或控制 Gateway 服务。",
+        "settings": "在桌面命令桥恢复前，无法读取本地 ClawDesk 设置文件。"
+      },
+      "steps": {
+        "install": "先修复运行时桥接，安装步骤才可执行。",
+        "config": "先修复运行时桥接，配置文件才可读写。",
+        "service": "先修复运行时桥接，服务状态才可控制。",
+        "dashboard": "先修复运行时桥接，之后才能正常打开 Dashboard。"
+      },
+      "supportPrimary": "先让桌面命令桥恢复正常，再继续下面的流程。",
+      "supportLogs": "如果修复桌面运行时时遇到问题，再来这里查看错误日志。",
+      "supportSettings": "检查运行时诊断、桥接状态和本地路径信息。"
+    },
+    "common": {
+      "checkInstall": "安装检查",
+      "checkConfig": "配置检查",
+      "checkService": "服务检查",
+      "checkRuntime": "运行时检查",
+      "checkSettings": "设置检查",
+      "stepInstall": "安装 OpenClaw",
+      "stepConfig": "填写 API Key",
+      "stepService": "启动 Gateway",
+      "stepDashboard": "开始使用 OpenClaw",
+      "goInstall": "去安装",
+      "goConfig": "去填写 API Key",
+      "goService": "去启动 Gateway",
+      "goDashboard": "打开 Dashboard",
+      "openSettings": "打开设置",
+      "viewLogs": "查看日志",
+      "viewDocs": "查看说明"
+    }
   }
 }
