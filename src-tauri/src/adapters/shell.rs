@@ -1,13 +1,53 @@
+use std::collections::HashSet;
 use std::process::Stdio;
+use std::sync::OnceLock;
 use std::time::Instant;
 
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 use tokio::process::Command;
+use tokio::sync::Mutex;
 use tokio::time::{timeout, Duration};
 
 use crate::adapters::platform;
 use crate::models::error::{AppError, ErrorCode};
+
+// ─── Active child PID registry ──────────────────────────────────────────────
+// Tracks PIDs of in-flight child processes so that we can kill their entire
+// process trees on application exit.  On Windows, `kill_on_drop` only
+// terminates the direct child (cmd.exe) — grandchildren (node.exe) survive.
+
+static ACTIVE_CHILD_PIDS: OnceLock<Mutex<HashSet<u32>>> = OnceLock::new();
+
+fn active_child_pids() -> &'static Mutex<HashSet<u32>> {
+    ACTIVE_CHILD_PIDS.get_or_init(|| Mutex::new(HashSet::new()))
+}
+
+async fn register_child_pid(pid: u32) {
+    active_child_pids().lock().await.insert(pid);
+}
+
+async fn unregister_child_pid(pid: u32) {
+    active_child_pids().lock().await.remove(&pid);
+}
+
+/// Kill all tracked child process trees.  Called once during application
+/// shutdown to prevent orphan `node.exe` processes on Windows.
+pub async fn kill_all_active_children() {
+    let pids: Vec<u32> = {
+        let mut set = active_child_pids().lock().await;
+        let pids: Vec<u32> = set.drain().collect();
+        pids
+    };
+
+    #[cfg(windows)]
+    for pid in pids {
+        kill_process_tree_windows(pid);
+    }
+
+    #[cfg(not(windows))]
+    let _ = pids;
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ShellOutput {
@@ -44,6 +84,15 @@ pub async fn run_command(
         command.env("PATH", path_env);
     }
 
+    // Limit the V8 heap of spawned Node.js processes to prevent
+    // memory exhaustion on Windows, where each `openclaw.cmd` invocation
+    // starts a full `node.exe` instance.  CLI commands (status, version)
+    // need far less than the default ~1.4 GB heap.  Only set this when
+    // the caller has not already configured NODE_OPTIONS.
+    if std::env::var_os("NODE_OPTIONS").is_none() {
+        command.env("NODE_OPTIONS", "--max-old-space-size=256");
+    }
+
     let started_at = Instant::now();
     let child = command.spawn().map_err(|error| {
         AppError::new(
@@ -60,10 +109,19 @@ pub async fn run_command(
 
     // Capture the PID now — wait_with_output() consumes the Child, so we
     // must read the PID before handing ownership to the timeout future.
-    #[cfg(windows)]
     let child_pid = child.id();
 
+    // Track the PID so we can kill the entire process tree on app exit.
+    if let Some(pid) = child_pid {
+        register_child_pid(pid).await;
+    }
+
     let timeout_result = timeout(Duration::from_millis(timeout_ms), child.wait_with_output()).await;
+
+    // Unregister the PID now that the child has finished (or timed out).
+    if let Some(pid) = child_pid {
+        unregister_child_pid(pid).await;
+    }
 
     match timeout_result {
         Err(_elapsed) => {

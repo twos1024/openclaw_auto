@@ -235,7 +235,27 @@ pub fn desktop_runtime_bin_dirs() -> Vec<PathBuf> {
     dedupe_paths(dirs)
 }
 
+/// Cached normalized PATH — resolved once per process lifetime to avoid
+/// repeated filesystem I/O on every `run_command` invocation.  The
+/// environment rarely changes while ClawDesk is running, so caching is safe.
+#[cfg(windows)]
+static NORMALIZED_PATH_ENV: OnceLock<Option<String>> = OnceLock::new();
+
 pub fn normalized_path_env() -> Option<String> {
+    #[cfg(windows)]
+    {
+        return NORMALIZED_PATH_ENV
+            .get_or_init(|| compute_normalized_path_env())
+            .clone();
+    }
+
+    #[cfg(not(windows))]
+    {
+        compute_normalized_path_env()
+    }
+}
+
+fn compute_normalized_path_env() -> Option<String> {
     let current = env::var_os("PATH");
     let mut ordered = desktop_runtime_bin_dirs();
 

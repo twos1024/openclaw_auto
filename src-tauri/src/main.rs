@@ -8,6 +8,19 @@ mod services;
 fn main() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
+        .on_window_event(|_window, event| {
+            // Kill all tracked child process trees when the app is about to
+            // close.  On Windows, `kill_on_drop` only terminates the direct
+            // child (cmd.exe) while grandchildren (node.exe) survive.  This
+            // prevents orphan node.exe processes from accumulating after the
+            // user closes ClawDesk.
+            if let tauri::WindowEvent::Destroyed = event {
+                tokio::task::block_in_place(|| {
+                    tokio::runtime::Handle::current()
+                        .block_on(adapters::shell::kill_all_active_children());
+                });
+            }
+        })
         .invoke_handler(tauri::generate_handler![
             // Agent management
             commands::agent::list_agents,
