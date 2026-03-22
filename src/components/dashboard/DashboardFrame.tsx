@@ -23,15 +23,11 @@ function ActionButton(props: {
     <button
       type="button"
       onClick={props.onClick}
-      style={{
-        border: props.variant === "primary" ? "none" : "1px solid #cbd5e1",
-        borderRadius: 8,
-        background: props.variant === "primary" ? "#0f172a" : "#ffffff",
-        color: props.variant === "primary" ? "#ffffff" : "#0f172a",
-        padding: "10px 14px",
-        fontWeight: 700,
-        cursor: "pointer",
-      }}
+      className={
+        props.variant === "primary"
+          ? "rounded-lg border-none bg-slate-900 px-3.5 py-2.5 text-sm font-bold text-white"
+          : "rounded-lg border border-border bg-card px-3.5 py-2.5 text-sm font-bold text-foreground"
+      }
     >
       {props.label}
     </button>
@@ -83,78 +79,36 @@ export function DashboardFrame({
   };
 
   return (
-    <section
-      style={{
-        position: "relative",
-        border: "1px solid #cbd5e1",
-        borderRadius: 16,
-        overflow: "hidden",
-        background: "#0f172a",
-        minHeight: "72vh",
-      }}
-    >
+    <section className="relative overflow-hidden rounded-2xl border border-border bg-slate-900" style={{ minHeight: "72vh" }}>
       <iframe
         ref={iframeRef}
         key={frameKey}
         title={t("frame.title")}
         src={src}
         onLoad={handleLoad}
-        style={{
-          width: "100%",
-          minHeight: "72vh",
-          border: "none",
-          background: "#ffffff",
-        }}
+        className="w-full border-none bg-white"
+        style={{ minHeight: "72vh" }}
       />
 
       {phase !== "loaded" ? (
         <div
-          style={{
-            position: "absolute",
-            inset: 0,
-            background: phase === "loading" ? "rgba(248, 250, 252, 0.92)" : "rgba(255, 255, 255, 0.96)",
-            display: "grid",
-            placeItems: "center",
-            padding: 24,
-          }}
+          className={`absolute inset-0 grid place-items-center p-6 ${
+            phase === "loading" ? "bg-slate-50/[0.92]" : "bg-white/[0.96]"
+          }`}
         >
-          <section
-            style={{
-              width: "100%",
-              maxWidth: 720,
-              border: "1px solid #e2e8f0",
-              borderRadius: 16,
-              background: "#ffffff",
-              padding: 20,
-              display: "grid",
-              gap: 12,
-              boxShadow: "0 18px 40px rgba(15, 23, 42, 0.12)",
-            }}
-          >
-            <h3 style={{ margin: 0 }}>{presentation.title}</h3>
-            <p style={{ margin: 0, color: "#475569" }}>{presentation.detail}</p>
-            <p style={{ margin: 0, fontSize: 13, color: "#64748b" }}>{presentation.suggestion}</p>
+          <section className="grid w-full max-w-2xl gap-3 rounded-2xl border border-border bg-card p-5 shadow-[0_18px_40px_rgba(15,23,42,0.12)]">
+            <h3 className="m-0 text-base font-semibold">{presentation.title}</h3>
+            <p className="m-0 text-sm text-muted-foreground">{presentation.detail}</p>
+            <p className="m-0 text-xs text-slate-500">{presentation.suggestion}</p>
             {phase === "loading" ? (
               <div
                 aria-label={t("frame.loadingAria")}
-                style={{
-                  height: 10,
-                  borderRadius: 999,
-                  background: "#e2e8f0",
-                  overflow: "hidden",
-                }}
+                className="h-2.5 overflow-hidden rounded-full bg-border"
               >
-                <div
-                  style={{
-                    width: "42%",
-                    height: "100%",
-                    background: "#2563eb",
-                    borderRadius: 999,
-                  }}
-                />
+                <div className="h-full w-[42%] rounded-full bg-blue-600" />
               </div>
             ) : (
-              <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+              <div className="flex flex-wrap gap-2.5">
                 <ActionButton label={t("frame.actions.reloadFrame")} onClick={onReloadFrame} variant="primary" />
                 <ActionButton label={t("frame.actions.openExternal")} onClick={onOpenExternal} />
                 {phase === "blocked" ? (

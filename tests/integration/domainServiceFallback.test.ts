@@ -5,13 +5,13 @@ import { channelService } from "../../src/services/channelService";
 import { cronService } from "../../src/services/cronService";
 import { providerService } from "../../src/services/providerService";
 import { gatewayFetch } from "../../src/lib/gateway-client";
-import { invokeCommand } from "../../src/services/tauriClient";
+import { invokeCommand } from "../../src/services/hostClient";
 
 vi.mock("../../src/lib/gateway-client", () => ({
   gatewayFetch: vi.fn(),
 }));
 
-vi.mock("../../src/services/tauriClient", () => ({
+vi.mock("../../src/services/hostClient", () => ({
   invokeCommand: vi.fn(),
 }));
 

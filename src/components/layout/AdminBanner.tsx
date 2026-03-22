@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { invokeCommand } from "../../services/tauriClient";
+import { invokeCommand } from "../../services/hostClient";
 import { useGatewayStore } from "../../store/useGatewayStore";
 import type { AdminStatus } from "../../store/useGatewayStore";
 

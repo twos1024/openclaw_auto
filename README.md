@@ -60,7 +60,8 @@ src/
   lib/                  # 工具函数（utils, preferences, constants, gateway-client）
   pages/                # 页面组件（19 个路由）
   services/             # 业务逻辑层
-    tauriClient.ts      # Tauri 后端桥接（运行时检测、invoke 封装）
+    hostClient.ts       # 宿主桥接规范入口（运行时检测、invoke 封装）
+    tauriClient.ts      # 兼容层（re-export shim，将在下个版本移除）
     configService.ts    # 配置读写与连接测试
     configParser.ts     # 配置解析纯函数（从 configService 提取）
     installService.ts   # 安装流程编排
@@ -81,7 +82,7 @@ src-tauri/
     services/           # 业务逻辑（config, gateway, connectivity 等）
 tests/
   unit/                 # Vitest 单元测试
-  integration/          # 集成测试（Mock Tauri Bridge）
+  integration/          # 集成测试（Mock Host Bridge）
   e2e/                  # Playwright 端到端测试
 docs/
   specs/                # 产品与技术规格文档
