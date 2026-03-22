@@ -40,6 +40,7 @@ export type ErrorCode =
   | "E_CONNECTION_TEST"
   | "E_INVOKE"
   | "E_HOST_UNAVAILABLE"
+  | "E_TAURI_UNAVAILABLE" // legacy alias — tauriClient shim maps E_HOST_UNAVAILABLE back to this
   | "E_PREVIEW_MODE"
   | "E_UNKNOWN"
   | string;

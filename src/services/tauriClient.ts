@@ -5,15 +5,42 @@
  * Do NOT add new imports from this module in business code.
  * New code must import from hostClient instead.
  *
- * This module re-exports invokeCommand and getInvoke from hostClient, and
- * provides legacy-named wrappers (getRuntimeDiagnostics, isTauriRuntime,
- * createRuntimeAccessError) that map the host-agnostic HostDiagnostics back
- * to the Tauri-named RuntimeDiagnostics / RuntimeMode for backward compatibility.
+ * This module provides legacy-named wrappers that map host-agnostic values back
+ * to Tauri-named values for backward compatibility:
+ *   - getRuntimeDiagnostics() maps HostRuntimeMode → RuntimeMode
+ *   - invokeCommand()         maps E_HOST_UNAVAILABLE → E_TAURI_UNAVAILABLE
+ *   - createRuntimeAccessError() maps E_HOST_UNAVAILABLE → E_TAURI_UNAVAILABLE
  */
-export { invokeCommand, getInvoke } from "./hostClient";
+export { getInvoke } from "./hostClient";
 
-import type { BackendError, RuntimeDiagnostics } from "../types/api";
-import { createHostAccessError, getHostDiagnostics, isHostRuntime } from "./hostClient";
+import type { BackendError, CommandResult, RuntimeDiagnostics } from "../types/api";
+import {
+  createHostAccessError,
+  getHostDiagnostics,
+  invokeCommand as hostInvokeCommand,
+  isHostRuntime,
+} from "./hostClient";
+
+/** Map host-agnostic error codes back to legacy Tauri-named codes. */
+function toLegacyErrorCode(code: string): string {
+  if (code === "E_HOST_UNAVAILABLE") return "E_TAURI_UNAVAILABLE";
+  return code;
+}
+
+/** Wrapped invokeCommand that preserves the legacy E_TAURI_UNAVAILABLE error code. */
+export async function invokeCommand<T>(
+  command: string,
+  payload?: Record<string, unknown>,
+): Promise<CommandResult<T>> {
+  const result = await hostInvokeCommand<T>(command, payload);
+  if (!result.success && result.error) {
+    return {
+      ...result,
+      error: { ...result.error, code: toLegacyErrorCode(result.error.code) },
+    };
+  }
+  return result;
+}
 
 function toRuntimeMode(mode: string): RuntimeDiagnostics["mode"] {
   if (mode === "host-runtime-available") return "tauri-runtime-available";
@@ -36,5 +63,6 @@ export function isTauriRuntime(): boolean {
 }
 
 export function createRuntimeAccessError(): BackendError {
-  return createHostAccessError();
+  const err = createHostAccessError();
+  return { ...err, code: toLegacyErrorCode(err.code) };
 }

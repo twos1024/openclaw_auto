@@ -60,6 +60,6 @@ describe("tauriClient runtime detection", () => {
       bridgeSource: "none",
     });
     expect(isTauriRuntime()).toBe(false);
-    expect(result.error?.code).toBe("E_HOST_UNAVAILABLE");
+    expect(result.error?.code).toBe("E_TAURI_UNAVAILABLE"); // shim maps E_HOST_UNAVAILABLE back to legacy code
   });
 });
