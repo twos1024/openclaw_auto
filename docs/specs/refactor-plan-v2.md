@@ -212,6 +212,9 @@ grep -rn "bg-white\|bg-black\|text-white\|text-black\|#[0-9a-fA-F]" src/
 - `bg-white` → `bg-card` 或 `bg-background`
 - `text-black` → `text-foreground`
 - `bg-black/5` → `bg-foreground/5`（保留透明度语法）
+- 内联 `style={{}}` → Tailwind 工具类 + `dark:` 变体
+
+**2026-03-22 完成：** NoticeBanner、PageHero、HomeEntryPage 的内联样式已全部替换为 Tailwind 类，添加暗色主题支持。HomeEntryPage 中的原生 `<button>` 已改为复用 `Button` 组件。
 
 ### 2.5 Sidebar 暗色适配
 
@@ -225,6 +228,7 @@ className="bg-[hsl(var(--sidebar))]"
 - [x] `.dark` 变量完整覆盖
 - [x] SettingsPage 主题切换可用
 - [x] 全部组件无硬编码颜色（含 ConfigPage / OpenAIConfigForm / OllamaConfigForm — 2026-03-22 修复）
+- [x] NoticeBanner / PageHero / HomeEntryPage 内联样式替换为 Tailwind（2026-03-22 完成）
 - [ ] 亮/暗截图对比验证
 
 ---
@@ -479,6 +483,21 @@ src/components/cron/
 - [x] 安装 `rollup-plugin-visualizer` 并集成到 `vite.config.ts`
 - [x] 添加 `npm run analyze` 脚本，产出 `dist/bundle-stats.html`
 - [x] 开启 gzip/brotli 体积统计
+
+### 服务层模块提取（2026-03-22）
+
+将大型服务文件中的纯逻辑提取为独立模块，提高可测试性和可读性：
+
+- [x] `configService.ts`（453行→240行）：配置解析逻辑提取到 `configParser.ts`（175行）
+- [x] `installService.ts`（470行→90行）：阶段构建提取到 `installPhases.ts`，问题规范化提取到 `installIssues.ts`
+- [x] 所有 re-export 保持兼容，现有 import 无需修改
+- [x] 97 个测试用例全部通过
+
+### 内联样式清理（2026-03-22）
+
+- [x] `NoticeBanner.tsx`：内联样式 → Tailwind 类 + `dark:` 暗色变体
+- [x] `PageHero.tsx`：内联样式 → Tailwind 语义色（`text-foreground`, `text-muted-foreground`）
+- [x] `HomeEntryPage.tsx`：17 处内联样式全部替换，原生 `<button>` 改为复用 `Button` 组件
 
 ---
 
