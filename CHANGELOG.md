@@ -2,6 +2,17 @@
 
 All notable changes to ClawDesk (OpenClaw Manager) will be documented in this file.
 
+## [3.0.0] — 2026-03-22
+
+### Added
+
+- **Host bridge compatibility helpers**: Reintroduced `hostClient` runtime detection helpers so desktop-host shells can be diagnosed separately from plain browser preview mode.
+- **Dashboard URL normalization coverage**: Added focused unit coverage for dashboard URL normalization and host bridge detection fallbacks.
+
+### Fixed
+
+- **Release metadata drift**: Synced package, Tauri, Cargo, and frontend app-version constants to `3.0.0`.
+
 ## [2.7.0] — 2026-03-22
 
 ### Fixed
